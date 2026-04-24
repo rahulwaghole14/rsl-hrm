@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Run - Company Calendar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .guide-card {
+            background: var(--card);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid #334155;
+        }
+        h1 {
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+        .step {
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+            border-left: 3px solid var(--primary);
+        }
+        .step h3 {
+            margin: 0 0 0.5rem 0;
+            color: #818cf8;
+        }
+        code {
+            background: #0f172a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.3rem;
+            font-family: monospace;
+            color: #f472b6;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-card">
+        <h1>🚀 Get Started</h1>
+        
+        <div class="step">
+            <h3>Step 1: Start XAMPP</h3>
+            <p>Open the XAMPP Control Panel and start <strong>Apache</strong> and <strong>MySQL</strong>.</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Database Credentials</h3>
+            <p>I saw you updated <code>setup_db.php</code> and <code>config/db.php</code> with your password (<code>root</code>). Great!</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Run Setup</h3>
+            <p>Visit this link to create the database and seed the 2026 holidays:</p>
+            <a href="setup_db.php" class="btn">Run setup_db.php</a>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Launch App</h3>
+            <p>Once setup is complete, go to the main calendar:</p>
+            <a href="index.php" class="btn" style="background: #10b981;">Open index.php</a>
+        </div>
+
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 2rem; text-align: center;">
+            The app is specifically pre-configured for the year 2026.
+        </p>
+    </div>
+</body>
+</html>
