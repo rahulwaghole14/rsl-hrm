@@ -41,7 +41,8 @@ $userName = $_SESSION['name'] ?? null;
                 <?php endif; ?>
             </div>
 
-            <div class="calendar-nav" style="justify-content: flex-end;">
+            <div class="calendar-nav" style="justify-content: flex-end; gap: 1rem;">
+                <a href="holidays.php" class="btn" style="border-color: var(--holiday-red); color: var(--holiday-red);">Holidays List</a>
                 <?php if ($isLoggedIn): ?>
                     <?php if ($userRole === 'admin'): ?>
                         <a href="manage_event.php" class="btn btn-primary">+ Add Event</a>
