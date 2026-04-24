@@ -62,6 +62,8 @@ include 'includes/header.php';
                     Holiday</option>
                 <option value="half_day" <?php echo ($event && $event['type'] == 'half_day') ? 'selected' : ''; ?>>Half
                     Day</option>
+                <option value="working" <?php echo ($event && $event['type'] == 'working') ? 'selected' : ''; ?>>Working
+                    Day</option>
             </select>
         </div>
 

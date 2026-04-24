@@ -10,19 +10,29 @@ function getEventsForMonth($year, $month)
     $start_date = "$year-$month-01";
     $end_date = date("Y-m-t", strtotime($start_date));
 
-    $stmt = $pdo->prepare("SELECT * FROM events WHERE event_date BETWEEN ? AND ?");
+    $stmt = $pdo->prepare("SELECT e.* FROM events e WHERE e.event_date BETWEEN ? AND ?");
     $stmt->execute([$start_date, $end_date]);
 
-    $events = [];
+    $data = ['events' => [], 'leaves' => []];
     while ($row = $stmt->fetch()) {
-        $events[$row['event_date']][] = $row;
+        $data['events'][$row['event_date']][] = $row;
     }
-    return $events;
+
+    // Fetch Leaves with User Names
+    $stmt = $pdo->prepare("SELECT l.*, u.name as user_name FROM leaves l JOIN users u ON l.user_id = u.id WHERE l.leave_date BETWEEN ? AND ?");
+    $stmt->execute([$start_date, $end_date]);
+    while ($row = $stmt->fetch()) {
+        $data['leaves'][$row['leave_date']][] = $row;
+    }
+
+    return $data;
 }
 
 function renderCalendar($year, $month)
 {
-    $events = getEventsForMonth($year, $month);
+    $data = getEventsForMonth($year, $month);
+    $events = $data['events'];
+    $leaves = $data['leaves'];
 
     // Get first day of the month
     $firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
@@ -64,6 +74,7 @@ function renderCalendar($year, $month)
         $isHoliday = false;
         $isEvent = false;
         $isHalfDay = false;
+        $isWorking = false;
         foreach ($dayEvents as $event) {
             if ($event['type'] === 'holiday') {
                 $isHoliday = true;
@@ -71,6 +82,8 @@ function renderCalendar($year, $month)
                 $isEvent = true;
             } elseif ($event['type'] === 'half_day') {
                 $isHalfDay = true;
+            } elseif ($event['type'] === 'working') {
+                $isWorking = true;
             }
         }
         if ($isHoliday)
@@ -79,11 +92,40 @@ function renderCalendar($year, $month)
             $classes[] = 'event-day';
         if ($isHalfDay)
             $classes[] = 'half-day';
+        if ($isWorking)
+            $classes[] = 'working-day';
+
+        // Check for Approved Leaves to highlight the whole box red
+        $dayLeaves = isset($leaves[$currentDate]) ? $leaves[$currentDate] : [];
+        $hasApprovedLeave = false;
+        $currentUserId = $_SESSION['user_id'] ?? null;
+        $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
+
+        foreach ($dayLeaves as $leave) {
+            if ($leave['status'] === 'approved') {
+                // ONLY show red background for the Employee who has the leave
+                if (!$isAdmin && $currentUserId && $leave['user_id'] == $currentUserId) {
+                    $hasApprovedLeave = true;
+                    break;
+                }
+            }
+        }
+        if ($hasApprovedLeave) $classes[] = 'leave-approved';
 
         $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
+        $isLoggedIn = isset($_SESSION['user_id']);
+        $currentUserId = $_SESSION['user_id'] ?? null;
+
         $clickAttr = '';
         if ($isAdmin) {
             $clickAttr = 'onclick="location.href=\'manage_event.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
+        } elseif ($isLoggedIn) {
+            $isPast = (strtotime($currentDate) < strtotime(date('Y-m-d')));
+            if (!$isPast) {
+                $clickAttr = 'onclick="openLeaveModal(\'' . $currentDate . '\')" style="cursor: pointer;"';
+            } else {
+                $clickAttr = 'style="cursor: default; opacity: 0.6;" title="Past dates are disabled"';
+            }
         }
 
         echo '<div class="day-cell ' . implode(' ', $classes) . '" ' . $clickAttr . '>';
@@ -96,6 +138,8 @@ function renderCalendar($year, $month)
                 $tagClass = 'holiday-tag';
             } elseif ($event['type'] === 'half_day') {
                 $tagClass = 'type-half-day';
+            } elseif ($event['type'] === 'working') {
+                $tagClass = 'type-working';
             }
 
             if ($isAdmin) {
@@ -110,6 +154,23 @@ function renderCalendar($year, $month)
             }
         }
         echo '</div>';
+
+        // Display Leaves
+        $dayLeaves = isset($leaves[$currentDate]) ? $leaves[$currentDate] : [];
+        foreach ($dayLeaves as $leave) {
+            if ($isAdmin) {
+                // Admin sees employee name
+                $leaveJson = htmlspecialchars(json_encode($leave));
+                echo '<div class="leave-tag status-' . $leave['status'] . '" onclick="event.stopPropagation(); openAdminViewModal(' . $leaveJson . ')" title="View Request">';
+                echo 'Leave: ' . htmlspecialchars($leave['user_name']);
+                echo '</div>';
+            } elseif ($leave['user_id'] == $currentUserId) {
+                // Employee sees their own status
+                echo '<div class="leave-tag status-' . $leave['status'] . '" style="cursor:default;" onclick="event.stopPropagation();">';
+                echo 'Leave: ' . ucfirst($leave['status']);
+                echo '</div>';
+            }
+        }
 
         echo '</div>';
     }

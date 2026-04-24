@@ -60,4 +60,7 @@ if (!$pdo) {
 renderCalendar($year, $month); 
 ?>
 
-<?php include 'includes/footer.php'; ?>
+<?php 
+include 'includes/modals.php';
+include 'includes/footer.php'; 
+?>
