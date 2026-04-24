@@ -17,6 +17,29 @@ $userName = $_SESSION['name'] ?? null;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
+    <script>
+        // Theme Logic
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.innerText = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') === 'dark' ? 'light' : 'dark';
+            applyTheme(currentTheme);
+        }
+
+        // Initialize Theme immediately to prevent flicker
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.innerText = savedTheme === 'dark' ? '☀️' : '🌙';
+        });
+    </script>
 </head>
 
 <body>
@@ -41,7 +64,12 @@ $userName = $_SESSION['name'] ?? null;
                 <?php endif; ?>
             </div>
 
-            <div class="calendar-nav" style="justify-content: flex-end; gap: 1rem;">
+            <div class="calendar-nav" style="justify-content: flex-end; gap: 1rem; align-items: center;">
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" id="themeToggle" class="btn" style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                
                 <a href="holidays.php" class="btn" style="border-color: var(--holiday-red); color: var(--holiday-red);">Holidays List</a>
                 <?php if ($isLoggedIn): ?>
                     <?php if ($userRole === 'admin'): ?>

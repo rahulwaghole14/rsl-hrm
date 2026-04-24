@@ -8,17 +8,25 @@
 
     /* Box Colors (Light Mode) */
     --normal-bg: #dcfce7;
-    /* Light Green */
     --weekend-bg: #f1f5f9;
-    /* Light Grey */
     --holiday-bg: #fee2e2;
-    /* Light Red */
     --event-bg: #fef9c3;
-    /* Light Yellow */
 
     --holiday-red: #ef4444;
     --event-yellow: #f59e0b;
     --border-color: #e2e8f0;
+}
+
+[data-theme="dark"] {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --normal-bg: #1e293b;
+    --weekend-bg: #0f172a;
+    --holiday-bg: #450a0a;
+    --event-bg: #422006;
+    --border-color: #334155;
 }
 
 * {
@@ -26,6 +34,12 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
 }
 
 body {
@@ -142,9 +156,8 @@ h1 {
 }
 
 .day-cell.leave-approved {
-    background: #fee2e2 !important;
-    /* Soft Red for Approved Leaves */
-    border-top: 4px solid #ef4444 !important;
+    background: var(--holiday-bg) !important;
+    border-top: 4px solid var(--holiday-red) !important;
 }
 
 .day-cell.today {
