@@ -82,14 +82,16 @@
     }
 
     .modal-content {
-        background-color: white;
-        margin: 10% auto;
+        background-color: var(--card-bg, white);
+        color: var(--text-main, #333);
+        margin: 5% auto;
         padding: 2.5rem;
         border-radius: 1.5rem;
-        width: 90%;
+        width: 95%;
         max-width: 500px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         position: relative;
+        border: 1px solid var(--border-color, #eee);
     }
 
     .close {

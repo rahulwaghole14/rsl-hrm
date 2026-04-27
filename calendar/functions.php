@@ -13,7 +13,7 @@ function getEventsForMonth($year, $month)
     $stmt = $pdo->prepare("SELECT e.* FROM events e WHERE e.event_date BETWEEN ? AND ?");
     $stmt->execute([$start_date, $end_date]);
 
-    $data = ['events' => [], 'leaves' => []];
+    $data = ['events' => [], 'leaves' => [], 'birthdays' => []];
     while ($row = $stmt->fetch()) {
         $data['events'][$row['event_date']][] = $row;
     }
@@ -25,6 +25,14 @@ function getEventsForMonth($year, $month)
         $data['leaves'][$row['leave_date']][] = $row;
     }
 
+    // Fetch Birthdays
+    $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE MONTH(dob) = ?");
+    $stmt->execute([$month]);
+    while ($row = $stmt->fetch()) {
+        $dayB = date('d', strtotime($row['dob']));
+        $data['birthdays'][$dayB][] = $row['name'];
+    }
+
     return $data;
 }
 
@@ -33,6 +41,7 @@ function renderCalendar($year, $month)
     $data = getEventsForMonth($year, $month);
     $events = $data['events'];
     $leaves = $data['leaves'];
+    $birthdays = $data['birthdays'];
 
     // Get first day of the month
     $firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
@@ -59,7 +68,8 @@ function renderCalendar($year, $month)
 
     // Days of current month
     for ($day = 1; $day <= $daysInMonth; $day++) {
-        $currentDate = sprintf("%04d-%02d-%02d", $year, $month, $day);
+        $currentDate = "$year-" . sprintf("%02d", $month) . "-" . sprintf("%02d", $day);
+        $day_padded = sprintf("%02d", $day);
         $dayStamp = mktime(0, 0, 0, $month, $day, $year);
         $isWeekend = (date('N', $dayStamp) >= 6); // 6=Sat, 7=Sun
         $isToday = (date('Y-m-d', $dayStamp) === date('Y-m-d'));
@@ -110,7 +120,8 @@ function renderCalendar($year, $month)
                 }
             }
         }
-        if ($hasApprovedLeave) $classes[] = 'leave-approved';
+        if ($hasApprovedLeave)
+            $classes[] = 'leave-approved';
 
         $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
         $isLoggedIn = isset($_SESSION['user_id']);
@@ -133,6 +144,11 @@ function renderCalendar($year, $month)
 
         echo '<div class="event-list">';
         foreach ($dayEvents as $event) {
+            // If the event is a 'working' day, we only want the cell color, NOT the text tag.
+            if ($event['type'] === 'working') {
+                continue;
+            }
+            
             $tagClass = 'type-event';
             if ($event['type'] === 'holiday') {
                 $tagClass = 'holiday-tag';
@@ -154,6 +170,14 @@ function renderCalendar($year, $month)
             }
         }
         echo '</div>';
+
+        // Display Birthdays
+        $dayBirthdays = isset($birthdays[$day_padded]) ? $birthdays[$day_padded] : [];
+        foreach ($dayBirthdays as $bdayName) {
+            echo '<div class="birthday-tag" title="Happy Birthday!">';
+            echo '🎂 ' . htmlspecialchars($bdayName);
+            echo '</div>';
+        }
 
         // Display Leaves
         $dayLeaves = isset($leaves[$currentDate]) ? $leaves[$currentDate] : [];
