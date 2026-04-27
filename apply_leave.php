@@ -32,6 +32,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $stmt = $pdo->prepare("INSERT INTO leaves (user_id, leave_date, subject, description, attachment) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$user_id, $date, $subject, $description, $attachment]);
+        $leave_id = $pdo->lastInsertId(); // Get the ID for the email links
+
+        // --- FETCH EMPLOYEE DETAILS ---
+        $stmt = $pdo->prepare("SELECT name, email FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $employee = $stmt->fetch();
+        $emp_name = $employee['name'];
+        $emp_email = $employee['email'];
+
+        // --- EMAIL NOTIFICATION VIA PHPMAILER ---
+        require 'libs/PHPMailer/Exception.php';
+        require 'libs/PHPMailer/PHPMailer.php';
+        require 'libs/PHPMailer/SMTP.php';
+
+        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+
+        try {
+            // SMTP Settings
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = 'pawanepratik2001@gmail.com';
+            $mail->Password = 'ohry ijav gwvb yuzx';
+            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+
+            // Recipients
+            $mail->setFrom('noreply@rslcalendar.com', 'RSL');
+            $mail->addAddress('pawanepratik2001@gmail.com');
+            $mail->addReplyTo($emp_email, $emp_name);
+
+            // Attachment
+            if ($attachment) {
+                $mail->addAttachment('uploads/leaves/' . $attachment);
+            }
+
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = "Leave Request: $emp_name ($date)";
+            $mail->Body = "
+                <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                    <h2 style='color: #4f46e5;'>New Leave Request</h2>
+                    <p><strong>Employee:</strong> $emp_name ($emp_email)</p>
+                    <p><strong>Date:</strong> $date</p>
+                    <p><strong>Subject:</strong> $subject</p>
+                    <p><strong>Description:</strong><br>$description</p>
+                    <div style='margin-top: 2rem; display: flex; gap: 1rem;'>
+                        <a href='http://localhost:8000/process_leave.php?id=$leave_id&status=approved' 
+                           style='background-color: #10b981; color: white; padding: 0.8rem 2rem; text-decoration: none; border-radius: 0.5rem; font-weight: bold; display: inline-block; margin-right: 10px;'>
+                           Approve
+                        </a>
+                        <a href='http://localhost:8000/process_leave.php?id=$leave_id&status=rejected' 
+                           style='background-color: #ef4444; color: white; padding: 0.8rem 2rem; text-decoration: none; border-radius: 0.5rem; font-weight: bold; display: inline-block;'>
+                           Reject
+                        </a>
+                    </div>
+                    <hr style='margin-top: 2rem;'>
+                    <p style='font-size: 0.9rem; color: #666;'>This is an automated notification from RSL Calendar System.</p>
+                </div>";
+
+            $mail->send();
+        } catch (Exception $e) {
+            error_log("Mailer Error: " . $mail->ErrorInfo);
+        }
+        // ------------------------------------------
+
         header("Location: index.php?month=" . date('m', strtotime($date)) . "&leave=success");
     } catch (PDOException $e) {
         die("Error: " . $e->getMessage());
