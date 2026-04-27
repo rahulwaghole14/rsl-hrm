@@ -53,16 +53,18 @@ if ($leave_id && $status) {
                 $mail->isHTML(true);
                 $mail->Subject = "Leave Request Status: " . ucfirst($status);
                 
+                $statusText = ($status === 'approved') ? 'Approved' : 'Rejected';
                 $statusColor = ($status === 'approved') ? '#10b981' : '#ef4444';
+                
                 $mail->Body = "
                     <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                        <h2 style='color: $statusColor;'>Your Leave Request has been " . strtoupper($status) . "</h2>
-                        <p>Hello $emp_name,</p>
-                        <p>The status of your leave request for <strong>$leave_date</strong> has been updated.</p>
-                        <p><strong>Subject:</strong> $leave_subject</p>
-                        <p><strong>New Status:</strong> <span style='color: $statusColor; font-weight: bold;'>" . strtoupper($status) . "</span></p>
-                        <hr>
-                        <p style='font-size: 0.9rem; color: #666;'>Log in to the RSL Calendar to see the updated schedule.</p>
+                        <p style='font-size: 1.1rem; font-weight: bold; color: $statusColor;'>$statusText</p>
+                        <br>
+                        <p>Best Regards,<br>
+                        <strong>Pratik Pawane</strong><br>
+                        PP Software .<br>
+                        pawanepratik2001@gmail.com<br>
+                        8805854727.</p>
                     </div>";
 
                 $mail->send();
