@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Kolkata');
 $host = 'localhost';
 $db = 'company_calendar';
 $user = 'root';

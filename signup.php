@@ -30,8 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include 'includes/header.php';
 ?>
 
-<div
-    style="max-width: 500px; margin: 2rem auto; background: var(--card-bg); padding: 2.5rem; border-radius: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+<div class="card" style="max-width: 550px;">
     <h2 style="margin-bottom: 2rem; text-align: center; color: var(--primary-color);">Create Account</h2>
 
     <?php if ($error): ?>

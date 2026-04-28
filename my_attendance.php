@@ -41,7 +41,7 @@ include 'includes/header.php';
         </div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2rem;">
+    <div class="attendance-dashboard-grid">
         <!-- Attendance Control -->
         <div style="background: var(--card-bg); padding: 2rem; border-radius: 1.5rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             <h3 style="color: var(--text-muted); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em;">Daily Check-In</h3>
@@ -86,7 +86,7 @@ include 'includes/header.php';
     </div>
     
     <!-- Attendance Table -->
-    <div style="background: var(--card-bg); border-radius: 1.5rem; border: 1px solid var(--border-color); overflow: hidden; margin-top: 2rem;">
+    <div class="attendance-table-container">
         <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
             <h3 style="font-size: 1.1rem;">Recent History</h3>
         </div>

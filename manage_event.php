@@ -37,8 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include 'includes/header.php';
 ?>
 
-<div
-    style="max-width: 600px; margin: 0 auto; background: var(--card-bg); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border-color);">
+<div class="card" style="max-width: 650px;">
     <h2 style="margin-bottom: 2rem;"><?php echo $id > 0 ? 'Edit Event' : 'Add New Event'; ?></h2>
 
     <form method="POST">

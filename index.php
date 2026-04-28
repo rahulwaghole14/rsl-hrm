@@ -25,7 +25,7 @@ $monthName = date('F', mktime(0, 0, 0, $month, 1, $year));
 include 'includes/header.php';
 ?>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <h2 style="font-size: 1.5rem;"><?php echo "$monthName $year"; ?></h2>
 
     <div class="calendar-nav">
@@ -65,20 +65,19 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
     $stmt = $pdo->query("SELECT name, dob FROM users WHERE role = 'employee' AND dob IS NOT NULL ORDER BY MONTH(dob), DAY(dob)");
     $allBirthdays = $stmt->fetchAll();
     if (!empty($allBirthdays)) {
-        echo '<div class="container" style="margin-bottom: 2rem;">
-                <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); text-align: right;">
+        echo '<div style="margin-bottom: 2rem;">
+                <div class="card" style="padding: 1.5rem; text-align: right; margin: 0;">
                     <button onclick="toggleBirthdays()" class="btn" style="background: var(--bg-color); border-color: var(--primary-color); color: var(--primary-color); display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                        🎂 Employee Birthday </button>
+                        🎂 Employee Birthdays </button>
                     
                     <div id="birthdayList" style="display: none; margin-top: 1.5rem; text-align: left;">
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-end;">';
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-start;">';
         foreach ($allBirthdays as $bday) {
             echo '<div style="background: var(--bg-color); padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); font-size: 0.9rem;">
                     <strong>' . htmlspecialchars($bday['name']) . '</strong>: ' . date('d M', strtotime($bday['dob'])) . '
                   </div>';
         }
-        echo '          </div>
-                    </div>
+        echo '                    </div>
                 </div>
               </div>';
 

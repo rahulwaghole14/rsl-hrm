@@ -14,13 +14,14 @@ $holidays = $stmt->fetchAll();
 include 'includes/header.php';
 ?>
 
-<div style="max-width: 800px; margin: 2rem auto; background: var(--card-bg); padding: 2.5rem; border-radius: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+<div class="card" style="max-width: 900px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <h2 style="color: var(--primary-color);">Official Holidays 2026</h2>
         <a href="index.php" class="btn">Back to Calendar</a>
     </div>
 
-    <table style="width: 100%; border-collapse: collapse;">
+    <div class="table-responsive">
+        <table style="width: 100%; border-collapse: collapse;">
         <thead>
             <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
                 <th style="padding: 1rem; color: var(--text-muted);">Date</th>
@@ -55,6 +56,7 @@ include 'includes/header.php';
             <?php endforeach; ?>
         </tbody>
     </table>
+    </div>
     
     <?php if (empty($holidays)): ?>
         <p style="text-align: center; padding: 3rem; color: var(--text-muted);">No holidays found.</p>

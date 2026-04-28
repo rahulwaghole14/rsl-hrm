@@ -44,7 +44,7 @@ $userName = $_SESSION['name'] ?? null;
 
 <body>
     <div class="container">
-        <header style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem;">
+        <header>
             <div class="user-info">
                 <?php if ($isLoggedIn): ?>
                     <span style="font-size: 0.8rem; color: var(--text-muted);">

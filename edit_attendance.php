@@ -58,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include 'includes/header.php';
 ?>
 
-<div class="container" style="max-width: 600px; margin-top: 2rem;">
-    <div style="background: var(--card-bg); padding: 2.5rem; border-radius: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">
+<div class="container" style="max-width: 650px;">
+    <div class="card">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
             <div style="width: 48px; height: 48px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700;">
                 <?php echo strtoupper(substr($record['name'], 0, 1)); ?>

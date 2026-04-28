@@ -8,31 +8,41 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
+$filter_month = isset($_GET['filter_month']) ? $_GET['filter_month'] : '';
 $records = [];
 
 try {
+    $where = ["1=1"];
+    $params = [];
+
     if ($search !== '') {
-        // Search by name
-        $stmt = $pdo->prepare("
-            SELECT a.*, u.name, u.emp_id 
-            FROM attendance a 
-            JOIN users u ON a.user_id = u.id 
-            WHERE u.name LIKE ? 
-            ORDER BY a.date DESC, a.check_in_time DESC
-        ");
-        $stmt->execute(['%' . $search . '%']);
-        $records = $stmt->fetchAll();
-    } else {
-        // Show all recent records if no search
-        $stmt = $pdo->query("
-            SELECT a.*, u.name, u.emp_id 
-            FROM attendance a 
-            JOIN users u ON a.user_id = u.id 
-            ORDER BY a.date DESC, a.check_in_time DESC 
-            LIMIT 50
-        ");
-        $records = $stmt->fetchAll();
+        $where[] = "u.name LIKE ?";
+        $params[] = '%' . $search . '%';
     }
+    if ($filter_date !== '') {
+        $where[] = "a.date = ?";
+        $params[] = $filter_date;
+    }
+    if ($filter_month !== '') {
+        $where[] = "DATE_FORMAT(a.date, '%Y-%m') = ?";
+        $params[] = $filter_month;
+    }
+
+    $sql = "SELECT a.*, u.name, u.emp_id 
+            FROM attendance a 
+            JOIN users u ON a.user_id = u.id 
+            WHERE " . implode(" AND ", $where) . " 
+            ORDER BY a.date DESC, a.check_in_time DESC";
+    
+    // If no filters are applied, add a limit for performance
+    if ($search === '' && $filter_date === '' && $filter_month === '') {
+        $sql .= " LIMIT 50";
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $records = $stmt->fetchAll();
 } catch (PDOException $e) {
     $error = "Error fetching records: " . $e->getMessage();
 }
@@ -43,14 +53,35 @@ include 'includes/header.php';
 <div class="container" style="margin-top: 1rem;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <h2 style="font-size: 1.5rem;">Employee Attendance Records</h2>
-        <form action="" method="GET" style="display: flex; gap: 0.5rem; flex-grow: 1; max-width: 500px;">
-            <input type="text" name="search" placeholder="Search by employee name..." value="<?php echo htmlspecialchars($search); ?>" 
-                   style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.75rem; flex-grow: 1; background: var(--card-bg); color: var(--text-main);">
-            <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Search</button>
-            <?php if ($search !== ''): ?>
-                <a href="admin_attendance.php" class="btn" style="display: flex; align-items: center; text-decoration: none;">Clear</a>
-            <?php endif; ?>
+    <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+        <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Employee Name</label>
+                <input type="text" name="search" placeholder="Search name..." value="<?php echo htmlspecialchars($search); ?>" 
+                       style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
+            </div>
+
+            <div style="width: 180px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Specific Date</label>
+                <input type="date" name="filter_date" value="<?php echo htmlspecialchars($filter_date); ?>" 
+                       style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
+            </div>
+
+            <div style="width: 180px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">By Month</label>
+                <input type="month" name="filter_month" value="<?php echo htmlspecialchars($filter_month); ?>" 
+                       style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.5rem;">Filter</button>
+                <a href="admin_attendance.php" class="btn" style="text-decoration: none; padding: 0.65rem 1rem;">Clear</a>
+                <a href="export_attendance.php?<?php echo http_build_query($_GET); ?>" class="btn" style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    📥 Export Excel
+                </a>
+            </div>
         </form>
+    </div>
     </div>
 
     <?php if (isset($error)): ?>
