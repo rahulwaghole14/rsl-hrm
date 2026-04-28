@@ -144,8 +144,8 @@ function renderCalendar($year, $month)
 
         echo '<div class="event-list">';
         foreach ($dayEvents as $event) {
-            // If the event is a 'working' day, we only want the cell color, NOT the text tag.
-            if ($event['type'] === 'working') {
+            // If the event is a 'working' day or titled 'Weekend', we only want the cell color, NOT the text tag.
+            if ($event['type'] === 'working' || $event['title'] === 'Weekend') {
                 continue;
             }
             
@@ -171,6 +171,7 @@ function renderCalendar($year, $month)
         }
         echo '</div>';
 
+        echo '<div class="day-tags-top">';
         // Display Birthdays
         $dayBirthdays = isset($birthdays[$day_padded]) ? $birthdays[$day_padded] : [];
         foreach ($dayBirthdays as $bdayName) {
@@ -195,6 +196,7 @@ function renderCalendar($year, $month)
                 echo '</div>';
             }
         }
+        echo '</div>';
 
         echo '</div>';
     }

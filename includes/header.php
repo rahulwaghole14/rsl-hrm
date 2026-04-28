@@ -73,7 +73,10 @@ $userName = $_SESSION['name'] ?? null;
                 <a href="holidays.php" class="btn" style="border-color: var(--holiday-red); color: var(--holiday-red);">Holidays List</a>
                 <?php if ($isLoggedIn): ?>
                     <?php if ($userRole === 'admin'): ?>
+                        <a href="admin_attendance.php" class="btn" style="border-color: var(--primary-color); color: var(--primary-color);">Attendance</a>
                         <a href="manage_event.php" class="btn btn-primary">+ Add Event</a>
+                    <?php elseif ($userRole === 'employee'): ?>
+                        <a href="my_attendance.php" class="btn" style="border-color: var(--primary-color); color: var(--primary-color);">Attendance</a>
                     <?php endif; ?>
                     <a href="logout.php" class="btn" style="border-color: #f87171; color: #ef4444;">Logout</a>
                 <?php else: ?>

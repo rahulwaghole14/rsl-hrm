@@ -256,13 +256,13 @@ h1 {
 }
 
 .leave-tag {
-    font-size: 0.65rem;
-    padding: 0.2rem 0.5rem;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
     border-radius: 0.25rem;
-    margin-top: 0.25rem;
-    cursor: pointer;
     font-weight: 600;
-    border-left: 3px solid transparent;
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
 }
 
 .leave-tag.status-pending {
@@ -284,16 +284,28 @@ h1 {
 }
 
 .birthday-tag {
-    font-size: 0.65rem;
-    padding: 0.2rem 0.5rem;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
     border-radius: 0.25rem;
-    margin-top: 0.25rem;
     background: #f3e8ff;
-    /* Soft Purple */
     color: #7e22ce;
     font-weight: 600;
-    border-left: 3px solid #a855f7;
+    border-left: 2px solid #a855f7;
     cursor: default;
+    white-space: nowrap;
+}
+
+/* Container for top-right floating tags */
+.day-tags-top {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    z-index: 10;
+    max-width: 70%;
 }
 
 /* Form Styling */
