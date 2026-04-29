@@ -2,7 +2,7 @@
 require_once 'config/db.php';
 session_start();
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'employee') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'employee' && $_SESSION['role'] !== 'sub_admin')) {
     header("Location: login.php");
     exit;
 }

@@ -62,7 +62,7 @@ if (!$pdo) {
 
 // Admin Birthday Directory (Toggleable)
 if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
-    $stmt = $pdo->query("SELECT name, dob FROM users WHERE role = 'employee' AND dob IS NOT NULL ORDER BY MONTH(dob), DAY(dob)");
+    $stmt = $pdo->query("SELECT name, dob FROM users WHERE (role = 'employee' OR role = 'sub_admin') AND dob IS NOT NULL ORDER BY MONTH(dob), DAY(dob)");
     $allBirthdays = $stmt->fetchAll();
     if (!empty($allBirthdays)) {
         echo '<div style="margin-bottom: 2rem;">

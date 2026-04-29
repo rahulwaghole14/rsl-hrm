@@ -34,7 +34,7 @@ $userName = $_SESSION['name'] ?? null;
         // Initialize Theme immediately to prevent flicker
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             const icon = document.getElementById('themeIcon');
             if (icon) icon.innerText = savedTheme === 'dark' ? '☀️' : '🌙';
@@ -58,7 +58,8 @@ $userName = $_SESSION['name'] ?? null;
                     <h1>RSL Calendar 2026</h1>
                 </a>
                 <?php if ($isLoggedIn): ?>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+                    <div
+                        style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
                         <?php echo ucfirst($userRole); ?> Dashboard
                     </div>
                 <?php endif; ?>
@@ -66,17 +67,25 @@ $userName = $_SESSION['name'] ?? null;
 
             <div class="calendar-nav" style="justify-content: flex-end; gap: 1rem; align-items: center;">
                 <!-- Theme Toggle -->
-                <button onclick="toggleTheme()" id="themeToggle" class="btn" style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;">
+                <button onclick="toggleTheme()" id="themeToggle" class="btn"
+                    style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;">
                     <span id="themeIcon">🌙</span>
                 </button>
-                
-                <a href="holidays.php" class="btn" style="border-color: var(--holiday-red); color: var(--holiday-red);">Holidays List</a>
+
+                <a href="holidays.php" class="btn"
+                    style="border-color: var(--holiday-red); color: var(--holiday-red);">Holidays List</a>
                 <?php if ($isLoggedIn): ?>
+                    <?php if ($userRole === 'admin' || $userRole === 'sub_admin'): ?>
+                        <a href="meetings.php" class="btn" style="border-color: #8b5cf6; color: #8b5cf6;">Schedule Meeting</a>
+                    <?php endif; ?>
+
                     <?php if ($userRole === 'admin'): ?>
-                        <a href="admin_attendance.php" class="btn" style="border-color: var(--primary-color); color: var(--primary-color);">Attendance</a>
+                        <a href="admin_attendance.php" class="btn"
+                            style="border-color: var(--primary-color); color: var(--primary-color);">Attendance</a>
                         <a href="manage_event.php" class="btn btn-primary">+ Add Event</a>
-                    <?php elseif ($userRole === 'employee'): ?>
-                        <a href="my_attendance.php" class="btn" style="border-color: var(--primary-color); color: var(--primary-color);">Attendance</a>
+                    <?php elseif ($userRole === 'employee' || $userRole === 'sub_admin'): ?>
+                        <a href="my_attendance.php" class="btn"
+                            style="border-color: var(--primary-color); color: var(--primary-color);">Attendance</a>
                     <?php endif; ?>
                     <a href="logout.php" class="btn" style="border-color: #f87171; color: #ef4444;">Logout</a>
                 <?php else: ?>

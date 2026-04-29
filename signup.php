@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dob = $_POST['dob'];
     $role = $_POST['role'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $emp_id = ($role === 'employee') ? $_POST['emp_id'] : null;
+    $emp_id = ($role === 'employee' || $role === 'sub_admin') ? $_POST['emp_id'] : null;
 
     try {
         $stmt = $pdo->prepare("INSERT INTO users (name, email, mob_no, dob, role, password, emp_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -68,6 +68,7 @@ include 'includes/header.php';
             <label>Role</label>
             <select name="role" id="roleSelect" onchange="toggleEmpId(this.value)">
                 <option value="employee">Employee</option>
+                <option value="sub_admin">Sub Admin</option>
                 <option value="admin">Admin</option>
             </select>
         </div>

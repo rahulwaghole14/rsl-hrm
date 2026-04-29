@@ -1,0 +1,163 @@
+🧠 1. PYTHON FUNDAMENTALS QUESTIONS
+What is Python? Why is it popular?
+Difference between compiled and interpreted languages?
+What are Python data types?
+What is dynamic typing?
+What is strong vs weak typing?
+What is indentation in Python?
+What is PEP 8?
+What are keywords in Python?
+Difference between mutable and immutable types?
+What is memory management in Python?
+🔁 2. CONTROL FLOW QUESTIONS
+Difference between for and while loop?
+What is range()?
+What is pass, break, continue?
+What is nested loop?
+What is conditional expression (ternary operator)?
+📦 3. DATA STRUCTURES QUESTIONS
+List
+What is list?
+List vs Tuple?
+How to reverse a list?
+What is list slicing?
+Tuple
+Why tuple is immutable?
+When to use tuple?
+Set
+What is set?
+Difference between set and list?
+What are set operations?
+Dictionary
+What is dictionary?
+How hashing works in dict?
+How to iterate dictionary?
+🔧 4. FUNCTIONS QUESTIONS
+What is a function?
+Types of arguments?
+What is recursion?
+What is lambda function?
+What are closures?
+What are higher-order functions?
+What is default argument issue?
+📂 5. MODULES & PACKAGES
+What is module?
+What is package?
+Difference between import styles?
+What is __name__ == "__main__"?
+🧱 6. OOP QUESTIONS (VERY IMPORTANT)
+What is OOP?
+What is class and object?
+What is constructor?
+What is inheritance?
+Types of inheritance?
+What is polymorphism?
+What is encapsulation?
+What is abstraction?
+What is method overloading (Python way)?
+What is method overriding?
+Difference between classmethod and staticmethod?
+⚠️ 7. EXCEPTION HANDLING
+What is exception?
+Try-except-else-finally?
+How to create custom exception?
+Difference between error and exception?
+📜 8. FILE HANDLING
+File modes?
+Difference between read() and readline()?
+What is with open()?
+How to handle large files?
+⚙️ 9. ADVANCED PYTHON
+What is iterator?
+What is generator?
+Difference between iterator and generator?
+What is decorator?
+What is closure?
+What is comprehension (list/dict/set)?
+What is zip() function?
+What is map(), filter(), reduce()?
+🧵 10. MULTITHREADING & MULTIPROCESSING
+What is thread?
+What is process?
+Difference between threading and multiprocessing?
+What is GIL?
+When to use async?
+⚡ 11. ASYNC PROGRAMMING
+What is async/await?
+What is event loop?
+Difference between sync and async?
+🌐 12. API & BACKEND QUESTIONS (IMPORTANT FOR YOU)
+What is REST API?
+What are HTTP methods?
+Difference between PUT and PATCH?
+What is status code?
+What is JSON?
+What is authentication?
+What is JWT?
+What is middleware?
+🗄️ 13. DATABASE QUESTIONS
+What is SQL?
+What is normalization?
+What is indexing?
+What is JOIN?
+What is ORM?
+Difference between SQL and NoSQL?
+🧪 14. TESTING
+What is unit testing?
+What is pytest?
+What is mocking?
+📦 15. DEVOPS / ENVIRONMENT
+What is virtual environment?
+What is pip?
+What is requirements.txt?
+What is Docker (basic)?
+🔍 16. PYTHON INTERNALS
+What is GIL?
+How memory works?
+What is reference counting?
+What is garbage collection?
+What is shallow vs deep copy?
+🚀 17. CODING QUESTIONS (VERY IMPORTANT)
+Reverse a string
+Find palindrome
+Two sum
+Fibonacci series
+Factorial
+Find duplicates in array
+Find missing number
+Anagram check
+Longest substring
+Binary search
+Sorting algorithms
+Merge intervals
+LRU cache
+🔥 18. SCENARIO-BASED QUESTIONS
+API is slow – what will you do?
+Database is slow?
+Memory leak issue?
+High CPU usage?
+Server down?
+Debugging steps?
+💡 19. REAL PROJECT QUESTIONS (VERY IMPORTANT FOR YOU)
+
+Since you are building projects, expect:
+
+Explain your project architecture
+How frontend connects to backend?
+How API works?
+How you handle authentication?
+How you store data?
+How you handle errors?
+How you deploy project?
+🎯 20. HR + BEHAVIORAL
+Tell me about yourself
+Strengths & weaknesses
+Why Python?
+Why should we hire you?
+Describe a challenge you faced
+🧠 BONUS: TRICK QUESTIONS
+Why mutable default arguments are dangerous?
+Difference between is and ==?
+Why Python is slow?
+What happens when you run Python code?
+What is bytecode?
