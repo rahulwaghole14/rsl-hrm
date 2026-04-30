@@ -80,12 +80,7 @@ $userName = $_SESSION['name'] ?? null;
                     <?php endif; ?>
 
                     <?php if ($userRole === 'admin'): ?>
-                        <a href="admin_attendance.php" class="btn"
-                            style="border-color: var(--primary-color); color: var(--primary-color);">Attendance</a>
                         <a href="manage_event.php" class="btn btn-primary">+ Add Event</a>
-                    <?php elseif ($userRole === 'employee' || $userRole === 'sub_admin'): ?>
-                        <a href="my_attendance.php" class="btn"
-                            style="border-color: var(--primary-color); color: var(--primary-color);">Attendance</a>
                     <?php endif; ?>
                     <a href="logout.php" class="btn" style="border-color: #f87171; color: #ef4444;">Logout</a>
                 <?php else: ?>

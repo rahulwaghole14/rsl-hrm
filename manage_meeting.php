@@ -7,25 +7,30 @@ if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['ro
     exit;
 }
 
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $preset_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
-$meeting = null;
 
-if ($id > 0) {
-    $stmt = $pdo->prepare("SELECT * FROM meetings WHERE id = ?");
-    $stmt->execute([$id]);
-    $meeting = $stmt->fetch();
-    if ($meeting) {
-        $preset_date = $meeting['meeting_date'];
+// Define Slots (11:00 AM to 8:00 PM, every 30 mins)
+$slots = [];
+for ($h = 11; $h <= 20; $h++) {
+    $slots[] = sprintf("%02d:00", $h);
+    if ($h < 20) {
+        $slots[] = sprintf("%02d:30", $h);
     }
 }
 
 // Fetch all meetings for the selected date
-$stmt = $pdo->prepare("SELECT m.*, u.name as assign_by FROM meetings m JOIN users u ON m.created_by = u.id WHERE m.meeting_date = ? ORDER BY m.meeting_time ASC");
+$stmt = $pdo->prepare("SELECT m.*, u.name as assign_by FROM meetings m JOIN users u ON m.created_by = u.id WHERE m.meeting_date = ?");
 $stmt->execute([$preset_date]);
-$dayMeetings = $stmt->fetchAll();
+$dbMeetings = $stmt->fetchAll();
+
+$dayMeetings = [];
+foreach ($dbMeetings as $m) {
+    $timeKey = date('H:i', strtotime($m['meeting_time']));
+    $dayMeetings[$timeKey] = $m;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
     $title = $_POST['title'];
     $date = $_POST['meeting_date'];
     $time = $_POST['meeting_time'];
@@ -35,151 +40,146 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = $_POST['description'];
     $user_id = $_SESSION['user_id'];
 
-    // Overlap Validation
-    $new_start = $time;
-    $new_end = date('H:i:s', strtotime("$time + $duration minutes"));
-    
-    $check_sql = "SELECT * FROM meetings 
-                  WHERE meeting_date = ? 
-                  AND id != ? 
-                  AND meeting_time < ? 
-                  AND ADDTIME(meeting_time, SEC_TO_TIME(duration * 60)) > ?";
-    $check_stmt = $pdo->prepare($check_sql);
-    $check_stmt->execute([$date, $id, $new_end, $new_start]);
-    $conflict = $check_stmt->fetch();
-
-    if ($conflict) {
-        $error = "The selected slot is already booked. Please choose a different time.";
+    if ($id > 0) {
+        $stmt = $pdo->prepare("UPDATE meetings SET title = ?, meeting_date = ?, meeting_time = ?, duration = ?, company_name = ?, meeting_link = ?, description = ? WHERE id = ?");
+        $stmt->execute([$title, $date, $time, $duration, $company_name, $meeting_link, $description, $id]);
     } else {
-        if ($id > 0) {
-            $stmt = $pdo->prepare("UPDATE meetings SET title = ?, meeting_date = ?, meeting_time = ?, duration = ?, company_name = ?, meeting_link = ?, description = ? WHERE id = ?");
-            $stmt->execute([$title, $date, $time, $duration, $company_name, $meeting_link, $description, $id]);
-        } else {
-            $stmt = $pdo->prepare("INSERT INTO meetings (title, meeting_date, meeting_time, duration, company_name, meeting_link, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$title, $date, $time, $duration, $company_name, $meeting_link, $description, $user_id]);
-        }
-        header("Location: manage_meeting.php?date=" . $date);
-        exit;
+        $stmt = $pdo->prepare("INSERT INTO meetings (title, meeting_date, meeting_time, duration, company_name, meeting_link, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$title, $date, $time, $duration, $company_name, $meeting_link, $description, $user_id]);
     }
+    header("Location: manage_meeting.php?date=" . $date);
+    exit;
 }
 
 include 'includes/header.php';
 ?>
 
-<div class="meeting-dashboard-container">
-    <!-- Left Column: Add/Edit Form -->
-    <div class="card" style="margin: 0; max-width: none;">
-        <h2 style="margin-bottom: 2rem; color: #8b5cf6; display: flex; align-items: center; gap: 0.75rem;">
-            <span style="background: rgba(139, 92, 246, 0.1); padding: 0.5rem; border-radius: 0.5rem;">📅</span>
-            <?php echo $id > 0 ? 'Edit Meeting' : 'Schedule New Meeting'; ?>
-        </h2>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Book Meeting Slots - <?php echo date('d M Y', strtotime($preset_date)); ?></h2>
+    <a href="meetings.php" class="btn">Back to Calendar</a>
+</div>
 
-        <?php if (isset($error)): ?>
-            <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border: 1px solid #fecaca; font-weight: 600;">
-                ⚠️ <?php echo $error; ?>
+<div class="slot-grid">
+    <?php foreach ($slots as $slotTime): ?>
+        <?php 
+            $timeVal = date('H:i', strtotime($slotTime));
+            $isBooked = isset($dayMeetings[$timeVal]);
+            $meeting = $isBooked ? $dayMeetings[$timeVal] : null;
+        ?>
+        <div class="slot-card <?php echo $isBooked ? 'booked' : ''; ?>">
+            <div class="slot-time"><?php echo date('h:i A', strtotime($slotTime)); ?></div>
+            
+            <div class="slot-details">
+                <?php if ($isBooked): ?>
+                    <strong style="display: block; font-size: 1rem; margin-bottom: 0.25rem;"><?php echo htmlspecialchars($meeting['title']); ?></strong>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">🏢 <?php echo htmlspecialchars($meeting['company_name']); ?></span>
+                    <?php if ($meeting['meeting_link']): ?>
+                        <a href="<?php echo htmlspecialchars($meeting['meeting_link']); ?>" target="_blank" 
+                           style="color: #6366f1; font-size: 0.75rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.25rem; margin-bottom: 0.5rem;">
+                           🔗 Join Meeting
+                        </a>
+                    <?php endif; ?>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">
+                        👤 Assigned by: <strong><?php echo htmlspecialchars($meeting['assign_by']); ?></strong>
+                    </div>
+                <?php else: ?>
+                    <span style="color: #10b981; font-weight: 600;">Available</span>
+                <?php endif; ?>
             </div>
-        <?php endif; ?>
 
-        <form method="POST">
+            <div class="slot-actions">
+                <?php if ($isBooked): ?>
+                    <button class="btn" style="width: 100%; border-color: #8b5cf6; color: #8b5cf6;" 
+                            onclick="openMeetingModal(<?php echo htmlspecialchars(json_encode($meeting)); ?>)">Edit</button>
+                <?php else: ?>
+                    <button class="btn btn-primary" style="width: 100%; background: #8b5cf6; border-color: #8b5cf6;" 
+                            onclick="openMeetingModal(null, '<?php echo $slotTime; ?>')">Schedule</button>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endforeach; ?>
+</div>
+
+<!-- Meeting Modal -->
+<div class="modal-overlay" id="meetingModal">
+    <div class="modal-content">
+        <h3 id="modalTitle" style="margin-bottom: 1.5rem; color: #8b5cf6;">Schedule Meeting</h3>
+        <form method="POST" id="meetingForm">
+            <input type="hidden" name="id" id="meetingId" value="0">
+            <input type="hidden" name="meeting_date" value="<?php echo $preset_date; ?>">
+            
             <div class="form-group">
                 <label>Meeting Title</label>
-                <input type="text" name="title" value="<?php echo $meeting ? htmlspecialchars($meeting['title']) : ''; ?>"
-                    required placeholder="e.g. Weekly Sync-up">
+                <input type="text" name="title" id="title" required placeholder="e.g. Project Kickoff">
             </div>
 
             <div class="form-group">
                 <label>Company Name</label>
-                <input type="text" name="company_name" value="<?php echo $meeting ? htmlspecialchars($meeting['company_name']) : ''; ?>"
-                    required placeholder="e.g. RSL Solution">
+                <input type="text" name="company_name" id="company_name" required placeholder="e.g. RSL Solution">
             </div>
 
             <div class="form-group">
                 <label>Meeting Link</label>
-                <input type="url" name="meeting_link" value="<?php echo $meeting ? htmlspecialchars($meeting['meeting_link']) : ''; ?>"
-                    placeholder="https://meet.google.com/xxx-xxxx-xxx">
+                <input type="url" name="meeting_link" id="meeting_link" placeholder="https://meet.google.com/xxx-xxxx-xxx">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" name="meeting_date" value="<?php echo $preset_date; ?>" required>
+                    <label>Time</label>
+                    <input type="time" name="meeting_time" id="meeting_time" readonly required style="background: var(--bg-color); opacity: 0.7;">
                 </div>
                 <div class="form-group">
-                    <label>Time</label>
-                    <input type="time" name="meeting_time" value="<?php echo $meeting ? $meeting['meeting_time'] : '10:00'; ?>" required>
+                    <label>Duration (min)</label>
+                    <input type="number" name="duration" id="duration" value="30" required min="5" step="5">
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Duration (minutes)</label>
-                <input type="number" name="duration" value="<?php echo $meeting ? $meeting['duration'] : '30'; ?>" required min="5" step="5">
             </div>
 
             <div class="form-group">
                 <label>Description (Optional)</label>
-                <textarea name="description" rows="3" placeholder="Add meeting details, agenda..."><?php echo $meeting ? htmlspecialchars($meeting['description']) : ''; ?></textarea>
+                <textarea name="description" id="description" rows="2"></textarea>
             </div>
 
-            <div class="form-group">
-                <label>Assign By</label>
-                <input type="text" value="<?php echo isset($_SESSION['name']) ? htmlspecialchars($_SESSION['name']) : ''; ?>" readonly style="background: var(--bg-color); opacity: 0.8;">
-            </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 2; background: #8b5cf6; border-color: #8b5cf6; padding: 1rem;">Save Meeting</button>
-                <?php if ($id > 0): ?>
-                    <a href="delete_meeting.php?id=<?php echo $id; ?>" class="btn"
-                        style="background: #ef4444; border-color: #ef4444; color: white;"
-                        onclick="return confirm('Are you sure you want to delete this meeting?')">Delete</a>
-                <?php endif; ?>
-                <a href="meetings.php" class="btn" style="flex: 1; text-align: center;">Back to Calendar</a>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 2; background: #8b5cf6; border-color: #8b5cf6;">Save Meeting</button>
+                <button type="button" class="btn" style="flex: 1;" onclick="closeMeetingModal()">Cancel</button>
             </div>
         </form>
     </div>
-
-    <!-- Right Column: Meetings List -->
-    <div class="meeting-list-side">
-        <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-            <span>Meetings for <?php echo date('d M Y', strtotime($preset_date)); ?></span>
-            <span style="background: #8b5cf6; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.8rem;">
-                <?php echo count($dayMeetings); ?> Total
-            </span>
-        </h3>
-
-        <?php if (empty($dayMeetings)): ?>
-            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🏖️</div>
-                <p>No meetings scheduled for this day.</p>
-            </div>
-        <?php else: ?>
-            <div class="meeting-items-container">
-                <?php foreach ($dayMeetings as $dm): ?>
-                    <div class="meeting-item" style="<?php echo $id == $dm['id'] ? 'background: rgba(139, 92, 246, 0.05); border-left: 4px solid #8b5cf6;' : ''; ?>">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div>
-                                <div class="meeting-time-large"><?php echo date('h:i A', strtotime($dm['meeting_time'])); ?></div>
-                                <h4 style="margin: 0.25rem 0; font-size: 1.1rem;"><?php echo htmlspecialchars($dm['title']); ?></h4>
-                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
-                                    🏢 <?php echo htmlspecialchars($dm['company_name']); ?> • ⏳ <?php echo $dm['duration']; ?> min
-                                </div>
-                            </div>
-                            <a href="?id=<?php echo $dm['id']; ?>&date=<?php echo $preset_date; ?>" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Edit</a>
-                        </div>
-                        
-                        <?php if ($dm['meeting_link']): ?>
-                            <a href="<?php echo htmlspecialchars($dm['meeting_link']); ?>" target="_blank" class="meeting-link-btn">
-                                🔗 Join Meeting
-                            </a>
-                        <?php endif; ?>
-                        
-                        <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                            👤 Assigned by: <strong><?php echo htmlspecialchars($dm['assign_by']); ?></strong>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
 </div>
+
+<script>
+    function openMeetingModal(meeting = null, time = null) {
+        const modal = document.getElementById('meetingModal');
+        const form = document.getElementById('meetingForm');
+        const title = document.getElementById('modalTitle');
+        
+        if (meeting) {
+            title.innerText = 'Edit Meeting';
+            document.getElementById('meetingId').value = meeting.id;
+            document.getElementById('title').value = meeting.title;
+            document.getElementById('company_name').value = meeting.company_name;
+            document.getElementById('meeting_link').value = meeting.meeting_link;
+            document.getElementById('meeting_time').value = meeting.meeting_time.substring(0, 5);
+            document.getElementById('duration').value = meeting.duration;
+            document.getElementById('description').value = meeting.description;
+        } else {
+            title.innerText = 'Schedule Meeting';
+            form.reset();
+            document.getElementById('meetingId').value = 0;
+            document.getElementById('meeting_time').value = time;
+        }
+        
+        modal.classList.add('active');
+    }
+
+    function closeMeetingModal() {
+        document.getElementById('meetingModal').classList.remove('active');
+    }
+
+    // Close on overlay click
+    document.getElementById('meetingModal').addEventListener('click', function(e) {
+        if (e.target === this) closeMeetingModal();
+    });
+</script>
 
 <?php include 'includes/footer.php'; ?>

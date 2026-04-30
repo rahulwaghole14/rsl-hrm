@@ -370,6 +370,127 @@ h1 {
     }
 }
 
+/* Slot Grid (Discrete Boxes) */
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+    margin: 2rem 0;
+}
+
+.slot-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.slot-card.booked {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.slot-card:not(.booked):hover {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.slot-time {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.booked .slot-time {
+    color: #94a3b8;
+    text-decoration: line-through;
+}
+
+.slot-details {
+    min-height: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+}
+
+.slot-actions {
+    width: 100%;
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    width: 90%;
+    max-width: 550px;
+    padding: 1.5rem 2rem;
+    border-radius: 1.5rem;
+    max-height: 95vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+
+@media (max-width: 1200px) {
+    .slot-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .slot-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .slot-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 400px) {
+    .slot-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .day-tags-top {
     position: absolute;
     top: 0.5rem;
@@ -384,7 +505,7 @@ h1 {
 
 /* Form Styling */
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     text-align: left;
 }
 
@@ -399,7 +520,7 @@ h1 {
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 0.85rem 1rem;
+    padding: 0.65rem 1rem;
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     font-size: 1rem;
