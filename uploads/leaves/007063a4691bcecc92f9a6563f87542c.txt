@@ -1,0 +1,148 @@
+🔥 1. CORE REACT FUNDAMENTALS
+What is React?
+Why use React over plain JavaScript?
+What are the features of React?
+What is SPA (Single Page Application)?
+What is Virtual DOM and how it works internally?
+Difference between Real DOM vs Virtual DOM
+What is reconciliation in React?
+What is JSX? Why is it used?
+Can browsers understand JSX directly?
+🧩 2. COMPONENTS (VERY IMPORTANT)
+What are components in React?
+Difference between Functional vs Class components
+What is a pure component?
+What is a higher-order component (HOC)?
+What is a controlled component?
+What is an uncontrolled component?
+What is component composition?
+🔄 3. STATE & PROPS (MOST ASKED)
+What is state?
+What are props?
+Difference between state and props
+Can props be modified?
+What happens when state changes?
+What is setState batching?
+How does React handle state updates internally?
+⚙️ 4. HOOKS (VERY IMPORTANT 🔥)
+What are hooks in React?
+Why hooks were introduced?
+Explain useState
+Explain useEffect
+Difference between useEffect and component lifecycle
+What is dependency array in useEffect?
+What is useContext?
+What is useReducer?
+Difference between useState and useReducer
+What is useRef?
+When to use useMemo?
+When to use useCallback?
+🔁 5. LIFECYCLE METHODS
+What are lifecycle methods?
+Explain mounting, updating, unmounting
+Difference between componentDidMount and useEffect
+What happens during re-render?
+🧠 6. PERFORMANCE OPTIMIZATION
+What is memoization?
+What is React.memo?
+What is useMemo and useCallback?
+What is code splitting?
+What is lazy loading?
+What is bundle size optimization?
+🌐 7. ROUTING
+What is React Router?
+Difference between BrowserRouter and HashRouter
+What is dynamic routing?
+How to pass data between routes?
+What is useParams and useNavigate?
+📡 8. API HANDLING
+How to call API in React?
+Difference between fetch and Axios
+Where do you write API calls?
+How to handle API errors?
+How to show loading state?
+🧾 9. FORMS HANDLING
+Controlled vs uncontrolled forms
+How to handle form submission?
+How to validate forms?
+What is Formik?
+🔐 10. AUTHENTICATION
+How do you implement login/logout?
+What is JWT?
+How do you store tokens?
+LocalStorage vs SessionStorage
+🧵 11. STATE MANAGEMENT
+What is global state?
+What is Redux?
+What are actions, reducers, store?
+What is middleware in Redux?
+Difference between Redux and Context API
+⚡ 12. EVENT HANDLING
+How does event handling work in React?
+What is synthetic event?
+Difference between onClick and addEventListener
+📦 13. FILE STRUCTURE & PROJECT DESIGN
+How do you structure a React project?
+What is reusable component?
+What is separation of concerns?
+🧪 14. TESTING (BASIC)
+What is testing in React?
+What is unit testing?
+Tools used (Jest, React Testing Library)
+🚀 15. ADVANCED CONCEPTS (IMPORTANT FOR 1–2 YEARS)
+What is prop drilling?
+How to avoid prop drilling?
+What is Context API?
+What are custom hooks?
+What is error boundary?
+What is Suspense in React?
+What is Strict Mode?
+💻 16. CODING QUESTIONS (REAL INTERVIEW 🔥)
+
+👉 Reverse a string input
+👉 Create counter app
+👉 Todo list (CRUD)
+👉 Debounced search input
+👉 Fetch API and display data
+👉 Pagination component
+👉 Modal popup component
+👉 Form validation
+👉 Infinite scroll
+
+🎯 17. SCENARIO-BASED QUESTIONS (VERY IMPORTANT 🔥🔥)
+
+These are MOST IMPORTANT for real interviews
+
+1. API is slow — what will you do?
+Show loader
+Use caching
+Optimize API calls
+2. Component re-rendering too much — fix it
+Use React.memo
+useMemo
+useCallback
+3. Data sharing between components?
+Lift state up
+Use Context API
+Use Redux
+4. Large app state management?
+Use Redux or global store
+5. How React communicates with backend (Spring Boot)?
+REST API (GET, POST, PUT, DELETE)
+Axios/fetch
+🧠 18. PROJECT-BASED QUESTIONS (VERY IMPORTANT FOR YOU)
+
+Since you are building projects, expect:
+
+Explain your React project architecture
+How you handled API integration
+How you managed state
+Challenges you faced
+How you optimized performance
+Folder structure explanation
+💥 19. TRICKY QUESTIONS
+Why keys should not be index?
+Why React is fast?
+Can we use hooks inside loops?
+Why useEffect runs twice sometimes?
+Difference between null and undefined rendering

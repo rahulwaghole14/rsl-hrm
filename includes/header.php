@@ -75,11 +75,14 @@ $userName = $_SESSION['name'] ?? null;
                 <a href="holidays.php" class="btn"
                     style="border-color: var(--holiday-red); color: var(--holiday-red);">Holidays List</a>
                 <?php if ($isLoggedIn): ?>
-                    <?php if ($userRole === 'admin' || $userRole === 'sub_admin'): ?>
+                    <?php if ($userRole === 'admin' || $userRole === 'sub_admin' || $userRole === 'employee'): ?>
                         <a href="meetings.php" class="btn" style="border-color: #8b5cf6; color: #8b5cf6;">Schedule Meeting</a>
                     <?php endif; ?>
 
+                    <a href="my_attendance.php" class="btn" style="border-color: #10b981; color: #10b981;">My Attendance</a>
+                    
                     <?php if ($userRole === 'admin'): ?>
+                        <a href="admin_attendance.php" class="btn" style="border-color: #f59e0b; color: #f59e0b;">Employee Attendance</a>
                         <a href="manage_event.php" class="btn btn-primary">+ Add Event</a>
                     <?php endif; ?>
                     <a href="logout.php" class="btn" style="border-color: #f87171; color: #ef4444;">Logout</a>

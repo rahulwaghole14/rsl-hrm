@@ -10,12 +10,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mob_no = $_POST['mob_no'];
     $dob = $_POST['dob'];
     $role = $_POST['role'];
+    $department = $_POST['department'] ?? 'General';
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $emp_id = ($role === 'employee' || $role === 'sub_admin') ? $_POST['emp_id'] : null;
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO users (name, email, mob_no, dob, role, password, emp_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $email, $mob_no, $dob, $role, $password, $emp_id]);
+        $stmt = $pdo->prepare("INSERT INTO users (name, email, mob_no, dob, role, password, emp_id, department) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $email, $mob_no, $dob, $role, $password, $emp_id, $department]);
         header("Location: login.php?signup=success");
         exit;
     } catch (PDOException $e) {
@@ -76,6 +77,17 @@ include 'includes/header.php';
         <div class="form-group" id="empIdGroup">
             <label>Employee ID</label>
             <input type="text" name="emp_id" id="emp_id" placeholder="EMP123">
+        </div>
+
+        <div class="form-group">
+            <label>Department</label>
+            <select name="department" required>
+                <option value="General">General</option>
+                <option value="IT">IT</option>
+                <option value="HR">HR</option>
+                <option value="Sales">Sales</option>
+                <option value="Marketing">Marketing</option>
+            </select>
         </div>
 
         <div class="form-group">

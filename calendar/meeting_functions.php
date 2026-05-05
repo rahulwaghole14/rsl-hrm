@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 
-function getMeetingsForMonth($year, $month)
+function getMeetingsForMonth($year, $month, $role = 'admin', $user_id = null)
 {
     global $pdo;
     if (!$pdo)
@@ -10,8 +10,22 @@ function getMeetingsForMonth($year, $month)
     $start_date = "$year-$month-01";
     $end_date = date("Y-m-t", strtotime($start_date));
 
-    $stmt = $pdo->prepare("SELECT m.*, u.name as organizer FROM meetings m JOIN users u ON m.created_by = u.id WHERE m.meeting_date BETWEEN ? AND ?");
-    $stmt->execute([$start_date, $end_date]);
+    // If employee or sub_admin, only show meetings they created or are participant in
+    // Only 'admin' can see all meetings
+    if (in_array($role, ['employee', 'sub_admin']) && $user_id) {
+        $stmt = $pdo->prepare("SELECT m.*, u.name as organizer 
+                              FROM meetings m 
+                              JOIN users u ON m.created_by = u.id 
+                              WHERE m.meeting_date BETWEEN ? AND ? 
+                              AND (m.created_by = ? OR m.rsl_employee_id = ?)");
+        $stmt->execute([$start_date, $end_date, $user_id, $user_id]);
+    } else {
+        $stmt = $pdo->prepare("SELECT m.*, u.name as organizer 
+                              FROM meetings m 
+                              JOIN users u ON m.created_by = u.id 
+                              WHERE m.meeting_date BETWEEN ? AND ?");
+        $stmt->execute([$start_date, $end_date]);
+    }
 
     $data = [];
     while ($row = $stmt->fetch()) {
@@ -23,7 +37,9 @@ function getMeetingsForMonth($year, $month)
 
 function renderMeetingCalendar($year, $month)
 {
-    $meetings = getMeetingsForMonth($year, $month);
+    $role = $_SESSION['role'] ?? 'employee';
+    $user_id = $_SESSION['user_id'] ?? null;
+    $meetings = getMeetingsForMonth($year, $month, $role, $user_id);
 
     // Get first day of the month
     $firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
@@ -67,9 +83,11 @@ function renderMeetingCalendar($year, $month)
         echo '<div class="day-number">' . $day . '</div>';
 
         echo '<div class="event-list">';
-        $count = count($dayMeetings);
-        if ($count > 0) {
-            echo '<div class="meeting-count-badge">' . $count . ' ' . ($count === 1 ? 'Meeting' : 'Meetings') . '</div>';
+        foreach ($dayMeetings as $m) {
+            $time = date('h:i A', strtotime($m['meeting_time']));
+            echo '<div class="calendar-meeting-item" title="' . htmlspecialchars($m['title']) . '">';
+            echo '<strong>' . $time . '</strong> ' . htmlspecialchars($m['title']);
+            echo '</div>';
         }
         echo '</div>';
 
