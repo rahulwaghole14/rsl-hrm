@@ -41,6 +41,9 @@ CREATE TABLE IF NOT EXISTS attendance (
     date DATE NOT NULL,
     check_in_time TIME NOT NULL,
     check_out_time TIME DEFAULT NULL,
+    status ENUM('checked_in', 'on_break', 'checked_out') DEFAULT 'checked_out',
+    total_break_seconds INT DEFAULT 0,
+    last_break_start TIME DEFAULT NULL,
     total_hours DECIMAL(5,2) DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE KEY (user_id, date)
