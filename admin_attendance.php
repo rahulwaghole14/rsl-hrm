@@ -99,6 +99,7 @@ include 'includes/header.php';
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Emp ID</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Check In</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Check Out</th>
+                    <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Mode</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Status / Total</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Actions</th>
                 </tr>
@@ -106,7 +107,7 @@ include 'includes/header.php';
             <tbody>
                 <?php if (empty($records)): ?>
                     <tr>
-                        <td colspan="7" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                        <td colspan="8" style="padding: 3rem; text-align: center; color: var(--text-muted);">
                             <div style="font-size: 2rem; margin-bottom: 1rem;">🔍</div>
                             No attendance records found.
                         </td>
@@ -132,6 +133,11 @@ include 'includes/header.php';
                             <td style="padding: 1rem;">
                                 <span style="color: #ef4444; font-weight: 600;">
                                     <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
+                                </span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span style="font-size: 0.75rem; font-weight: 800; color: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? '#8b5cf6' : '#10b981'; ?>; background: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)'; ?>; padding: 0.3rem 0.6rem; border-radius: 0.5rem; border: 1px solid <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)'; ?>;">
+                                    <?php echo htmlspecialchars($row['work_mode'] ?? 'WFO'); ?>
                                 </span>
                             </td>
                             <td style="padding: 1rem;">

@@ -79,16 +79,22 @@ $userName = $_SESSION['name'] ?? null;
                         <a href="meetings.php" class="btn" style="border-color: #8b5cf6; color: #8b5cf6;">Schedule Meeting</a>
                     <?php endif; ?>
 
-                    <a href="my_attendance.php" class="btn" style="border-color: #10b981; color: #10b981;">My Attendance</a>
+                    <div class="dropdown">
+                        <a href="my_attendance.php" class="btn" style="border-color: #10b981; color: #10b981;">My Attendance ▾</a>
+                        <div class="dropdown-content">
+                            <a href="my_attendance.php?mode=WFO">Work From Office (WFO)</a>
+                            <a href="my_attendance.php?mode=WFH">Work From Home (WFH)</a>
+                        </div>
+                    </div>
                     
                     <?php if ($userRole === 'admin'): ?>
+                        <a href="signup.php" class="btn" style="border-color: #8b5cf6; color: #8b5cf6;">+ Create User</a>
                         <a href="admin_attendance.php" class="btn" style="border-color: #f59e0b; color: #f59e0b;">Employee Attendance</a>
                         <a href="manage_event.php" class="btn btn-primary">+ Add Event</a>
                     <?php endif; ?>
                     <a href="logout.php" class="btn" style="border-color: #f87171; color: #ef4444;">Logout</a>
                 <?php else: ?>
                     <a href="login.php" class="btn">Login</a>
-                    <a href="signup.php" class="btn btn-primary">Sign Up</a>
                 <?php endif; ?>
             </div>
         </header>

@@ -28,13 +28,16 @@ include 'includes/header.php';
 
 <div class="card" style="max-width: 450px;">
     <h2 style="margin-bottom: 2rem; text-align: center; color: var(--primary-color);">Welcome Back</h2>
-    
+
     <?php if (isset($_GET['signup']) && $_GET['signup'] === 'success'): ?>
-        <div style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; text-align: center;">Registration successful! Please login.</div>
+        <div
+            style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; text-align: center;">
+            Registration successful! Please login.</div>
     <?php endif; ?>
 
     <?php if ($error): ?>
-        <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;"><?php echo $error; ?></div>
+        <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            <?php echo $error; ?></div>
     <?php endif; ?>
 
     <form method="POST">
@@ -47,12 +50,13 @@ include 'includes/header.php';
             <label>Password</label>
             <input type="password" name="password" required placeholder="••••••••">
         </div>
-        
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">Sign In</button>
-        
-        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">Sign
+            In</button>
+
+        <!-- <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
             Don't have an account? <a href="signup.php" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Sign Up</a>
-        </p>
+        </p> -->
     </form>
 </div>
 

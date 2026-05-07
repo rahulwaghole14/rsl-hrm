@@ -1,5 +1,12 @@
 <?php
 require_once 'config/db.php';
+session_start();
+
+// RESTRICTION: Only Admin can access this page
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login.php");
+    exit;
+}
 
 $error = '';
 $success = '';
@@ -17,8 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $stmt = $pdo->prepare("INSERT INTO users (name, email, mob_no, dob, role, password, emp_id, department) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$name, $email, $mob_no, $dob, $role, $password, $emp_id, $department]);
-        header("Location: login.php?signup=success");
-        exit;
+        $success = "User account created successfully for " . htmlspecialchars($name);
     } catch (PDOException $e) {
         if ($e->getCode() == 23000) {
             $error = "Email or Employee ID already exists.";
@@ -32,7 +38,7 @@ include 'includes/header.php';
 ?>
 
 <div class="card" style="max-width: 550px;">
-    <h2 style="margin-bottom: 2rem; text-align: center; color: var(--primary-color);">Create Account</h2>
+    <h2 style="margin-bottom: 2rem; text-align: center; color: var(--primary-color);">Create New User Account</h2>
 
     <?php if ($error): ?>
         <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
@@ -95,13 +101,7 @@ include 'includes/header.php';
             <input type="password" name="password" required placeholder="••••••••">
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">Sign
-            Up</button>
-
-        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
-            Already have an account? <a href="login.php"
-                style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Login</a>
-        </p>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">Create User Account</button>
     </form>
 </div>
 

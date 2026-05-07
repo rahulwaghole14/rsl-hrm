@@ -150,23 +150,27 @@ include 'includes/header.php';
                     placeholder="https://meet.google.com/xxx-xxxx-xxx">
             </div>
 
-            <div class="form-group">
-                <label>RSL Employee?</label>
-                <div style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 1rem;">
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                        <input type="radio" name="is_rsl_employee" id="rsl_yes" value="1"
-                            onclick="toggleEmployeeField(true)"> Yes
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                        <input type="radio" name="is_rsl_employee" id="rsl_no" value="0" checked
-                            onclick="toggleEmployeeField(false)"> No
-                    </label>
+            <?php if ($_SESSION['role'] === 'employee'): ?>
+                <input type="hidden" name="is_rsl_employee" value="1">
+            <?php else: ?>
+                <div class="form-group">
+                    <label>RSL Employee?</label>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="is_rsl_employee" id="rsl_yes" value="1"
+                                onclick="toggleEmployeeField(true)"> Yes
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="is_rsl_employee" id="rsl_no" value="0" checked
+                                onclick="toggleEmployeeField(false)"> No
+                        </label>
+                    </div>
                 </div>
-            </div>
+            <?php endif; ?>
 
-            <div class="form-group" id="employee_field" style="display: none;">
+            <div class="form-group" id="employee_field" <?php echo $_SESSION['role'] === 'employee' ? 'style="display: block;"' : 'style="display: none;"'; ?>>
                 <label>Select Employee</label>
-                <select name="rsl_employee_id" id="rsl_employee_id">
+                <select name="rsl_employee_id" id="rsl_employee_id" <?php echo $_SESSION['role'] === 'employee' ? 'required' : ''; ?>>
                     <option value="">-- Select Employee --</option>
                     <?php foreach ($allUsers as $u): ?>
                         <?php if ($u['id'] != $_SESSION['user_id']): ?>
@@ -236,11 +240,11 @@ include 'includes/header.php';
             document.getElementById('title').value = meeting.title;
 
             if (meeting.is_rsl_employee == 1) {
-                document.getElementById('rsl_yes').checked = true;
+                if(document.getElementById('rsl_yes')) document.getElementById('rsl_yes').checked = true;
                 toggleEmployeeField(true);
                 document.getElementById('rsl_employee_id').value = meeting.rsl_employee_id;
             } else {
-                document.getElementById('rsl_no').checked = true;
+                if(document.getElementById('rsl_no')) document.getElementById('rsl_no').checked = true;
                 toggleEmployeeField(false);
             }
 
@@ -253,8 +257,13 @@ include 'includes/header.php';
         } else {
             title.innerText = 'Schedule Meeting';
             form.reset();
-            document.getElementById('rsl_no').checked = true;
-            toggleEmployeeField(false);
+            const userRole = '<?php echo $_SESSION['role']; ?>';
+            if (userRole !== 'employee') {
+                document.getElementById('rsl_no').checked = true;
+                toggleEmployeeField(false);
+            } else {
+                toggleEmployeeField(true);
+            }
             document.getElementById('meetingId').value = 0;
             document.getElementById('meeting_time').value = time;
             document.getElementById('meeting_date').value = '<?php echo $preset_date; ?>';
@@ -266,8 +275,17 @@ include 'includes/header.php';
     }
 
     function toggleEmployeeField(show) {
+        const userRole = '<?php echo $_SESSION['role']; ?>';
         const field = document.getElementById('employee_field');
         const select = document.getElementById('rsl_employee_id');
+        
+        // Employees always see the dropdown
+        if (userRole === 'employee') {
+            field.style.display = 'block';
+            select.required = true;
+            return;
+        }
+
         field.style.display = show ? 'block' : 'none';
         select.required = show;
     }

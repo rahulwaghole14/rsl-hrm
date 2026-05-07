@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'employee' && $_SESSI
 }
 
 $userId = $_SESSION['user_id'];
+$requestedMode = isset($_GET['mode']) ? $_GET['mode'] : 'WFO';
 // Helper function to format seconds into "X Hr Y Min"
 function formatDuration($seconds) {
     if ($seconds < 0) $seconds = 0;
@@ -89,8 +90,12 @@ include 'includes/header.php';
 
             <?php if (!$todayAttendance): ?>
                 <?php if (time() >= strtotime($today . ' 07:00:00')): ?>
-                    <form action="process_attendance.php" method="POST">
+                    <form action="process_attendance.php" method="POST" style="text-align: center;">
                         <input type="hidden" name="action" value="check_in">
+                        <input type="hidden" name="work_mode" value="<?php echo htmlspecialchars($requestedMode); ?>">
+                        <div style="margin-bottom: 1rem; font-weight: 600; color: var(--primary-color);">
+                            Selected Mode: <span style="background: var(--bg-color); padding: 0.2rem 0.6rem; border-radius: 0.5rem; border: 1px solid var(--primary-color);"><?php echo $requestedMode; ?></span>
+                        </div>
                         <button type="submit" class="btn btn-primary"
                             style="padding: 1.25rem 2.5rem; font-size: 1.2rem; width: 220px; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">Check
                             In</button>
@@ -201,13 +206,14 @@ include 'includes/header.php';
         </div>
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
-                <tr style="background: var(--weekend-bg); border-bottom: 1px solid var(--border-color);">
-                    <th style="padding: 1rem;">Date</th>
-                    <th style="padding: 1rem;">Check In</th>
-                    <th style="padding: 1rem;">Check Out</th>
-                    <th style="padding: 1rem;">Total Time</th>
-                    <th style="padding: 1rem;">Break</th>
-                    <th style="padding: 1rem;">Working Hours</th>
+                <tr style="border-bottom: 2px solid var(--border-color); background: var(--bg-color);">
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Date</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Check In</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Check Out</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Mode</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Total Time</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Break</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Working Hours</th>
                 </tr>
             </thead>
             <tbody>
@@ -219,17 +225,22 @@ include 'includes/header.php';
 
                 if (empty($recentRecords)): ?>
                     <tr>
-                        <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">No records yet.
+                        <td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-muted);">No records yet.
                         </td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($recentRecords as $row): ?>
-                        <tr style="border-bottom: 1px solid var(--border-color);">
+                        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
                             <td style="padding: 1rem; font-weight: 600;"><?php echo date('d M Y', strtotime($row['date'])); ?>
                             </td>
                             <td style="padding: 1rem;"><?php echo date('h:i A', strtotime($row['check_in_time'])); ?></td>
                             <td style="padding: 1rem;">
                                 <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span style="font-size: 0.75rem; font-weight: 800; color: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? '#8b5cf6' : '#10b981'; ?>; background: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)'; ?>; padding: 0.2rem 0.5rem; border-radius: 0.25rem;">
+                                    <?php echo htmlspecialchars($row['work_mode'] ?? 'WFO'); ?>
+                                </span>
                             </td>
                             <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
                                 <?php 

@@ -591,27 +591,38 @@ h1 {
     header {
         flex-direction: column;
         text-align: center;
-        gap: 1rem;
+        gap: 1.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .user-info {
+        order: 2;
     }
 
     .calendar-nav {
         justify-content: center;
         width: 100%;
+        gap: 0.5rem;
     }
 
     .attendance-dashboard-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .card {
+        padding: 1.5rem;
     }
 }
 
 @media (max-width: 768px) {
     .container {
         margin: 1rem auto;
+        padding: 0 0.75rem;
     }
 
     .day-cell {
-        min-height: 80px;
-        padding: 0.25rem;
+        min-height: 100px;
+        padding: 0.5rem;
     }
 
     .day-number {
@@ -621,28 +632,73 @@ h1 {
     .event-tag,
     .leave-tag,
     .birthday-tag {
-        font-size: 0.55rem;
-        white-space: normal;
+        font-size: 0.6rem;
+        padding: 0.2rem 0.4rem;
     }
 
-    .card {
-        padding: 1.5rem;
-        margin: 1rem auto;
+    .modal-content {
+        width: 95%;
+        padding: 1.25rem;
     }
 }
 
 @media (max-width: 480px) {
-    .calendar-grid {
-        grid-template-columns: repeat(7, 1fr);
+    h1 {
+        font-size: 1.5rem;
     }
 
     .day-header {
-        padding: 0.5rem 0.2rem;
-        font-size: 0.6rem;
+        padding: 0.75rem 0.2rem;
+        font-size: 0.65rem;
     }
 
     .btn {
-        padding: 0.4rem 0.75rem;
+        padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
     }
+    
+    .dropdown-content {
+        right: auto;
+        left: 0;
+    }
+}
+
+/* Navigation Dropdown Styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: var(--card-bg);
+    min-width: 140px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+    z-index: 1000;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    margin-top: 0.5rem;
+    right: 0;
+    overflow: hidden;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-content a {
+    color: var(--text-main);
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--bg-color);
+    color: var(--primary-color);
+    padding-left: 1.25rem;
 }
