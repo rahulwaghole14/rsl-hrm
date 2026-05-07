@@ -37,7 +37,8 @@ include 'includes/header.php';
 
     <?php if ($error): ?>
         <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
-            <?php echo $error; ?></div>
+            <?php echo $error; ?>
+        </div>
     <?php endif; ?>
 
     <form method="POST">

@@ -10,22 +10,15 @@ function getMeetingsForMonth($year, $month, $role = 'admin', $user_id = null)
     $start_date = "$year-$month-01";
     $end_date = date("Y-m-t", strtotime($start_date));
 
-    // If employee or sub_admin, only show meetings they created or are participant in
-    // Only 'admin' can see all meetings
-    if (in_array($role, ['employee', 'sub_admin']) && $user_id) {
-        $stmt = $pdo->prepare("SELECT m.*, u.name as organizer 
-                              FROM meetings m 
-                              JOIN users u ON m.created_by = u.id 
-                              WHERE m.meeting_date BETWEEN ? AND ? 
-                              AND (m.created_by = ? OR m.rsl_employee_id = ?)");
-        $stmt->execute([$start_date, $end_date, $user_id, $user_id]);
-    } else {
-        $stmt = $pdo->prepare("SELECT m.*, u.name as organizer 
-                              FROM meetings m 
-                              JOIN users u ON m.created_by = u.id 
-                              WHERE m.meeting_date BETWEEN ? AND ?");
-        $stmt->execute([$start_date, $end_date]);
-    }
+    // Visibility Logic: 
+    // 1. External meetings (is_rsl_employee = 0) are visible to everyone.
+    // 2. Internal meetings (is_rsl_employee = 1) are ONLY visible to the creator OR the participant (rsl_employee_id).
+    $stmt = $pdo->prepare("SELECT m.*, u.name as organizer 
+                          FROM meetings m 
+                          JOIN users u ON m.created_by = u.id 
+                          WHERE m.meeting_date BETWEEN ? AND ? 
+                          AND (m.is_rsl_employee = 0 OR m.created_by = ? OR m.rsl_employee_id = ?)");
+    $stmt->execute([$start_date, $end_date, $user_id, $user_id]);
 
     $data = [];
     while ($row = $stmt->fetch()) {
@@ -50,6 +43,7 @@ function renderMeetingCalendar($year, $month)
     $prevYear = date('Y', strtotime("-1 month", $firstDayOfMonth));
     $daysInPrevMonth = date('t', mktime(0, 0, 0, $prevMonth, 1, $prevYear));
 
+    echo '<div class="calendar-wrapper">';
     echo '<div class="calendar-grid">';
 
     // Headers
@@ -101,6 +95,7 @@ function renderMeetingCalendar($year, $month)
         echo '<div class="day-cell other-month"><div class="day-number">' . $i . '</div></div>';
     }
 
+    echo '</div>';
     echo '</div>';
 }
 ?>

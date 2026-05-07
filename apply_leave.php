@@ -1,5 +1,13 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 require_once 'config/db.php';
+require_once 'config/mail_settings.php';
+require_once 'libs/PHPMailer/Exception.php';
+require_once 'libs/PHPMailer/PHPMailer.php';
+require_once 'libs/PHPMailer/SMTP.php';
+
 session_start();
 
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'employee' && $_SESSION['role'] !== 'sub_admin')) {
@@ -8,7 +16,8 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'employee' && $_SESSI
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
-    $date = $_POST['leave_date'];
+    $from_date = $_POST['from_date'];
+    $to_date = $_POST['to_date'];
     $subject = $_POST['subject'];
     $description = $_POST['description'];
     $attachment = null;
@@ -30,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO leaves (user_id, leave_date, subject, description, attachment) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$user_id, $date, $subject, $description, $attachment]);
+        $stmt = $pdo->prepare("INSERT INTO leaves (user_id, from_date, to_date, leave_date, subject, description, attachment) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $from_date, $to_date, $from_date, $subject, $description, $attachment]);
         $leave_id = $pdo->lastInsertId(); // Get the ID for the email links
 
         // --- FETCH EMPLOYEE DETAILS ---
@@ -42,25 +51,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $emp_email = $employee['email'];
 
         // --- EMAIL NOTIFICATION VIA PHPMAILER ---
-        require 'libs/PHPMailer/Exception.php';
-        require 'libs/PHPMailer/PHPMailer.php';
-        require 'libs/PHPMailer/SMTP.php';
 
-        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+        $mail = new PHPMailer(true);
 
         try {
             // SMTP Settings
             $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
+            $mail->Host = SMTP_HOST;
             $mail->SMTPAuth = true;
-            $mail->Username = 'pawanepratik2001@gmail.com';
-            $mail->Password = 'ohry ijav gwvb yuzx';
-            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
+            $mail->Username = SMTP_USER;
+            $mail->Password = SMTP_PASS;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = SMTP_PORT;
 
             // Recipients
-            $mail->setFrom('noreply@rslcalendar.com', 'RSL');
-            $mail->addAddress('pawanepratik2001@gmail.com');
+            $mail->Sender = SMTP_USER;
+            $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+            $mail->addAddress(ADMIN_EMAIL);
             $mail->addReplyTo($emp_email, $emp_name);
 
             // Attachment
@@ -70,23 +77,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Content
             $mail->isHTML(true);
-            $mail->Subject = "Leave Request: $emp_name ($date)";
+            $leave_range_text = date('d M', strtotime($from_date)) . " to " . date('d M', strtotime($to_date));
+            $mail->Subject = "Leave Request: $emp_name ($leave_range_text)";
             $mail->Body = "
                 <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
                     <h2 style='color: #4f46e5;'>New Leave Request</h2>
                     <p><strong>Employee:</strong> $emp_name ($emp_email)</p>
-                    <p><strong>Date:</strong> $date</p>
+                    <p><strong>Range:</strong> $leave_range_text</p>
                     <p><strong>Subject:</strong> $subject</p>
                     <p><strong>Description:</strong><br>$description</p>
                     <div style='margin-top: 2rem; display: flex; gap: 1rem;'>
-                        <a href='http://localhost:8000/process_leave.php?id=$leave_id&status=approved' 
-                           style='background-color: #10b981; color: white; padding: 0.8rem 2rem; text-decoration: none; border-radius: 0.5rem; font-weight: bold; display: inline-block; margin-right: 10px;'>
-                           Approve
-                        </a>
-                        <a href='http://localhost:8000/process_leave.php?id=$leave_id&status=rejected' 
-                           style='background-color: #ef4444; color: white; padding: 0.8rem 2rem; text-decoration: none; border-radius: 0.5rem; font-weight: bold; display: inline-block;'>
-                           Reject
-                        </a>
+                        <p>Please review this request in the admin dashboard.</p>
                     </div>
                     <hr style='margin-top: 2rem;'>
                     <p style='font-size: 0.9rem; color: #666;'>This is an automated notification from RSL Calendar System.</p>

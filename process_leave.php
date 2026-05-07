@@ -1,5 +1,13 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 require_once 'config/db.php';
+require_once 'config/mail_settings.php';
+require_once 'libs/PHPMailer/Exception.php';
+require_once 'libs/PHPMailer/PHPMailer.php';
+require_once 'libs/PHPMailer/SMTP.php';
+
 session_start();
 
 // Redirect to login if not authorized as admin
@@ -8,17 +16,51 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
-// Support both POST (Dashboard) and GET (Email buttons)
+// Support both POST (Dashboard) and GET (Legacy email buttons - though we prefer the new checklist)
 $leave_id = $_POST['leave_id'] ?? $_GET['id'] ?? null;
 $status = $_POST['status'] ?? $_GET['status'] ?? null;
+$approved_days = $_POST['approved_days'] ?? []; // Array of dates selected by admin
 
 if ($leave_id && $status) {
     try {
-        $stmt = $pdo->prepare("UPDATE leaves SET status = ? WHERE id = ?");
-        $stmt->execute([$status, $leave_id]);
-        
+        // Fetch leave details first to compare range
+        $stmt = $pdo->prepare("SELECT from_date, to_date, user_id FROM leaves WHERE id = ?");
+        $stmt->execute([$leave_id]);
+        $leaveData = $stmt->fetch();
+
+        if (!$leaveData) die("Leave request not found.");
+
+        $final_status = $status;
+        $json_approved_dates = null;
+
+        if ($status === 'approved') {
+            if (!empty($approved_days)) {
+                // Calculate if it's full or partial
+                $start = new DatePeriod(
+                    new DateTime($leaveData['from_date']),
+                    new DateInterval('P1D'),
+                    (new DateTime($leaveData['to_date']))->modify('+1 day')
+                );
+                
+                $totalDaysRequested = 0;
+                foreach($start as $date) $totalDaysRequested++;
+
+                if (count($approved_days) < $totalDaysRequested) {
+                    $final_status = 'partially_approved';
+                }
+                $json_approved_dates = json_encode($approved_days);
+            } else {
+                // If "Approve" clicked but no days checked, reject it or keep pending? 
+                // We'll treat it as rejected if no days are selected.
+                $final_status = 'rejected';
+            }
+        }
+
+        $stmt = $pdo->prepare("UPDATE leaves SET status = ?, approved_dates = ? WHERE id = ?");
+        $stmt->execute([$final_status, $json_approved_dates, $leave_id]);
+
         // --- FETCH EMPLOYEE DETAILS FOR NOTIFICATION ---
-        $stmt = $pdo->prepare("SELECT l.leave_date, l.subject, u.name, u.email 
+        $stmt = $pdo->prepare("SELECT l.from_date, l.to_date, l.subject, u.name, u.email 
                                FROM leaves l 
                                JOIN users u ON l.user_id = u.id 
                                WHERE l.id = ?");
@@ -28,43 +70,55 @@ if ($leave_id && $status) {
         if ($leave) {
             $emp_name = $leave['name'];
             $emp_email = $leave['email'];
-            $leave_date = $leave['leave_date'];
-            $leave_subject = $leave['subject'];
+            $leave_range = date('d M', strtotime($leave['from_date'])) . " to " . date('d M', strtotime($leave['to_date']));
+            
+            // Format approved dates for email
+            $approved_list_str = "None";
+            if (!empty($approved_days)) {
+                $formatted_dates = array_map(function($d) { return date('d M Y', strtotime($d)); }, $approved_days);
+                $approved_list_str = implode(", ", $formatted_dates);
+            }
 
             // --- SEND EMAIL TO EMPLOYEE VIA PHPMAILER ---
-            require 'libs/PHPMailer/Exception.php';
-            require 'libs/PHPMailer/PHPMailer.php';
-            require 'libs/PHPMailer/SMTP.php';
-
-            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            $mail = new PHPMailer(true);
 
             try {
                 $mail->isSMTP();
-                $mail->Host = 'smtp.gmail.com';
-                $mail->SMTPAuth = true;
-                $mail->Username = 'pawanepratik2001@gmail.com';
-                $mail->Password = 'ohry ijav gwvb yuzx'; // Your App Password
-                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port = 587;
+                $mail->Host       = SMTP_HOST;
+                $mail->SMTPAuth   = true;
+                $mail->Username   = SMTP_USER;
+                $mail->Password   = SMTP_PASS;
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = SMTP_PORT;
 
-                $mail->setFrom('pawanepratik2001@gmail.com', 'RSL Admin');
+                $mail->Sender = SMTP_USER;
+                $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
                 $mail->addAddress($emp_email, $emp_name);
 
                 $mail->isHTML(true);
-                $mail->Subject = "Leave Request Status: " . ucfirst($status);
-                
-                $statusText = ($status === 'approved') ? 'Approved' : 'Rejected';
-                $statusColor = ($status === 'approved') ? '#10b981' : '#ef4444';
-                
+                $mail->Subject = "Leave Request Status: " . str_replace('_', ' ', ucfirst($final_status));
+
+                $statusText = str_replace('_', ' ', ucfirst($final_status));
+                $statusColor = ($final_status === 'approved' || $final_status === 'partially_approved') ? '#10b981' : '#ef4444';
+
                 $mail->Body = "
-                    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                        <p style='font-size: 1.1rem; font-weight: bold; color: $statusColor;'>$statusText</p>
-                        <br>
-                        <p>Best Regards,<br>
-                        <strong>Pratik Pawane</strong><br>
-                        PP Software .<br>
-                        pawanepratik2001@gmail.com<br>
-                        8805854727.</p>
+                    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 1rem; overflow: hidden;'>
+                        <div style='background: $statusColor; padding: 2rem; text-align: center; color: white;'>
+                            <h2 style='margin: 0;'>Leave Request $statusText</h2>
+                        </div>
+                        <div style='padding: 2rem;'>
+                            <p>Hi <strong>$emp_name</strong>,</p>
+                            <p>Your leave request for <strong>$leave_range</strong> has been processed.</p>
+                            
+                            <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0; border: 1px solid #e2e8f0;'>
+                                <p><strong>Final Status:</strong> <span style='color: $statusColor; font-weight: bold;'>$statusText</span></p>
+                                <p><strong>Approved Dates:</strong> $approved_list_str</p>
+                            </div>
+
+                            <p>Best Regards,<br>
+                            <strong>Admin Team</strong><br>
+                            RSL Calendar System</p>
+                        </div>
                     </div>";
 
                 $mail->send();
@@ -72,9 +126,8 @@ if ($leave_id && $status) {
                 error_log("Employee Mailer Error: " . $mail->ErrorInfo);
             }
         }
-        
-        $redirect_month = date('m', strtotime($leave['leave_date']));
-        header("Location: index.php?month=$redirect_month&process=success");
+
+        header("Location: index.php?process=success");
         exit;
     } catch (PDOException $e) {
         die("Error: " . $e->getMessage());

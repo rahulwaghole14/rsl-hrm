@@ -23,22 +23,14 @@ $stmt = $pdo->query("SELECT id, name FROM users WHERE department != 'IT' ORDER B
 $allUsers = $stmt->fetchAll();
 
 // Fetch all meetings for the selected date
-// If employee or sub_admin, only show meetings they are involved in
-if (in_array($_SESSION['role'], ['employee', 'sub_admin'])) {
-    $stmt = $pdo->prepare("SELECT m.*, u.name as assign_by, u2.name as employee_name 
-                          FROM meetings m 
-                          JOIN users u ON m.created_by = u.id 
-                          LEFT JOIN users u2 ON m.rsl_employee_id = u2.id 
-                          WHERE m.meeting_date = ? AND (m.created_by = ? OR m.rsl_employee_id = ?)");
-    $stmt->execute([$preset_date, $_SESSION['user_id'], $_SESSION['user_id']]);
-} else {
-    $stmt = $pdo->prepare("SELECT m.*, u.name as assign_by, u2.name as employee_name 
-                          FROM meetings m 
-                          JOIN users u ON m.created_by = u.id 
-                          LEFT JOIN users u2 ON m.rsl_employee_id = u2.id 
-                          WHERE m.meeting_date = ?");
-    $stmt->execute([$preset_date]);
-}
+// Visibility Logic: External (is_rsl_employee=0) visible to all. Internal (is_rsl_employee=1) only to creator/participant.
+$stmt = $pdo->prepare("SELECT m.*, u.name as assign_by, u2.name as employee_name 
+                      FROM meetings m 
+                      JOIN users u ON m.created_by = u.id 
+                      LEFT JOIN users u2 ON m.rsl_employee_id = u2.id 
+                      WHERE m.meeting_date = ? 
+                      AND (m.is_rsl_employee = 0 OR m.created_by = ? OR m.rsl_employee_id = ?)");
+$stmt->execute([$preset_date, $_SESSION['user_id'], $_SESSION['user_id']]);
 $dbMeetings = $stmt->fetchAll();
 
 $dayMeetings = [];
@@ -66,6 +58,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("INSERT INTO meetings (title, meeting_date, meeting_time, duration, is_rsl_employee, rsl_employee_id, meeting_link, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $rsl_employee_id, $meeting_link, $description, $user_id]);
     }
+
+    // EMAIL NOTIFICATION LOGIC
+    if ($is_rsl_employee && $rsl_employee_id) {
+        require_once 'includes/mail_helper.php';
+        
+        // Fetch participant and organizer details
+        $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id IN (?, ?)");
+        $stmt->execute([$rsl_employee_id, $user_id]);
+        $usersResult = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $participant = null;
+        $organizer = null;
+
+        foreach($usersResult as $u) {
+            if ($u['id'] == $rsl_employee_id) $participant = $u;
+            if ($u['id'] == $user_id) $organizer = $u;
+        }
+
+        if ($participant && $organizer) {
+            // Send to Participant
+            sendMeetingEmail(
+                $organizer['name'], 
+                $participant['email'], 
+                $participant['name'], 
+                $title, 
+                $date, 
+                $time, 
+                $meeting_link, 
+                $description,
+                $organizer['email'],
+                'Meeting Invitation'
+            );
+
+            // Send to Organizer
+            sendMeetingEmail(
+                $organizer['name'], 
+                $organizer['email'], 
+                $organizer['name'], 
+                $title, 
+                $date, 
+                $time, 
+                $meeting_link, 
+                "You have scheduled this meeting with " . $participant['name'] . ". " . $description,
+                $organizer['email'],
+                'Meeting Confirmation'
+            );
+        }
+    }
     header("Location: manage_meeting.php?date=" . $date);
     exit;
 }
@@ -73,8 +113,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include 'includes/header.php';
 ?>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <h2>Book Meeting Slots - <?php echo date('d M Y', strtotime($preset_date)); ?></h2>
+<div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h2 style="font-size: 1.5rem;">Book Meeting Slots - <?php echo date('d M Y', strtotime($preset_date)); ?></h2>
+    </div>
     <a href="meetings.php" class="btn">Back to Calendar</a>
 </div>
 
@@ -132,11 +175,12 @@ include 'includes/header.php';
         <h3 id="modalTitle" style="margin-bottom: 1.5rem; color: #8b5cf6;">Schedule Meeting</h3>
         <form method="POST" id="meetingForm">
             <input type="hidden" name="id" id="meetingId" value="0">
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+
+            <div class="form-grid">
                 <div class="form-group">
                     <label>Date</label>
-                    <input type="date" name="meeting_date" id="meeting_date" required value="<?php echo $preset_date; ?>">
+                    <input type="date" name="meeting_date" id="meeting_date" required
+                        value="<?php echo $preset_date; ?>">
                 </div>
                 <div class="form-group">
                     <label>Title</label>
@@ -154,7 +198,7 @@ include 'includes/header.php';
                 <input type="hidden" name="is_rsl_employee" value="1">
             <?php else: ?>
                 <div class="form-group">
-                    <label>RSL Employee?</label>
+                    <label>Is Internal Meeting?</label>
                     <div style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 1rem;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                             <input type="radio" name="is_rsl_employee" id="rsl_yes" value="1"
@@ -180,7 +224,7 @@ include 'includes/header.php';
                 </select>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-grid">
                 <div class="form-group">
                     <label>Time</label>
                     <select name="meeting_time" id="meeting_time" required>
@@ -199,10 +243,12 @@ include 'includes/header.php';
                 <textarea name="description" id="description" rows="2"></textarea>
             </div>
 
-            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+            <div class="btn-group-responsive" style="margin-top: 1rem;">
                 <button type="submit" class="btn btn-primary"
                     style="flex: 2; background: #8b5cf6; border-color: #8b5cf6;">Save Meeting</button>
-                <button type="button" id="deleteBtn" class="btn" style="flex: 1.2; border-color: #ef4444; color: #ef4444; display: none;" onclick="deleteMeeting()">Delete</button>
+                <button type="button" id="deleteBtn" class="btn"
+                    style="flex: 1.2; border-color: #ef4444; color: #ef4444; display: none;"
+                    onclick="deleteMeeting()">Delete</button>
                 <button type="button" class="btn" style="flex: 1;" onclick="closeMeetingModal()">Cancel</button>
             </div>
         </form>
@@ -240,11 +286,11 @@ include 'includes/header.php';
             document.getElementById('title').value = meeting.title;
 
             if (meeting.is_rsl_employee == 1) {
-                if(document.getElementById('rsl_yes')) document.getElementById('rsl_yes').checked = true;
+                if (document.getElementById('rsl_yes')) document.getElementById('rsl_yes').checked = true;
                 toggleEmployeeField(true);
                 document.getElementById('rsl_employee_id').value = meeting.rsl_employee_id;
             } else {
-                if(document.getElementById('rsl_no')) document.getElementById('rsl_no').checked = true;
+                if (document.getElementById('rsl_no')) document.getElementById('rsl_no').checked = true;
                 toggleEmployeeField(false);
             }
 
@@ -278,7 +324,7 @@ include 'includes/header.php';
         const userRole = '<?php echo $_SESSION['role']; ?>';
         const field = document.getElementById('employee_field');
         const select = document.getElementById('rsl_employee_id');
-        
+
         // Employees always see the dropdown
         if (userRole === 'employee') {
             field.style.display = 'block';

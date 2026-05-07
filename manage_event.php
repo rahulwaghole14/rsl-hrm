@@ -66,11 +66,11 @@ include 'includes/header.php';
             </select>
         </div>
 
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <div class="btn-group-responsive" style="margin-top: 2rem;">
             <button type="submit" class="btn btn-primary" style="flex: 1;">Save Event</button>
             <?php if ($id > 0): ?>
                 <a href="delete_event.php?id=<?php echo $id; ?>" class="btn"
-                    style="background: var(--holiday-red); border-color: var(--holiday-red);"
+                    style="background: var(--holiday-red); border-color: var(--holiday-red); color: white;"
                     onclick="return confirm('Are you sure?')">Delete</a>
             <?php endif; ?>
             <a href="index.php" class="btn" style="flex: 1; text-align: center;">Cancel</a>

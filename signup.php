@@ -42,12 +42,14 @@ include 'includes/header.php';
 
     <?php if ($error): ?>
         <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
-            <?php echo $error; ?></div>
+            <?php echo $error; ?>
+        </div>
     <?php endif; ?>
 
     <?php if ($success): ?>
         <div style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
-            <?php echo $success; ?></div>
+            <?php echo $success; ?>
+        </div>
     <?php endif; ?>
 
     <form method="POST">
@@ -101,7 +103,8 @@ include 'includes/header.php';
             <input type="password" name="password" required placeholder="••••••••">
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">Create User Account</button>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">Create User
+            Account</button>
     </form>
 </div>
 

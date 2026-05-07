@@ -7,7 +7,7 @@ function getEventsForMonth($year, $month)
     if (!$pdo)
         return [];
 
-    $start_date = "$year-$month-01";
+    $start_date = sprintf("%04d-%02d-01", $year, $month);
     $end_date = date("Y-m-t", strtotime($start_date));
 
     $stmt = $pdo->prepare("SELECT e.* FROM events e WHERE e.event_date BETWEEN ? AND ?");
@@ -18,11 +18,45 @@ function getEventsForMonth($year, $month)
         $data['events'][$row['event_date']][] = $row;
     }
 
-    // Fetch Leaves with User Names
-    $stmt = $pdo->prepare("SELECT l.*, u.name as user_name FROM leaves l JOIN users u ON l.user_id = u.id WHERE l.leave_date BETWEEN ? AND ?");
-    $stmt->execute([$start_date, $end_date]);
+    // Fetch Range-based Leaves
+    $stmt = $pdo->prepare("SELECT l.*, u.name as user_name 
+                           FROM leaves l 
+                           JOIN users u ON l.user_id = u.id 
+                           WHERE (l.from_date <= ? AND l.to_date >= ?)");
+    $stmt->execute([$end_date, $start_date]);
+    
     while ($row = $stmt->fetch()) {
-        $data['leaves'][$row['leave_date']][] = $row;
+        $start = new DateTime(max($row['from_date'], $start_date));
+        $end = new DateTime(min($row['to_date'], $end_date));
+        $end->modify('+1 day');
+        
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($start, $interval, $end);
+        
+        $approved_list = $row['approved_dates'] ? json_decode($row['approved_dates'], true) : [];
+
+        foreach($daterange as $date){
+            $dateStr = $date->format("Y-m-d");
+            $dayOfWeek = $date->format("N"); // 1 (Mon) to 7 (Sun)
+            
+            // Skip weekends (6=Sat, 7=Sun)
+            if ($dayOfWeek >= 6) {
+                continue;
+            }
+            
+            $shouldShow = false;
+            if ($row['status'] === 'pending') {
+                $shouldShow = true;
+            } elseif ($row['status'] === 'approved' || $row['status'] === 'partially_approved') {
+                if (in_array($dateStr, $approved_list)) {
+                    $shouldShow = true;
+                }
+            }
+
+            if ($shouldShow) {
+                $data['leaves'][$dateStr][] = $row;
+            }
+        }
     }
 
     // Fetch Birthdays
@@ -52,6 +86,7 @@ function renderCalendar($year, $month)
     $prevYear = date('Y', strtotime("-1 month", $firstDayOfMonth));
     $daysInPrevMonth = date('t', mktime(0, 0, 0, $prevMonth, 1, $prevYear));
 
+    echo '<div class="calendar-wrapper">';
     echo '<div class="calendar-grid">';
 
     // Headers
@@ -112,7 +147,7 @@ function renderCalendar($year, $month)
         $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
 
         foreach ($dayLeaves as $leave) {
-            if ($leave['status'] === 'approved') {
+            if ($leave['status'] === 'approved' || $leave['status'] === 'partially_approved') {
                 // ONLY show red background for the Employee who has the leave
                 if (!$isAdmin && $currentUserId && $leave['user_id'] == $currentUserId) {
                     $hasApprovedLeave = true;
@@ -208,6 +243,7 @@ function renderCalendar($year, $month)
         echo '<div class="day-cell other-month"><div class="day-number">' . $i . '</div></div>';
     }
 
+    echo '</div>';
     echo '</div>';
 }
 ?>
