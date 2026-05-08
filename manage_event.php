@@ -70,10 +70,10 @@ include 'includes/header.php';
             <button type="submit" class="btn btn-primary" style="flex: 1;">Save Event</button>
             <?php if ($id > 0): ?>
                 <a href="delete_event.php?id=<?php echo $id; ?>" class="btn"
-                    style="background: var(--holiday-red); border-color: var(--holiday-red); color: white;"
-                    onclick="return confirm('Are you sure?')">Delete</a>
+                    style="background: var(--holiday-red); border-color: var(--holiday-red); color: white; flex: 1;"
+                    onclick="return confirm('Are you sure you want to cancel/delete this event?')">Cancel Event</a>
             <?php endif; ?>
-            <a href="index.php" class="btn" style="flex: 1; text-align: center;">Cancel</a>
+            <a href="index.php" class="btn" style="flex: 1; text-align: center;">Back to Calendar</a>
         </div>
     </form>
 </div>

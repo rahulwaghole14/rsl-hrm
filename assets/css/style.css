@@ -148,7 +148,8 @@ h1 {
 }
 
 .day-cell.weekend {
-    background: var(--weekend-bg);
+    background: var(--holiday-bg);
+    border-top: 4px solid var(--holiday-red);
 }
 
 .day-cell.holiday {
@@ -211,7 +212,7 @@ h1 {
     font-weight: 700;
 }
 
-.holiday .day-number {
+.holiday .day-number, .weekend .day-number {
     color: var(--holiday-red);
 }
 

@@ -87,7 +87,7 @@ include 'includes/header.php';
             <input type="text" name="emp_id" id="emp_id" placeholder="EMP123">
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label>Department</label>
             <select name="department" required>
                 <option value="General">General</option>
@@ -96,7 +96,7 @@ include 'includes/header.php';
                 <option value="Sales">Sales</option>
                 <option value="Marketing">Marketing</option>
             </select>
-        </div>
+        </div> -->
 
         <div class="form-group">
             <label>Password</label>
