@@ -8,6 +8,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'sub_adm
 }
 
 $preset_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$isPastDate = ($preset_date < date('Y-m-d'));
 
 // Define Slots (11:00 AM to 8:00 PM, every 30 mins)
 $slots = [];
@@ -40,6 +41,9 @@ foreach ($dbMeetings as $m) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($isPastDate) {
+        die("Error: Cannot schedule or modify meetings on past dates.");
+    }
     $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
     $title = $_POST['title'];
     $date = $_POST['meeting_date'];
@@ -159,10 +163,14 @@ include 'includes/header.php';
             <div class="slot-actions">
                 <?php if ($isBooked): ?>
                     <button class="btn" style="width: 100%; border-color: #8b5cf6; color: #8b5cf6;"
-                        onclick="openMeetingModal(<?php echo htmlspecialchars(json_encode($meeting)); ?>)">Edit</button>
-                <?php else: ?>
+                        onclick="openMeetingModal(<?php echo htmlspecialchars(json_encode($meeting)); ?>)">
+                        <?php echo $isPastDate ? 'View' : 'Edit'; ?>
+                    </button>
+                <?php elseif (!$isPastDate): ?>
                     <button class="btn btn-primary" style="width: 100%; background: #8b5cf6; border-color: #8b5cf6;"
                         onclick="openMeetingModal(null, '<?php echo $slotTime; ?>')">Schedule</button>
+                <?php else: ?>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">Closed</span>
                 <?php endif; ?>
             </div>
         </div>
@@ -318,6 +326,24 @@ include 'includes/header.php';
         }
 
         modal.classList.add('active');
+
+        // Handle past date (Read-only mode)
+        const isPastDate = <?php echo $isPastDate ? 'true' : 'false'; ?>;
+        if (isPastDate) {
+            document.querySelectorAll('#meetingForm input, #meetingForm select, #meetingForm textarea').forEach(el => {
+                el.disabled = true;
+            });
+            document.querySelector('#meetingForm button[type="submit"]').style.display = 'none';
+            deleteBtn.style.display = 'none';
+            title.innerText = 'View Meeting Details';
+        } else {
+            document.querySelectorAll('#meetingForm input, #meetingForm select, #meetingForm textarea').forEach(el => {
+                el.disabled = false;
+            });
+            // Re-disable duration as it's always read-only
+            document.getElementById('duration').disabled = true;
+            document.querySelector('#meetingForm button[type="submit"]').style.display = 'block';
+        }
     }
 
     function toggleEmployeeField(show) {

@@ -71,7 +71,9 @@ function renderMeetingCalendar($year, $month)
 
         $dayMeetings = isset($meetings[$currentDate]) ? $meetings[$currentDate] : [];
         
-        $clickAttr = 'onclick="location.href=\'manage_meeting.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
+        $isPast = ($currentDate < date('Y-m-d'));
+        $clickAttr = $isPast ? 'style="cursor: default; opacity: 0.6;"' : 'onclick="location.href=\'manage_meeting.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
+        if ($isPast) $classes[] = 'past-date';
 
         echo '<div class="day-cell ' . implode(' ', $classes) . '" ' . $clickAttr . '>';
         echo '<div class="day-number">' . $day . '</div>';

@@ -1,6 +1,10 @@
 <?php
 require_once 'config/db.php';
+require_once 'includes/attendance_functions.php';
 session_start();
+
+// Auto-checkout any unclosed sessions from previous days for all employees
+autoCheckoutForgotten($pdo);
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");

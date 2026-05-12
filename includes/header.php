@@ -82,11 +82,11 @@ $userName = $_SESSION['name'] ?? null;
                     <?php if ($userRole !== 'admin'): ?>
                         <div class="dropdown">
                             <a href="my_attendance.php" class="btn" style="border-color: #10b981; color: #10b981;">My Attendance
-                                ▾</a>
-                            <div class="dropdown-content">
+                            </a>
+                            <!-- <div class="dropdown-content">
                                 <a href="my_attendance.php?mode=WFO">Work From Office (WFO)</a>
                                 <a href="my_attendance.php?mode=WFH">Work From Home (WFH)</a>
-                            </div>
+                            </div> -->
                         </div>
                     <?php endif; ?>
 

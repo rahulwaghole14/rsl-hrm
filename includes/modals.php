@@ -1,6 +1,6 @@
 <!-- Employee Apply Leave Modal -->
 <div id="leaveModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-content">
         <span class="close" onclick="closeModal('leaveModal')">&times;</span>
         <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">Apply for Leave</h2>
         <form action="apply_leave.php" method="POST" enctype="multipart/form-data">
@@ -43,7 +43,7 @@
 
 <!-- Admin View Leave Modal -->
 <div id="adminLeaveModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-content">
         <span class="close" onclick="closeModal('adminLeaveModal')">&times;</span>
         <h2 style="margin-bottom: 0.5rem; color: var(--primary-color);">Leave Request Details</h2>
         <p id="leaveStatusBadge" style="display:inline-block; margin-bottom:1.5rem;"></p>
@@ -96,20 +96,31 @@
         width: 100%;
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
     }
 
     .modal-content {
         background-color: var(--card-bg, white);
         color: var(--text-main, #333);
-        margin: 5% auto;
-        padding: 2.5rem;
+        margin: 0;
+        padding: 2rem;
         border-radius: 1.5rem;
-        width: 95%;
-        max-width: 500px;
+        width: 100%;
+        max-width: 600px;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         position: relative;
         border: 1px solid var(--border-color, #eee);
+        max-height: 90vh;
+        overflow-y: auto;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .modal-content::-webkit-scrollbar {
+        display: none;
     }
 
     .close {
@@ -153,7 +164,8 @@
         document.getElementById('modalFromDate').value = date;
         document.getElementById('modalToDate').value = date;
         calculateDays();
-        document.getElementById('leaveModal').style.display = 'block';
+        document.getElementById('leaveModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     }
 
     function calculateDays() {
@@ -230,16 +242,19 @@
         }
 
         document.getElementById('adminActions').style.display = (data.status === 'pending') ? 'flex' : 'none';
-        document.getElementById('adminLeaveModal').style.display = 'block';
+        document.getElementById('adminLeaveModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     }
 
     function closeModal(id) {
         document.getElementById(id).style.display = 'none';
+        document.body.style.overflow = 'auto';
     }
 
     window.onclick = function (event) {
         if (event.target.className === 'modal') {
             event.target.style.display = "none";
+            document.body.style.overflow = 'auto';
         }
     }
 </script>

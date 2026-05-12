@@ -72,6 +72,60 @@ h1 {
     justify-content: flex-end;
 }
 
+/* ── Header Dropdown ── */
+.dropdown {
+    position: relative;
+    display: inline-flex;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    min-width: 200px;
+    z-index: 500;
+    overflow: hidden;
+    animation: dropFade 0.15s ease;
+}
+
+@keyframes dropFade {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-content a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+
+.dropdown-content a:hover {
+    background: var(--bg-color);
+    color: var(--primary-color);
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
 .btn {
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -207,12 +261,25 @@ h1 {
     opacity: 0.4;
 }
 
+.day-cell.past-date {
+    background: #f8fafc;
+    opacity: 0.7;
+    cursor: default !important;
+}
+
+.day-cell.past-date:hover {
+    transform: none;
+    box-shadow: none;
+    filter: none;
+}
+
 .day-number {
     font-size: 1.1rem;
     font-weight: 700;
 }
 
-.holiday .day-number, .weekend .day-number {
+.holiday .day-number,
+.weekend .day-number {
     color: var(--holiday-red);
 }
 
