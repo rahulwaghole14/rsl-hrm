@@ -62,13 +62,14 @@ include 'includes/header.php';
         </script>
     <?php endif; ?>
 
-    <div class="attendance-dashboard-grid">
+    <div class="attendance-dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
         <!-- Attendance Control -->
-        <div
-            style="background: var(--card-bg); padding: 2rem; border-radius: 1.5rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <div class="card attendance-control-card"
+            style="background: var(--card-bg); padding: 2rem; border-radius: 1.5rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin: 0;">
             <h3 style="color: var(--text-muted); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em;">
                 Daily Check-In</h3>
-
+            
+            <?php /* ... rest of the control content ... */ ?>
             <?php if (!$todayAttendance): ?>
                 <?php if (time() >= strtotime($today . ' 07:00:00')): ?>
                     <form action="process_attendance.php" method="POST" style="text-align: center;">
@@ -83,20 +84,20 @@ include 'includes/header.php';
                             </select>
                         </div>
                         <button type="submit" class="btn btn-primary"
-                            style="padding: 1.25rem 2.5rem; font-size: 1.2rem; width: 220px; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">Check
+                            style="padding: 1.25rem 2.5rem; font-size: 1.2rem; width: 220px; max-width: 100%; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">Check
                             In</button>
                     </form>
                     <p style="color: var(--text-muted); font-size: 0.9rem;">Office hours: 07:00 AM - 12:00 AM</p>
                 <?php else: ?>
                     <button class="btn" disabled
-                        style="padding: 1.25rem 2.5rem; font-size: 1.2rem; width: 220px; border-radius: 1rem; background: #f3f4f6; color: #9ca3af; cursor: not-allowed; border-color: #e5e7eb;">Check
+                        style="padding: 1.25rem 2.5rem; font-size: 1.2rem; width: 220px; max-width: 100%; border-radius: 1rem; background: #f3f4f6; color: #9ca3af; cursor: not-allowed; border-color: #e5e7eb;">Check
                         In</button>
                     <p style="color: #ef4444; font-size: 0.9rem; font-weight: 500;">Opens at 07:00 AM</p>
                 <?php endif; ?>
             <?php elseif ($todayAttendance['status'] !== 'checked_out'): ?>
                 <div style="text-align: center; width: 100%;">
                     <div
-                        style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-around;">
+                        style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem;">
                         <div>
                             <p
                                 style="font-size: 0.8rem; color: var(--primary-color); font-weight: 600; margin-bottom: 0.25rem;">
@@ -118,22 +119,22 @@ include 'includes/header.php';
 
                     <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: center;">
                         <?php if ($todayAttendance['status'] === 'checked_in'): ?>
-                            <form action="process_attendance.php" method="POST" style="width: 220px;">
+                            <form action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
                                 <input type="hidden" name="action" value="break_in">
                                 <button type="submit" class="btn"
                                     style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #f59e0b; color: #d97706; background: #fff;">☕
-                                    Take Break</button>
+                                    Break</button>
                             </form>
                         <?php else: ?>
-                            <form action="process_attendance.php" method="POST" style="width: 220px;">
+                            <form action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
                                 <input type="hidden" name="action" value="break_out">
                                 <button type="submit" class="btn"
                                     style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #10b981; color: #059669; background: #fff;">🏃
-                                    Resume Work</button>
+                                    Resume</button>
                             </form>
                         <?php endif; ?>
 
-                        <form action="process_attendance.php" method="POST" style="width: 220px;">
+                        <form action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
                             <input type="hidden" name="action" value="check_out">
                             <button type="submit" class="btn"
                                 onclick="return confirm('Are you sure you want to check out?')"
@@ -145,10 +146,10 @@ include 'includes/header.php';
             <?php else: ?>
                 <div style="text-align: center;">
                     <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
-                    <p style="font-size: 1.2rem; font-weight: 700; color: #16a34a; margin-bottom: 0.5rem;">Workday Completed
+                    <p style="font-size: 1.2rem; font-weight: 700; color: #16a34a; margin-bottom: 0.5rem;">Completed
                     </p>
                     <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
-                        Working Hours: <strong
+                        Working: <strong
                             style="color: var(--text-main);">
                             <?php 
                                 $check_in_ts = strtotime($todayAttendance['date'] . ' ' . $todayAttendance['check_in_time']);
@@ -158,35 +159,22 @@ include 'includes/header.php';
                             ?>
                         </strong>
                     </p>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">
-                        Break Time: <?php echo formatDuration($todayAttendance['total_break_seconds']); ?>
-                    </p>
                 </div>
-                <script>
-                    var todayData = {
-                        status: <?php echo json_encode($todayAttendance['status']); ?>,
-                        check_in: <?php echo json_encode($todayAttendance['check_in_time']); ?>,
-                        total_break_sec: <?php echo (int)($todayAttendance['total_break_seconds'] ?? 0); ?>,
-                        working_hours_saved: <?php echo json_encode($todayAttendance['total_hours']); ?>
-                    };
-                    console.log("TODAY LOG:", JSON.stringify(todayData, null, 2));
-                </script>
             <?php endif; ?>
         </div>
 
         <!-- Attendance Graph -->
-        <div
-            style="background: var(--card-bg); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-main);">Working Hours (Last 7 Days)
-            </h3>
-            <div style="height: 300px;">
+        <div class="card attendance-graph-card"
+            style="background: var(--card-bg); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin: 0;">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-main);">Last 7 Days</h3>
+            <div style="height: 250px;">
                 <canvas id="attendanceChart"></canvas>
             </div>
         </div>
     </div>
 
     <!-- Attendance Table -->
-    <div class="attendance-table-container">
+    <div class="attendance-table-container" style="background: var(--card-bg); border-radius: 1rem; border: 1px solid var(--border-color); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-top: 2rem;">
         <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
             <h3 style="font-size: 1.1rem;">Recent History</h3>
         </div>

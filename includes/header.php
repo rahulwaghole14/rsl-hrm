@@ -53,7 +53,7 @@ $userName = $_SESSION['name'] ?? null;
                 <?php endif; ?>
             </div>
 
-            <div style="text-align: center;">
+            <div class="header-logo-section" style="flex: 1; min-width: 200px; text-align: center;">
                 <a href="index.php" style="text-decoration: none;">
                     <h1>RSL Calendar 2026</h1>
                 </a>
@@ -65,36 +65,28 @@ $userName = $_SESSION['name'] ?? null;
                 <?php endif; ?>
             </div>
 
-            <div class="calendar-nav" style="justify-content: flex-end; gap: 1rem; align-items: center;">
+            <div class="calendar-nav header-actions" style="flex: 1; min-width: 200px; justify-content: center;">
                 <!-- Theme Toggle -->
                 <button onclick="toggleTheme()" id="themeToggle" class="btn"
-                    style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;">
+                    style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px;">
                     <span id="themeIcon">🌙</span>
                 </button>
 
                 <a href="holidays.php" class="btn"
-                    style="border-color: var(--holiday-red); color: var(--holiday-red);">Holidays List</a>
+                    style="border-color: var(--holiday-red); color: var(--holiday-red);">Holidays</a>
                 <?php if ($isLoggedIn): ?>
                     <?php if ($userRole === 'admin' || $userRole === 'sub_admin' || $userRole === 'employee'): ?>
-                        <a href="meetings.php" class="btn" style="border-color: #8b5cf6; color: #8b5cf6;">Schedule Meeting</a>
+                        <a href="meetings.php" class="btn" style="border-color: #8b5cf6; color: #8b5cf6;">Meetings</a>
                     <?php endif; ?>
 
                     <?php if ($userRole !== 'admin'): ?>
-                        <div class="dropdown">
-                            <a href="my_attendance.php" class="btn" style="border-color: #10b981; color: #10b981;">My Attendance
-                            </a>
-                            <!-- <div class="dropdown-content">
-                                <a href="my_attendance.php?mode=WFO">Work From Office (WFO)</a>
-                                <a href="my_attendance.php?mode=WFH">Work From Home (WFH)</a>
-                            </div> -->
-                        </div>
+                        <a href="my_attendance.php" class="btn" style="border-color: #10b981; color: #10b981;">Attendance</a>
                     <?php endif; ?>
 
                     <?php if ($userRole === 'admin'): ?>
-                        <a href="signup.php" class="btn" style="border-color: #8b5cf6; color: #8b5cf6;">+ Create User</a>
-                        <a href="admin_attendance.php" class="btn" style="border-color: #f59e0b; color: #f59e0b;">Employee
-                            Attendance</a>
-                        <a href="manage_event.php" class="btn btn-primary">+ Add Event</a>
+                        <a href="signup.php" class="btn" style="border-color: #8b5cf6; color: #8b5cf6;">+ User</a>
+                        <a href="admin_attendance.php" class="btn" style="border-color: #f59e0b; color: #f59e0b;">Attendance</a>
+                        <a href="manage_event.php" class="btn btn-primary">+ Event</a>
                     <?php endif; ?>
                     <a href="logout.php" class="btn" style="border-color: #f87171; color: #ef4444;">Logout</a>
                 <?php else: ?>

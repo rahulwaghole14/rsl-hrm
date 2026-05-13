@@ -55,44 +55,41 @@ include 'includes/header.php';
 ?>
 
 <div class="container" style="margin-top: 1rem;">
-    <div
+    <div class="attendance-header-section"
         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-        <h2 style="font-size: 1.5rem;">Employee Attendance Records</h2>
-        <div
-            style="background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+        <h2 style="font-size: 1.5rem;">Employee Attendance</h2>
+        <div class="filter-card"
+            style="background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
                 <div style="flex: 1; min-width: 200px;">
                     <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Employee
-                        Name</label>
-                    <input type="text" name="search" placeholder="Search name..."
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Name</label>
+                    <input type="text" name="search" placeholder="Search..."
                         value="<?php echo htmlspecialchars($search); ?>"
                         style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
                 </div>
 
-                <div style="width: 180px;">
+                <div style="flex: 1; min-width: 150px;">
                     <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Specific
-                        Date</label>
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Date</label>
                     <input type="date" name="filter_date" value="<?php echo htmlspecialchars($filter_date); ?>"
                         style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
                 </div>
 
-                <div style="width: 180px;">
+                <div style="flex: 1; min-width: 150px;">
                     <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">By
-                        Month</label>
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Month</label>
                     <input type="month" name="filter_month" value="<?php echo htmlspecialchars($filter_month); ?>"
                         style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
                 </div>
 
-                <div style="display: flex; gap: 0.5rem;">
-                    <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.5rem;">Filter</button>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">Filter</button>
                     <a href="admin_attendance.php" class="btn"
                         style="text-decoration: none; padding: 0.65rem 1rem;">Clear</a>
                     <a href="export_attendance.php?<?php echo http_build_query($_GET); ?>" class="btn"
                         style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        📥 Export Excel
+                        📥 Export
                     </a>
                 </div>
             </form>
@@ -105,9 +102,9 @@ include 'includes/header.php';
         </div>
     <?php endif; ?>
 
-    <div
+    <div class="attendance-table-container"
         style="background: var(--card-bg); border-radius: 1rem; border: 1px solid var(--border-color); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background: var(--weekend-bg); border-bottom: 1px solid var(--border-color);">
                     <th

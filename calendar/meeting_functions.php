@@ -11,14 +11,20 @@ function getMeetingsForMonth($year, $month, $role = 'admin', $user_id = null)
     $end_date = date("Y-m-t", strtotime($start_date));
 
     // Visibility Logic: 
-    // 1. External meetings (is_rsl_employee = 0) are visible to everyone.
-    // 2. Internal meetings (is_rsl_employee = 1) are ONLY visible to the creator OR the participant (rsl_employee_id).
-    $stmt = $pdo->prepare("SELECT m.*, u.name as organizer 
+    // 1. External meetings (is_rsl_employee = 0) are visible to everyone,
+    //    EXCEPT if the creator is a sub_admin and the viewer is an employee.
+    // 2. Internal meetings (is_rsl_employee = 1) are ONLY visible to the creator OR any participant in meeting_participants.
+    $stmt = $pdo->prepare("SELECT DISTINCT m.*, u.name as organizer 
                           FROM meetings m 
                           JOIN users u ON m.created_by = u.id 
+                          LEFT JOIN meeting_participants mp ON m.id = mp.meeting_id
                           WHERE m.meeting_date BETWEEN ? AND ? 
-                          AND (m.is_rsl_employee = 0 OR m.created_by = ? OR m.rsl_employee_id = ?)");
-    $stmt->execute([$start_date, $end_date, $user_id, $user_id]);
+                          AND (
+                              (m.is_rsl_employee = 0 AND NOT (u.role = 'sub_admin' AND ? = 'employee'))
+                              OR m.created_by = ? 
+                              OR mp.user_id = ?
+                          )");
+    $stmt->execute([$start_date, $end_date, $role, $user_id, $user_id]);
 
     $data = [];
     while ($row = $stmt->fetch()) {
