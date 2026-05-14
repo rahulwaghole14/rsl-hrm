@@ -99,7 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         // ------------------------------------------
 
-        header("Location: index.php?month=" . date('m', strtotime($date)) . "&leave=success");
+        // Get redirect context
+        $retMonth = $_POST['nav_month'] ?? date('m');
+        $retYear = $_POST['nav_year'] ?? date('Y');
+
+        header("Location: index.php?month=$retMonth&year=$retYear&leave=success");
     } catch (PDOException $e) {
         die("Error: " . $e->getMessage());
     }

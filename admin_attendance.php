@@ -1,4 +1,17 @@
 <?php
+function formatHours($decimal) {
+    if (!$decimal) return "00h 00m 00s";
+    $hours = floor($decimal);
+    $minutes = floor(($decimal - $hours) * 60);
+    $seconds = round((($decimal - $hours) * 60 - $minutes) * 60);
+    
+    // Handle rounding overflow
+    if ($seconds >= 60) { $seconds = 0; $minutes++; }
+    if ($minutes >= 60) { $minutes = 0; $hours++; }
+    
+    return sprintf("%02dh %02dm %02ds", $hours, $minutes, $seconds);
+}
+
 require_once 'config/db.php';
 require_once 'includes/attendance_functions.php';
 session_start();
@@ -15,8 +28,13 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
 $filter_month = isset($_GET['filter_month']) ? $_GET['filter_month'] : '';
 $records = [];
+$users = [];
 
 try {
+    // Fetch all users for the "Add Attendance" dropdown
+    $usersStmt = $pdo->query("SELECT id, name, emp_id FROM users WHERE role != 'admin' ORDER BY name ASC");
+    $users = $usersStmt->fetchAll();
+
     $where = ["1=1"];
     $params = [];
 
@@ -56,8 +74,8 @@ include 'includes/header.php';
 
 <div class="container" style="margin-top: 1rem;">
     <div class="attendance-header-section"
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-        <h2 style="font-size: 1.5rem;">Employee Attendance</h2>
+        style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; gap: 1rem;">
+        <h2 style="font-size: 1.8rem; text-align: center; width: 100%; color: var(--text-main);">Employee Attendance</h2>
         <div class="filter-card"
             style="background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
@@ -91,14 +109,24 @@ include 'includes/header.php';
                         style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
                         📥 Export
                     </a>
+                    <button type="button" class="btn btn-primary" onclick="openAddAttendanceOverlay()" 
+                        style="background: var(--primary-color); border-color: var(--primary-color); padding: 0.65rem 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                        ➕ Add Attendance
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <?php if (isset($error)): ?>
-        <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-            <?php echo $error; ?>
+    <?php if (isset($_GET['success'])): ?>
+        <div style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
+            ✅ Attendance recorded successfully!
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['error']) || isset($error)): ?>
+        <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border: 1px solid #fecaca;">
+            <?php echo isset($_GET['error']) ? htmlspecialchars($_GET['error']) : $error; ?>
         </div>
     <?php endif; ?>
 
@@ -181,7 +209,7 @@ include 'includes/header.php';
                                 <?php if ($row['check_out_time']): ?>
                                     <span
                                         style="background: #dcfce7; color: #16a34a; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #bbf7d0;">
-                                        <?php echo $row['total_hours']; ?> hrs
+                                        <?php echo formatHours($row['total_hours']); ?>
                                     </span>
                                 <?php else: ?>
                                     <span
@@ -261,6 +289,56 @@ include 'includes/header.php';
             <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
                 <button type="submit" class="emp-btn-edit" style="flex:2;">Save Changes</button>
                 <button type="button" onclick="closeEmpModal('editUserOverlay')" class="btn" style="flex:1;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ✅ CENTERED OVERLAY — Add Attendance Popup -->
+<div class="emp-overlay" id="addAttendanceOverlay" onclick="handleOverlayClick(event, 'addAttendanceOverlay')">
+    <div class="emp-modal-card" style="max-width:500px; text-align:left;">
+        <button class="emp-close-x" onclick="closeEmpModal('addAttendanceOverlay')">&times;</button>
+        <h2 style="color:var(--primary-color); margin-bottom:1.5rem;">Add Manual Attendance</h2>
+
+        <form action="process_manual_attendance.php" method="POST">
+            <div class="form-group">
+                <label>Select Employee</label>
+                <select name="user_id" required style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
+                    <option value="">-- Choose Employee --</option>
+                    <?php foreach ($users as $u): ?>
+                        <option value="<?php echo $u['id']; ?>"><?php echo htmlspecialchars($u['name']); ?> (<?php echo htmlspecialchars($u['emp_id']); ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Date</label>
+                    <input type="date" name="date" required value="<?php echo date('Y-m-d'); ?>">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Work Mode</label>
+                    <select name="work_mode" required style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
+                        <option value="WFO">WFO (Office)</option>
+                        <option value="WFH">WFH (Home)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Check-In Time</label>
+                    <input type="time" name="check_in_time" required value="09:30">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Check-Out Time</label>
+                    <input type="time" name="check_out_time" required value="18:30">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                <button type="submit" class="emp-btn-edit" style="flex:2;">Save Attendance</button>
+                <button type="button" onclick="closeEmpModal('addAttendanceOverlay')" class="btn" style="flex:1;">Cancel</button>
             </div>
         </form>
     </div>
@@ -397,6 +475,10 @@ function openEditOverlay() {
 
 function closeEmpModal(id) {
     document.getElementById(id).classList.remove('active');
+}
+
+function openAddAttendanceOverlay() {
+    document.getElementById('addAttendanceOverlay').classList.add('active');
 }
 
 function handleOverlayClick(e, id) {

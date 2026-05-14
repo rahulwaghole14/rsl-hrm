@@ -5,6 +5,8 @@
     --card-bg: #ffffff;
     --text-main: #0f172a;
     --text-muted: #64748b;
+    --sidebar-width: 260px;
+    --header-height: 70px;
 
     /* Box Colors (Light Mode) */
     --normal-bg: #dcfce7;
@@ -16,6 +18,7 @@
     --event-yellow: #f59e0b;
     --border-color: #e2e8f0;
 }
+
 
 [data-theme="dark"] {
     --bg-color: #0f172a;
@@ -33,45 +36,223 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif !important;
     transition: background-color 0.3s, color 0.3s;
 }
 
 body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
     background-color: var(--bg-color);
     color: var(--text-main);
     line-height: 1.5;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-}
-
-header {
+.app-layout {
     display: flex;
-    justify-content: space-between;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+.auth-layout {
+    display: flex;
+    justify-content: center;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    flex-wrap: wrap;
-    gap: 1.5rem;
+    min-height: 100vh;
+    width: 100vw;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    overflow: hidden;
 }
 
-h1 {
-    font-size: 1.8rem;
+.auth-content {
+    padding: 2rem !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.login-page-body {
+    overflow: hidden;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--card-bg);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.25rem;
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+.sidebar h1 {
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    margin-bottom: 2.5rem;
+    font-weight: 800;
+    padding-left: 0.5rem;
+}
+
+.nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.nav-btn {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: none;
+    background: transparent;
+    text-decoration: none;
+    color: var(--text-muted);
     font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background: #f1f5f9;
     color: var(--primary-color);
 }
 
-.calendar-nav {
+.nav-btn.active {
+    background: #eef2ff;
+    color: var(--primary-color);
+}
+
+.btn-logout {
+    margin-top: auto;
+    color: #ef4444 !important;
+}
+
+.btn-logout:hover {
+    background: #fef2f2 !important;
+}
+
+/* MAIN CONTAINER */
+.main-container {
+    flex: 1;
     display: flex;
-    gap: 0.75rem;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* STATIC TOP HEADER */
+.static-header {
+    height: var(--header-height);
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: space-between;
+    padding: 0 2rem;
+    flex-shrink: 0;
+    z-index: 50;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-center {
+    flex: 0 1 400px;
+    position: relative;
+}
+
+.search-bar {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    background: #f8fafc;
+    font-size: 0.9rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.view-toggles {
+    display: flex;
+    background: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: 0.75rem;
+}
+
+.view-btn {
+    padding: 0.4rem 1rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.view-btn.active {
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--border-color);
+}
+
+.avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #eef2ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--primary-color);
+    overflow: hidden;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* SCROLLABLE CONTENT */
+.scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    scroll-behavior: smooth;
 }
 
 /* ── Header Dropdown ── */
@@ -168,26 +349,37 @@ h1 {
     background: var(--border-color);
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
-    overflow: hidden;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     min-width: 320px;
 }
 
 .calendar-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: visible;
     margin-bottom: 2rem;
     padding-bottom: 0.5rem;
 }
 
 .day-header {
-    background: #f8fafc;
-    padding: 1rem;
+    background: #ffffff;
+    padding: 1.25rem 1rem;
     text-align: center;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
     font-size: 0.75rem;
+    position: sticky;
+    top: -2rem; /* Pull it up to sit flush with the top header when scrolling */
+    z-index: 20;
+    border-bottom: 2px solid var(--border-color);
+    box-shadow: 0 4px 6px -2px rgba(0,0,0,0.05);
+}
+
+/* Ensure the first and last headers match the grid's rounded corners */
+.day-header:first-child {
+    border-top-left-radius: 0.75rem;
+}
+.day-header:nth-child(7) {
+    border-top-right-radius: 0.75rem;
 }
 
 .day-cell {
@@ -666,39 +858,62 @@ h1 {
 
 /* Media Queries */
 @media (max-width: 900px) {
-    header {
+    .app-layout {
         flex-direction: column;
-        text-align: center;
-        gap: 1.5rem;
-        padding-bottom: 2rem;
     }
 
-    .user-info {
-        order: 2;
+    .sidebar {
         width: 100%;
-        text-align: center;
+        flex-direction: row;
+        padding: 1rem;
+        gap: 1rem;
+        align-items: center;
+        overflow-x: auto;
     }
 
-    .calendar-nav {
-        justify-content: center;
-        width: 100%;
-        gap: 0.5rem;
+    .sidebar h1 {
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+
+    .nav-links {
+        flex-direction: row;
+        gap: 0.25rem;
+    }
+
+    .nav-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .btn-logout {
+        margin-top: 0;
+    }
+
+    .static-header {
+        height: auto;
+        padding: 1rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .header-center {
+        flex: 1 1 100%;
+        order: 3;
+    }
+
+    .scrollable-content {
+        padding: 1rem;
     }
 
     .attendance-dashboard-grid {
         grid-template-columns: 1fr;
     }
-
-    .card {
-        padding: 1.5rem;
-    }
-    
-    .calendar-nav .btn {
-        flex: 1 1 auto;
-        font-size: 0.8rem;
-        padding: 0.5rem 0.75rem;
-    }
 }
+
+
+
 
 @media (max-width: 768px) {
     .container {

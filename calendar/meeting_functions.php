@@ -3,36 +3,41 @@ require_once __DIR__ . '/../config/db.php';
 
 function getMeetingsForMonth($year, $month, $role = 'admin', $user_id = null)
 {
+    $data = [];
     global $pdo;
     if (!$pdo)
-        return [];
+        return $data;
 
-    $start_date = "$year-$month-01";
+    $start_date = sprintf("%04d-%02d-01", $year, $month);
     $end_date = date("Y-m-t", strtotime($start_date));
 
-    // Visibility Logic: 
-    // 1. External meetings (is_rsl_employee = 0) are visible to everyone,
-    //    EXCEPT if the creator is a sub_admin and the viewer is an employee.
-    // 2. Internal meetings (is_rsl_employee = 1) are ONLY visible to the creator OR any participant in meeting_participants.
-    $stmt = $pdo->prepare("SELECT DISTINCT m.*, u.name as organizer 
-                          FROM meetings m 
-                          JOIN users u ON m.created_by = u.id 
-                          LEFT JOIN meeting_participants mp ON m.id = mp.meeting_id
-                          WHERE m.meeting_date BETWEEN ? AND ? 
-                          AND (
-                              (m.is_rsl_employee = 0 AND NOT (u.role = 'sub_admin' AND ? = 'employee'))
-                              OR m.created_by = ? 
-                              OR mp.user_id = ?
-                          )");
-    $stmt->execute([$start_date, $end_date, $role, $user_id, $user_id]);
+    try {
+        // Visibility Logic: 
+        // 1. External meetings (is_rsl_employee = 0) are visible to everyone,
+        //    EXCEPT if the creator is a sub_admin and the viewer is an employee.
+        // 2. Internal meetings (is_rsl_employee = 1) are ONLY visible to the creator OR any participant in meeting_participants.
+        $stmt = $pdo->prepare("SELECT DISTINCT m.*, u.name as organizer 
+                              FROM meetings m 
+                              JOIN users u ON m.created_by = u.id 
+                              LEFT JOIN meeting_participants mp ON m.id = mp.meeting_id
+                              WHERE m.meeting_date BETWEEN ? AND ? 
+                              AND (
+                                  (m.is_rsl_employee = 0 AND NOT (u.role = 'sub_admin' AND ? = 'employee'))
+                                  OR m.created_by = ? 
+                                  OR mp.user_id = ?
+                              )");
+        $stmt->execute([$start_date, $end_date, $role, $user_id, $user_id]);
 
-    $data = [];
-    while ($row = $stmt->fetch()) {
-        $data[$row['meeting_date']][] = $row;
+        while ($row = $stmt->fetch()) {
+            $data[$row['meeting_date']][] = $row;
+        }
+    } catch (\Exception $e) {
+        // Log error if needed
     }
 
     return $data;
 }
+
 
 function renderMeetingCalendar($year, $month)
 {
@@ -72,14 +77,17 @@ function renderMeetingCalendar($year, $month)
         $isToday = (date('Y-m-d', $dayStamp) === date('Y-m-d'));
 
         $classes = ['day-cell'];
-        if ($isWeekend) $classes[] = 'weekend';
-        if ($isToday) $classes[] = 'today';
+        if ($isWeekend)
+            $classes[] = 'weekend';
+        if ($isToday)
+            $classes[] = 'today';
 
         $dayMeetings = isset($meetings[$currentDate]) ? $meetings[$currentDate] : [];
-        
+
         $isPast = ($currentDate < date('Y-m-d'));
         $clickAttr = $isPast ? 'style="cursor: default; opacity: 0.6;"' : 'onclick="location.href=\'manage_meeting.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
-        if ($isPast) $classes[] = 'past-date';
+        if ($isPast)
+            $classes[] = 'past-date';
 
         echo '<div class="day-cell ' . implode(' ', $classes) . '" ' . $clickAttr . '>';
         echo '<div class="day-number">' . $day . '</div>';

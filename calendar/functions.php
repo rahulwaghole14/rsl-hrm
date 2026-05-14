@@ -3,72 +3,77 @@ require_once __DIR__ . '/../config/db.php';
 
 function getEventsForMonth($year, $month)
 {
+    $data = ['events' => [], 'leaves' => [], 'birthdays' => []];
     global $pdo;
     if (!$pdo)
-        return [];
+        return $data;
 
     $start_date = sprintf("%04d-%02d-01", $year, $month);
     $end_date = date("Y-m-t", strtotime($start_date));
-
-    $stmt = $pdo->prepare("SELECT e.* FROM events e WHERE e.event_date BETWEEN ? AND ?");
-    $stmt->execute([$start_date, $end_date]);
-
-    $data = ['events' => [], 'leaves' => [], 'birthdays' => []];
-    while ($row = $stmt->fetch()) {
-        $data['events'][$row['event_date']][] = $row;
-    }
-
-    // Fetch Range-based Leaves
-    $stmt = $pdo->prepare("SELECT l.*, u.name as user_name 
-                           FROM leaves l 
-                           JOIN users u ON l.user_id = u.id 
-                           WHERE (l.from_date <= ? AND l.to_date >= ?)");
-    $stmt->execute([$end_date, $start_date]);
     
-    while ($row = $stmt->fetch()) {
-        $start = new DateTime(max($row['from_date'], $start_date));
-        $end = new DateTime(min($row['to_date'], $end_date));
-        $end->modify('+1 day');
-        
-        $interval = new DateInterval('P1D');
-        $daterange = new DatePeriod($start, $interval, $end);
-        
-        $approved_list = $row['approved_dates'] ? json_decode($row['approved_dates'], true) : [];
+    try {
+        $stmt = $pdo->prepare("SELECT e.* FROM events e WHERE e.event_date BETWEEN ? AND ?");
+        $stmt->execute([$start_date, $end_date]);
 
-        foreach($daterange as $date){
-            $dateStr = $date->format("Y-m-d");
-            $dayOfWeek = $date->format("N"); // 1 (Mon) to 7 (Sun)
+        while ($row = $stmt->fetch()) {
+            $data['events'][$row['event_date']][] = $row;
+        }
+
+        // Fetch Range-based Leaves
+        $stmt = $pdo->prepare("SELECT l.*, u.name as user_name 
+                               FROM leaves l 
+                               JOIN users u ON l.user_id = u.id 
+                               WHERE (l.from_date <= ? AND l.to_date >= ?)");
+        $stmt->execute([$end_date, $start_date]);
+        
+        while ($row = $stmt->fetch()) {
+            $start = new DateTime(max($row['from_date'], $start_date));
+            $end = new DateTime(min($row['to_date'], $end_date));
+            $end->modify('+1 day');
             
-            // Skip weekends (6=Sat, 7=Sun)
-            if ($dayOfWeek >= 6) {
-                continue;
-            }
+            $interval = new DateInterval('P1D');
+            $daterange = new DatePeriod($start, $interval, $end);
             
-            $shouldShow = false;
-            if ($row['status'] === 'pending') {
-                $shouldShow = true;
-            } elseif ($row['status'] === 'approved' || $row['status'] === 'partially_approved') {
-                if (in_array($dateStr, $approved_list)) {
+            $approved_list = $row['approved_dates'] ? json_decode($row['approved_dates'], true) : [];
+
+            foreach($daterange as $date){
+                $dateStr = $date->format("Y-m-d");
+                $dayOfWeek = $date->format("N"); // 1 (Mon) to 7 (Sun)
+                
+                // Skip weekends (6=Sat, 7=Sun)
+                if ($dayOfWeek >= 6) {
+                    continue;
+                }
+                
+                $shouldShow = false;
+                if ($row['status'] === 'pending') {
                     $shouldShow = true;
+                } elseif ($row['status'] === 'approved' || $row['status'] === 'partially_approved') {
+                    if (in_array($dateStr, $approved_list)) {
+                        $shouldShow = true;
+                    }
+                }
+
+                if ($shouldShow) {
+                    $data['leaves'][$dateStr][] = $row;
                 }
             }
-
-            if ($shouldShow) {
-                $data['leaves'][$dateStr][] = $row;
-            }
         }
-    }
 
-    // Fetch Birthdays
-    $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE MONTH(dob) = ?");
-    $stmt->execute([$month]);
-    while ($row = $stmt->fetch()) {
-        $dayB = date('d', strtotime($row['dob']));
-        $data['birthdays'][$dayB][] = $row['name'];
+        // Fetch Birthdays
+        $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE MONTH(dob) = ?");
+        $stmt->execute([$month]);
+        while ($row = $stmt->fetch()) {
+            $dayB = date('d', strtotime($row['dob']));
+            $data['birthdays'][$dayB][] = $row['name'];
+        }
+    } catch (\Exception $e) {
+        // Log error if needed
     }
 
     return $data;
 }
+
 
 function renderCalendar($year, $month)
 {
@@ -241,6 +246,154 @@ function renderCalendar($year, $month)
     $nextMonthPadding = (7 - ($totalCells % 7)) % 7;
     for ($i = 1; $i <= $nextMonthPadding; $i++) {
         echo '<div class="day-cell other-month"><div class="day-number">' . $i . '</div></div>';
+    }
+
+    echo '</div>';
+    echo '</div>';
+}
+
+function renderWeekView($year, $month)
+{
+    $data = getEventsForMonth($year, $month);
+    $events = $data['events'];
+    $leaves = $data['leaves'];
+    $birthdays = $data['birthdays'];
+
+    // Determine the current week to display
+    $today = date('Y-m-d');
+    $firstOfMonth = "$year-" . sprintf("%02d", $month) . "-01";
+    $lastOfMonth = date("Y-m-t", strtotime($firstOfMonth));
+
+    // Find the Monday of the current week (or first week of month)
+    if ($today >= $firstOfMonth && $today <= $lastOfMonth) {
+        // We're viewing the current month — show the week containing today
+        $weekStart = date('Y-m-d', strtotime('monday this week', strtotime($today)));
+    } else {
+        // Viewing another month — show the first week
+        $weekStart = date('Y-m-d', strtotime('monday this week', strtotime($firstOfMonth)));
+    }
+
+    // Allow week navigation via GET param
+    if (isset($_GET['week_start'])) {
+        $weekStart = $_GET['week_start'];
+    }
+
+    $weekEnd = date('Y-m-d', strtotime('+6 days', strtotime($weekStart)));
+    $prevWeek = date('Y-m-d', strtotime('-7 days', strtotime($weekStart)));
+    $nextWeek = date('Y-m-d', strtotime('+7 days', strtotime($weekStart)));
+
+    $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
+    $isLoggedIn = isset($_SESSION['user_id']);
+    $currentUserId = $_SESSION['user_id'] ?? null;
+
+    // Week navigation
+    echo '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">';
+    echo '<a href="?month=' . $month . '&year=' . $year . '&view=week&week_start=' . $prevWeek . '" class="btn" style="font-weight: 700;">&laquo; Prev Week</a>';
+    echo '<h3 style="font-weight: 700; color: var(--text-main);">' . date('M d', strtotime($weekStart)) . ' — ' . date('M d, Y', strtotime($weekEnd)) . '</h3>';
+    echo '<a href="?month=' . $month . '&year=' . $year . '&view=week&week_start=' . $nextWeek . '" class="btn" style="font-weight: 700;">Next Week &raquo;</a>';
+    echo '</div>';
+
+    echo '<div class="calendar-wrapper">';
+    echo '<div class="calendar-grid" style="grid-template-columns: repeat(7, 1fr);">';
+
+    // Day headers
+    $dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    foreach ($dayNames as $dn) {
+        echo '<div class="day-header">' . $dn . '</div>';
+    }
+
+    // Render each day of the week
+    for ($i = 0; $i < 7; $i++) {
+        $currentDate = date('Y-m-d', strtotime("+$i days", strtotime($weekStart)));
+        $dayNum = date('j', strtotime($currentDate));
+        $dayMonth = date('M', strtotime($currentDate));
+        $day_padded = date('d', strtotime($currentDate));
+        $dayStamp = strtotime($currentDate);
+        $isWeekend = (date('N', $dayStamp) >= 6);
+        $isToday = ($currentDate === $today);
+        $isCurrentMonth = (date('m', $dayStamp) == $month);
+
+        $classes = ['day-cell'];
+        if ($isWeekend) $classes[] = 'weekend';
+        if ($isToday) $classes[] = 'today';
+        if (!$isCurrentMonth) $classes[] = 'other-month';
+
+        // Events
+        $dayEvents = isset($events[$currentDate]) ? $events[$currentDate] : [];
+        $isHoliday = false;
+        foreach ($dayEvents as $event) {
+            if ($event['type'] === 'holiday') { $isHoliday = true; $classes[] = 'holiday'; }
+            if ($event['type'] === 'event') $classes[] = 'event-day';
+            if ($event['type'] === 'half_day') $classes[] = 'half-day';
+        }
+
+        // Leaves
+        $dayLeaves = isset($leaves[$currentDate]) ? $leaves[$currentDate] : [];
+        $hasApprovedLeave = false;
+        foreach ($dayLeaves as $leave) {
+            if (($leave['status'] === 'approved' || $leave['status'] === 'partially_approved') && !$isAdmin && $currentUserId && $leave['user_id'] == $currentUserId) {
+                $hasApprovedLeave = true; break;
+            }
+        }
+        if ($hasApprovedLeave) $classes[] = 'leave-approved';
+
+        // Click behavior
+        $clickAttr = '';
+        if ($isAdmin) {
+            $clickAttr = 'onclick="location.href=\'manage_event.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
+        } elseif ($isLoggedIn) {
+            $isPast = (strtotime($currentDate) < strtotime(date('Y-m-d')));
+            if (!$isPast) {
+                $clickAttr = 'onclick="openLeaveModal(\'' . $currentDate . '\')" style="cursor: pointer;"';
+            } else {
+                $clickAttr = 'style="cursor: default; opacity: 0.6;" title="Past dates are disabled"';
+            }
+        }
+
+        echo '<div class="' . implode(' ', $classes) . '" ' . $clickAttr . ' style="min-height: 200px;">';
+        echo '<div class="day-number">' . $dayNum . ' <span style="font-size: 0.7rem; color: var(--text-muted);">' . $dayMonth . '</span></div>';
+
+        // Event tags
+        echo '<div class="event-list">';
+        foreach ($dayEvents as $event) {
+            if ($event['type'] === 'working' || $event['title'] === 'Weekend') continue;
+            $tagClass = 'type-event';
+            if ($event['type'] === 'holiday') $tagClass = 'holiday-tag';
+            elseif ($event['type'] === 'half_day') $tagClass = 'type-half-day';
+
+            if ($isAdmin) {
+                echo '<a href="manage_event.php?id=' . $event['id'] . '" class="event-tag ' . $tagClass . '" title="' . htmlspecialchars($event['title']) . '" onclick="event.stopPropagation();">';
+                echo htmlspecialchars($event['title']);
+                echo '</a>';
+            } else {
+                echo '<div class="event-tag ' . $tagClass . '" style="cursor: default;" title="' . htmlspecialchars($event['title']) . '">';
+                echo htmlspecialchars($event['title']);
+                echo '</div>';
+            }
+        }
+        echo '</div>';
+
+        // Tags (birthdays + leaves)
+        echo '<div class="day-tags-top">';
+        $dayBirthdays = isset($birthdays[$day_padded]) ? $birthdays[$day_padded] : [];
+        foreach ($dayBirthdays as $bdayName) {
+            echo '<div class="birthday-tag" title="Happy Birthday!">🎂 ' . htmlspecialchars($bdayName) . '</div>';
+        }
+        foreach ($dayLeaves as $leave) {
+            if ($isAdmin) {
+                $leaveJson = htmlspecialchars(json_encode($leave));
+                echo '<div class="leave-tag status-' . $leave['status'] . '" onclick="event.stopPropagation(); openAdminViewModal(' . $leaveJson . ')" title="View Request">';
+                echo 'Leave: ' . htmlspecialchars($leave['user_name']);
+                echo '</div>';
+            } elseif ($leave['user_id'] == $currentUserId) {
+                echo '<div class="leave-tag status-' . $leave['status'] . '" style="cursor:default;" onclick="event.stopPropagation();">';
+                echo 'Leave: ' . ucfirst($leave['status']);
+                echo '</div>';
+            }
+        }
+        echo '</div>';
+
+        echo '</div>';
     }
 
     echo '</div>';

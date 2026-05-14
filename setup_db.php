@@ -1,15 +1,19 @@
 <?php
+// CHANGE THESE FOR LIVE SERVER
 $host = 'localhost';
 $user = 'root';
 $pass = '';
+$db   = 'company_calendar';
+
 
 try {
     $pdo = new PDO("mysql:host=$host", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Create Database
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS company_calendar");
-    $pdo->exec("USE company_calendar");
+    $pdo->exec("CREATE DATABASE IF NOT EXISTS `$db` ");
+    $pdo->exec("USE `$db` ");
+
 
     // Create Tables
     $pdo->exec("CREATE TABLE IF NOT EXISTS events (

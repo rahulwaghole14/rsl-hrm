@@ -20,28 +20,39 @@ for ($h = 11; $h <= 20; $h++) {
 }
 
 // Fetch users for the dropdown (All roles except IT)
-$stmt = $pdo->query("SELECT id, name FROM users WHERE department != 'IT' ORDER BY name ASC");
-$allUsers = $stmt->fetchAll();
+$allUsers = [];
+if ($pdo) {
+    try {
+        $stmt = $pdo->query("SELECT id, name FROM users WHERE department != 'IT' ORDER BY name ASC");
+        $allUsers = $stmt->fetchAll();
+    } catch (\Exception $e) {}
+}
 
 // Fetch all meetings for the selected date to handle global blocking
-$stmt = $pdo->prepare("SELECT m.*, u.name as assign_by, u.role as creator_role 
-                      FROM meetings m 
-                      JOIN users u ON m.created_by = u.id 
-                      WHERE m.meeting_date = ?");
-$stmt->execute([$preset_date]);
-$allDbMeetings = $stmt->fetchAll();
+$allDbMeetings = [];
+if ($pdo) {
+    try {
+        $stmt = $pdo->prepare("SELECT m.*, u.name as assign_by, u.role as creator_role 
+                              FROM meetings m 
+                              JOIN users u ON m.created_by = u.id 
+                              WHERE m.meeting_date = ?");
+        $stmt->execute([$preset_date]);
+        $allDbMeetings = $stmt->fetchAll();
+    } catch (\Exception $e) {}
+}
+
 
 $dayMeetings = [];
 $currentUserId = $_SESSION['user_id'];
 
 foreach ($allDbMeetings as &$m) {
     $timeKey = date('H:i', strtotime($m['meeting_time']));
-    
+
     // Fetch participants for this meeting
     $pStmt = $pdo->prepare("SELECT u.id, u.name FROM meeting_participants mp JOIN users u ON mp.user_id = u.id WHERE mp.meeting_id = ?");
     $pStmt->execute([$m['id']]);
     $m['participants'] = $pStmt->fetchAll();
-    
+
     // Check if current user is involved (creator or participant)
     $m['is_involved'] = ($m['created_by'] == $currentUserId);
     if (!$m['is_involved']) {
@@ -56,7 +67,7 @@ foreach ($allDbMeetings as &$m) {
     // Visibility Logic: 
     // - External (is_rsl_employee=0) visible to all, UNLESS it's a sub_admin's external meeting which is hidden from employees.
     // - Internal (is_rsl_employee=1) only details to involved users.
-    
+
     $isSubAdminExternal = ($m['is_rsl_employee'] == 0 && $m['creator_role'] == 'sub_admin');
     $isEmployee = ($_SESSION['role'] === 'employee');
 
@@ -80,10 +91,11 @@ unset($m); // Break reference
 $busyMap = [];
 foreach ($allDbMeetings as $m) {
     $timeKey = date('H:i', strtotime($m['meeting_time']));
-    if (!isset($busyMap[$timeKey])) $busyMap[$timeKey] = [];
-    
+    if (!isset($busyMap[$timeKey]))
+        $busyMap[$timeKey] = [];
+
     $busyMap[$timeKey][$m['id']] = array_merge(
-        [$m['created_by']], 
+        [$m['created_by']],
         array_column($m['participants'], 'id')
     );
 }
@@ -104,10 +116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
 
     // CONFLICT CHECK (Backend Validation)
-    if ($is_rsl_employee && !empty($rsl_employee_ids)) {
+    if ($pdo && $is_rsl_employee && !empty($rsl_employee_ids)) {
+
         $checkIds = array_merge([$user_id], $rsl_employee_ids);
         $placeholders = implode(',', array_fill(0, count($checkIds), '?'));
-        
+
         // Check if anyone is already in a meeting at this time (creator or participant)
         $query = "SELECT u.name FROM users u 
                   WHERE u.id IN ($placeholders) 
@@ -116,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     OR 
                     u.id IN (SELECT user_id FROM meeting_participants mp JOIN meetings m ON mp.meeting_id = m.id WHERE m.meeting_date = ? AND m.meeting_time = ? " . ($id > 0 ? "AND m.id != $id" : "") . ")
                   )";
-        
+
         $cStmt = $pdo->prepare($query);
         $params = array_merge($checkIds, [$date, $time, $date, $time]);
         $cStmt->execute($params);
@@ -127,31 +140,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($id > 0) {
-        $stmt = $pdo->prepare("UPDATE meetings SET title = ?, meeting_date = ?, meeting_time = ?, duration = ?, is_rsl_employee = ?, meeting_link = ?, description = ? WHERE id = ?");
-        $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $id]);
-        $meetingId = $id;
-        
-        // Clear existing participants
-        $pdo->prepare("DELETE FROM meeting_participants WHERE meeting_id = ?")->execute([$meetingId]);
-    } else {
-        $stmt = $pdo->prepare("INSERT INTO meetings (title, meeting_date, meeting_time, duration, is_rsl_employee, meeting_link, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $user_id]);
-        $meetingId = $pdo->lastInsertId();
-    }
+    if ($pdo) {
+        if ($id > 0) {
+            $stmt = $pdo->prepare("UPDATE meetings SET title = ?, meeting_date = ?, meeting_time = ?, duration = ?, is_rsl_employee = ?, meeting_link = ?, description = ? WHERE id = ?");
+            $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $id]);
+            $meetingId = $id;
 
-    // Save participants
-    if ($is_rsl_employee && !empty($rsl_employee_ids)) {
-        $pStmt = $pdo->prepare("INSERT INTO meeting_participants (meeting_id, user_id) VALUES (?, ?)");
-        foreach ($rsl_employee_ids as $pId) {
-            $pStmt->execute([$meetingId, $pId]);
+            // Clear existing participants
+            $pdo->prepare("DELETE FROM meeting_participants WHERE meeting_id = ?")->execute([$meetingId]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO meetings (title, meeting_date, meeting_time, duration, is_rsl_employee, meeting_link, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $user_id]);
+            $meetingId = $pdo->lastInsertId();
+        }
+
+        // Save participants
+        if ($is_rsl_employee && !empty($rsl_employee_ids)) {
+            $pStmt = $pdo->prepare("INSERT INTO meeting_participants (meeting_id, user_id) VALUES (?, ?)");
+            foreach ($rsl_employee_ids as $pId) {
+                $pStmt->execute([$meetingId, $pId]);
+            }
         }
     }
+
 
     // EMAIL NOTIFICATION LOGIC
     if ($is_rsl_employee && !empty($rsl_employee_ids)) {
         require_once 'includes/mail_helper.php';
-        
+
         // Fetch organizer
         $stmt = $pdo->prepare("SELECT name, email FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
@@ -166,13 +182,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($organizer) {
             foreach ($participants as $p) {
                 sendMeetingEmail(
-                    $organizer['name'], 
-                    $p['email'], 
-                    $p['name'], 
-                    $title, 
-                    $date, 
-                    $time, 
-                    $meeting_link, 
+                    $organizer['name'],
+                    $p['email'],
+                    $p['name'],
+                    $title,
+                    $date,
+                    $time,
+                    $meeting_link,
                     $description,
                     $organizer['email'],
                     'Meeting Invitation'
@@ -214,7 +230,8 @@ include 'includes/header.php';
                             <?php if (!empty($meeting['participants'])): ?>
                                 <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem;">
                                     <?php foreach ($meeting['participants'] as $p): ?>
-                                        <span style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600;">
+                                        <span
+                                            style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600;">
                                             👤 <?php echo htmlspecialchars($p['name']); ?>
                                         </span>
                                     <?php endforeach; ?>
@@ -308,11 +325,16 @@ include 'includes/header.php';
 
             <div class="form-group" id="employee_field" <?php echo $_SESSION['role'] === 'employee' ? 'style="display: block;"' : 'style="display: none;"'; ?>>
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Participants</label>
-                <div id="participant_container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 0.5rem; background: var(--card-bg);">
+                <div id="participant_container"
+                    style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 0.5rem; background: var(--card-bg);">
                     <?php foreach ($allUsers as $u): ?>
                         <?php if ($u['id'] != $_SESSION['user_id']): ?>
-                            <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.4rem 0.5rem; border-radius: 0.25rem; transition: background 0.2s;" onmouseover="this.style.background='var(--bg-color)'" onmouseout="this.style.background='transparent'">
-                                <input type="checkbox" name="rsl_employee_ids[]" value="<?php echo $u['id']; ?>" class="participant-checkbox" style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
+                            <label
+                                style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.4rem 0.5rem; border-radius: 0.25rem; transition: background 0.2s;"
+                                onmouseover="this.style.background='var(--bg-color)'"
+                                onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" name="rsl_employee_ids[]" value="<?php echo $u['id']; ?>"
+                                    class="participant-checkbox" style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
                                 <span style="font-size: 0.9rem;"><?php echo htmlspecialchars($u['name']); ?></span>
                             </label>
                         <?php endif; ?>
@@ -384,7 +406,7 @@ include 'includes/header.php';
             if (meeting.is_rsl_employee == 1) {
                 if (document.getElementById('rsl_yes')) document.getElementById('rsl_yes').checked = true;
                 toggleEmployeeField(true);
-                
+
                 // Select participants using checkboxes
                 const pIds = meeting.participants.map(p => parseInt(p.id));
                 document.querySelectorAll('.participant-checkbox').forEach(cb => {
@@ -458,7 +480,7 @@ include 'includes/header.php';
     function updateParticipantAvailability(currentMeetingId = null) {
         const time = document.getElementById('meeting_time').value;
         const busyData = busyMap[time] || {};
-        
+
         let busyIds = [];
         for (const [mId, ids] of Object.entries(busyData)) {
             if (mId != currentMeetingId) {
@@ -485,7 +507,7 @@ include 'includes/header.php';
     }
 
     // Update availability when time changes
-    document.getElementById('meeting_time').addEventListener('change', function() {
+    document.getElementById('meeting_time').addEventListener('change', function () {
         const mId = document.getElementById('meetingId').value;
         updateParticipantAvailability(mId > 0 ? mId : null);
     });

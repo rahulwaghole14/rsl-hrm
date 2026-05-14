@@ -27,6 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE events SET title = ?, event_date = ?, type = ? WHERE id = ?");
         $stmt->execute([$title, $date, $type, $id]);
     } else {
+        $today = date('Y-m-d');
+        if ($date < $today) {
+            die("Error: Cannot add events to past dates.");
+        }
         $stmt = $pdo->prepare("INSERT INTO events (title, event_date, type) VALUES (?, ?, ?)");
         $stmt->execute([$title, $date, $type]);
     }
@@ -49,7 +53,8 @@ include 'includes/header.php';
 
         <div class="form-group">
             <label>Date</label>
-            <input type="date" name="event_date" value="<?php echo $preset_date; ?>" required>
+            <input type="date" name="event_date" value="<?php echo $preset_date; ?>" 
+                <?php echo ($id == 0) ? 'min="' . date('Y-m-d') . '"' : ''; ?> required>
         </div>
 
         <div class="form-group">
