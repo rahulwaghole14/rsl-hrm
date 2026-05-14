@@ -103,25 +103,100 @@ include 'includes/header.php';
         </div>
     <?php endif; ?>
 
-    <div class="attendance-table-container"
-        style="background: var(--card-bg); border-radius: 1rem; border: 1px solid var(--border-color); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+    <style>
+        .dense-terminal-container {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            overflow: auto;
+            max-height: 75vh;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .dense-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            font-size: 0.8rem;
+        }
+
+        .dense-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: #f8fafc;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        /* Sticky Columns */
+        .sticky-col-1 {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: white !important;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sticky-col-2 {
+            position: sticky;
+            left: 100px; /* Adjust based on col 1 width */
+            z-index: 10;
+            background: white !important;
+            border-right: 2px solid var(--border-color);
+        }
+
+        /* Header z-index needs to be higher than sticky cols */
+        .dense-table thead th.sticky-col-1,
+        .dense-table thead th.sticky-col-2 {
+            z-index: 30;
+        }
+
+        .dense-table tbody tr:hover td {
+            background: #f1f5f9 !important;
+        }
+
+        .dense-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background: white;
+            white-space: nowrap;
+        }
+
+        .priority-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .status-badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+    </style>
+
+    <div class="dense-terminal-container">
+        <table class="dense-table">
             <thead>
-                <tr style="background: var(--weekend-bg); border-bottom: 1px solid var(--border-color);">
-                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                        Date</th>
-                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                        Project/Module</th>
-                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                        Task Title</th>
-                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                        Priority</th>
-                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                        Hours (Est/Act)</th>
-                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                        Status</th>
-                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                        Actions</th>
+                <tr>
+                    <th class="sticky-col-1" style="width: 100px;">Date</th>
+                    <th class="sticky-col-2" style="width: 180px;">Project/Module</th>
+                    <th>Task Title</th>
+                    <th>Priority</th>
+                    <th>Hours (Est/Act)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -133,57 +208,51 @@ include 'includes/header.php';
                     </tr>
                 <?php else: ?>
                     <?php foreach ($tasks as $task): ?>
-                        <tr style="border-bottom: 1px solid var(--border-color);">
-                            <td style="padding: 1rem;">
+                        <tr>
+                            <td class="sticky-col-1">
                                 <strong><?php echo date('d M', strtotime($task['task_date'])); ?></strong>
                                 <?php if ($is_admin): ?>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">
                                         <?php echo htmlspecialchars($task['user_name']); ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td style="padding: 1rem;">
+                            <td class="sticky-col-2">
                                 <div style="font-weight: 600;"><?php echo htmlspecialchars($task['project']); ?></div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted); opacity: 0.8;">
                                     <?php echo htmlspecialchars($task['module']); ?>
                                 </div>
                             </td>
-                            <td style="padding: 1rem;">
+                            <td>
                                 <div style="font-weight: 600; color: var(--primary-color);">
                                     <?php echo htmlspecialchars($task['task_title']); ?>
                                 </div>
-                                <div
-                                    style="font-size: 0.7rem; color: var(--text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    <?php echo htmlspecialchars($task['task_description']); ?>
-                                </div>
                             </td>
-                            <td style="padding: 1rem;">
-                                <span style="font-size: 0.7rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; 
-                                    <?php
-                                    if ($task['priority'] === 'Urgent')
-                                        echo 'background: #fee2e2; color: #ef4444;';
-                                    elseif ($task['priority'] === 'High')
-                                        echo 'background: #ffedd5; color: #f97316;';
-                                    else
-                                        echo 'background: #f3f4f6; color: #6b7280;';
+                            <td>
+                                <span class="priority-badge" 
+                                    style="<?php
+                                    if ($task['priority'] === 'Urgent') echo 'background: #fee2e2; color: #ef4444;';
+                                    elseif ($task['priority'] === 'High') echo 'background: #ffedd5; color: #f97316;';
+                                    else echo 'background: #f3f4f6; color: #6b7280;';
                                     ?>">
                                     <?php echo $task['priority']; ?>
                                 </span>
                             </td>
-                            <td style="padding: 1rem;">
-                                <div style="font-weight: 700;"><?php echo $task['actual_hours']; ?> <span
-                                        style="font-weight: 400; font-size: 0.7rem;">/
-                                        <?php echo $task['estimated_hours']; ?></span></div>
+                            <td>
+                                <div style="font-weight: 700; font-size: 0.85rem;">
+                                    <?php echo $task['actual_hours']; ?> 
+                                    <span style="font-weight: 400; font-size: 0.65rem; color: #94a3b8;">/ <?php echo $task['estimated_hours']; ?></span>
+                                </div>
                             </td>
-                            <td style="padding: 1rem;">
-                                <span style="padding: 0.3rem 0.7rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 700; 
-                                    background: <?php echo $task['status'] === 'Completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'; ?>;
-                                    color: <?php echo $task['status'] === 'Completed' ? '#10b981' : '#f59e0b'; ?>;">
+                            <td>
+                                <span class="status-badge" 
+                                    style="background: <?php echo $task['status'] === 'Completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'; ?>;
+                                           color: <?php echo $task['status'] === 'Completed' ? '#10b981' : '#f59e0b'; ?>;">
                                     <?php echo $task['status']; ?>
                                 </span>
                             </td>
-                            <td style="padding: 1rem;">
-                                <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"
+                            <td>
+                                <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 0.4rem;"
                                     onclick='openTaskModal(<?php echo json_encode($task); ?>)'>View/Edit</button>
                             </td>
                         </tr>

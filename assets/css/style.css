@@ -478,6 +478,15 @@ body {
 .day-number {
     font-size: 1.1rem;
     font-weight: 700;
+    flex-shrink: 0;
+}
+
+.day-tags-top {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    overflow: hidden;
 }
 
 .holiday .day-number,
@@ -518,31 +527,47 @@ body {
 }
 
 .leave-tag {
-    font-size: 0.6rem;
-    padding: 0.15rem 0.4rem;
-    border-radius: 0.25rem;
-    font-weight: 600;
-    border-left: 2px solid transparent;
+    font-size: 0.65rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: 700;
     cursor: pointer;
-    white-space: nowrap;
+    transition: transform 0.2s;
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.leave-tag:hover {
+    transform: scale(1.1);
+    z-index: 10;
 }
 
 .leave-tag.status-pending {
     background: #fef9c3;
     color: #a16207;
-    border-left-color: #eab308;
+    border-color: #fde047;
 }
 
-.leave-tag.status-approved {
+.leave-tag.status-approved, .leave-tag.status-partially_approved {
     background: #dcfce7;
     color: #16a34a;
-    border-left-color: #22c55e;
+    border-color: #86efac;
+}
+
+.leave-tag.status-partially_approved {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
 }
 
 .leave-tag.status-rejected {
     background: #fee2e2;
     color: #ef4444;
-    border-left-color: #ef4444;
+    border-color: #fca5a5;
 }
 
 .birthday-tag {
