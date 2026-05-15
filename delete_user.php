@@ -21,6 +21,6 @@ if ($id > 0) {
     }
 }
 
-header("Location: admin_attendance.php");
+header("Location: manage_users.php?success=User deleted successfully.");
 exit;
 ?>

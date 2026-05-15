@@ -115,8 +115,7 @@ $isLoginPage = ($currentPage == 'login.php');
                         <?php endif; ?>
 
                         <?php if ($userRole === 'admin'): ?>
-                            <a href="signup.php" class="nav-btn <?php echo ($currentPage == 'signup.php') ? 'active' : ''; ?>">+
-                                User</a>
+                            <a href="manage_users.php" class="nav-btn <?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">Users</a>
                             <a href="admin_attendance.php"
                                 class="nav-btn <?php echo ($currentPage == 'admin_attendance.php') ? 'active' : ''; ?>">Attendance</a>
                             <a href="manage_event.php"
