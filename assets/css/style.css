@@ -9,9 +9,9 @@
     --header-height: 70px;
 
     /* Box Colors (Light Mode) */
-    --normal-bg: #dcfce7;
-    --weekend-bg: #f1f5f9;
-    --holiday-bg: #fee2e2;
+    --normal-bg: #ffffff;
+    --weekend-bg: #ffffff;
+    --holiday-bg: #ffffff;
     --event-bg: #fef9c3;
 
     --holiday-red: #ef4444;
@@ -404,18 +404,18 @@ body {
 }
 
 .day-cell.weekend {
-    background: var(--holiday-bg);
-    border-top: 4px solid var(--holiday-red);
+    background: #ffffff;
+    border-top: 1px solid var(--border-color);
 }
 
 .day-cell.holiday {
-    background: var(--holiday-bg);
-    border-top: 4px solid var(--holiday-red);
+    background: #ffffff; /* Explicitly white for holidays */
+    border-top: 1px solid var(--border-color);
 }
 
 .day-cell.leave-approved {
-    background: var(--holiday-bg) !important;
-    border-top: 4px solid var(--holiday-red) !important;
+    background: #ffffff !important;
+    border-top: 1px solid var(--border-color) !important;
 }
 
 .day-cell.today {
@@ -490,7 +490,8 @@ body {
 }
 
 .holiday .day-number,
-.weekend .day-number {
+.weekend .day-number,
+.leave-approved .day-number {
     color: var(--holiday-red);
 }
 
@@ -514,7 +515,9 @@ body {
 }
 
 .event-tag.holiday-tag {
-    background: var(--holiday-red);
+    background: #fef2f2;
+    color: var(--holiday-red);
+    border: 1px solid #fecaca;
 }
 
 .event-tag.type-event {

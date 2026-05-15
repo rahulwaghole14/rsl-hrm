@@ -25,7 +25,8 @@ if ($pdo) {
     try {
         $stmt = $pdo->query("SELECT id, name FROM users WHERE department != 'IT' ORDER BY name ASC");
         $allUsers = $stmt->fetchAll();
-    } catch (\Exception $e) {}
+    } catch (\Exception $e) {
+    }
 }
 
 // Fetch all meetings for the selected date to handle global blocking
@@ -38,7 +39,8 @@ if ($pdo) {
                               WHERE m.meeting_date = ?");
         $stmt->execute([$preset_date]);
         $allDbMeetings = $stmt->fetchAll();
-    } catch (\Exception $e) {}
+    } catch (\Exception $e) {
+    }
 }
 
 
