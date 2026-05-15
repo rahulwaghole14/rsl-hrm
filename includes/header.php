@@ -64,7 +64,7 @@ $isLoginPage = ($currentPage == 'login.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSL Calendar 2026</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css?v=1.1">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo filemtime(__DIR__ . '/../assets/css/style.css'); ?>">
     <script>
         // Theme Logic
         function applyTheme(theme) {
@@ -118,9 +118,9 @@ $isLoginPage = ($currentPage == 'login.php');
                             <a href="manage_users.php" class="nav-btn <?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">Users</a>
                             <a href="admin_attendance.php"
                                 class="nav-btn <?php echo ($currentPage == 'admin_attendance.php') ? 'active' : ''; ?>">Attendance</a>
-                            <a href="manage_event.php"
-                                class="nav-btn <?php echo ($currentPage == 'manage_event.php') ? 'active' : ''; ?>">+ Event</a>
-                        <?php endif; ?>
+                            <a href="manage_events.php"
+                                class="nav-btn <?php echo ($currentPage == 'manage_events.php') ? 'active' : ''; ?>">Events</a>
+<?php endif; ?>
 
                         <a href="logout.php" class="nav-btn btn-logout">Logout</a>
                     <?php else: ?>

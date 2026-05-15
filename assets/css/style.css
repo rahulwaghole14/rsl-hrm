@@ -15,7 +15,7 @@
     --event-bg: #fef9c3;
 
     --holiday-red: #ef4444;
-    --event-yellow: #f59e0b;
+    --event-yellow: #f0d9b2;
     --border-color: #e2e8f0;
 }
 
@@ -56,6 +56,7 @@ body {
     width: 100vw;
     overflow: hidden;
 }
+
 .auth-layout {
     display: flex;
     justify-content: center;
@@ -217,7 +218,7 @@ body {
 
 .view-btn.active {
     background: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .user-profile {
@@ -368,16 +369,18 @@ body {
     text-transform: uppercase;
     font-size: 0.75rem;
     position: sticky;
-    top: -2rem; /* Pull it up to sit flush with the top header when scrolling */
+    top: -2rem;
+    /* Pull it up to sit flush with the top header when scrolling */
     z-index: 20;
     border-bottom: 2px solid var(--border-color);
-    box-shadow: 0 4px 6px -2px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Ensure the first and last headers match the grid's rounded corners */
 .day-header:first-child {
     border-top-left-radius: 0.75rem;
 }
+
 .day-header:nth-child(7) {
     border-top-right-radius: 0.75rem;
 }
@@ -409,7 +412,8 @@ body {
 }
 
 .day-cell.holiday {
-    background: #ffffff; /* Explicitly white for holidays */
+    background: #ffffff;
+    /* Explicitly white for holidays */
     border-top: 1px solid var(--border-color);
 }
 
@@ -446,16 +450,16 @@ body {
 }
 
 .day-cell.event-day {
-    background: #fef08a !important;
+    background: #ffffff !important;
 }
 
 .day-cell.half-day {
-    background: #dbeafe !important;
+    background: #ffffff !important;
 }
 
 .day-cell.holiday.event-day {
-    background: var(--event-bg);
-    border-top: 4px solid var(--holiday-red);
+    background: #ffffff;
+    border-top: 1px solid var(--border-color);
 }
 
 .day-cell.other-month {
@@ -540,8 +544,8 @@ body {
     font-weight: 700;
     cursor: pointer;
     transition: transform 0.2s;
-    border: 1px solid rgba(0,0,0,0.1);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .leave-tag:hover {
@@ -555,7 +559,8 @@ body {
     border-color: #fde047;
 }
 
-.leave-tag.status-approved, .leave-tag.status-partially_approved {
+.leave-tag.status-approved,
+.leave-tag.status-partially_approved {
     background: #dcfce7;
     color: #16a34a;
     border-color: #86efac;
@@ -999,31 +1004,32 @@ body {
     .btn-group-responsive {
         flex-direction: column !important;
     }
-    
+
     .calendar-grid {
         gap: 0;
     }
-    
+
     .day-cell {
         min-height: 80px;
         padding: 0.25rem;
     }
-    
+
     .day-number {
         font-size: 0.8rem;
     }
-    
+
     .event-tag {
         font-size: 0.55rem;
         padding: 0.15rem 0.25rem;
     }
-    
+
     .day-tags-top {
         top: 0.25rem;
         right: 0.25rem;
     }
 
-    .leave-tag, .birthday-tag {
+    .leave-tag,
+    .birthday-tag {
         font-size: 0.5rem;
         padding: 0.1rem 0.2rem;
     }

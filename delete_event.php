@@ -14,6 +14,6 @@ if ($id > 0) {
     $stmt->execute([$id]);
 }
 
-header("Location: index.php");
+header("Location: manage_events.php?success=Event deleted successfully.");
 exit;
 ?>

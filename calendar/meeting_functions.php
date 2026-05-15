@@ -85,19 +85,40 @@ function renderMeetingCalendar($year, $month)
         $dayMeetings = isset($meetings[$currentDate]) ? $meetings[$currentDate] : [];
 
         $isPast = ($currentDate < date('Y-m-d'));
-        $clickAttr = $isPast ? 'style="cursor: default; opacity: 0.6;"' : 'onclick="location.href=\'manage_meeting.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
+        $clickAttr = 'onclick="location.href=\'manage_meeting.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
         if ($isPast)
             $classes[] = 'past-date';
 
         echo '<div class="day-cell ' . implode(' ', $classes) . '" ' . $clickAttr . '>';
         echo '<div class="day-number">' . $day . '</div>';
 
-        echo '<div class="event-list">';
+        echo '<div class="event-list" style="display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.5rem;">';
+        $maxVisible = 3;
+        $count = 0;
+        $totalMeetings = count($dayMeetings);
+
         foreach ($dayMeetings as $m) {
+            if ($count >= $maxVisible)
+                break;
+
             $time = date('h:i A', strtotime($m['meeting_time']));
-            echo '<div class="calendar-meeting-item" title="' . htmlspecialchars($m['title']) . '">';
-            echo '<strong>' . $time . '</strong> ' . htmlspecialchars($m['title']);
+            $organizerName = $m['organizer'];
+            $initials = strtoupper(substr($organizerName, 0, 1));
+            $words = explode(" ", $organizerName);
+            if (count($words) > 1) {
+                $initials .= strtoupper(substr(end($words), 0, 1));
+            }
+
+            echo '<div class="calendar-meeting-item" title="' . htmlspecialchars($m['title'] . ' (by ' . $organizerName . ')') . '" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.4rem; background: rgba(139, 92, 241, 0.08); border-radius: 0.4rem; border: 1px solid rgba(139, 92, 241, 0.1);">';
+            echo '<div style="width: 16px; height: 16px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-weight: 700; flex-shrink: 0;">' . $initials . '</div>';
+            echo '<span style="font-size: 0.7rem; font-weight: 700; color: var(--primary-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' . $time . '</span>';
             echo '</div>';
+            $count++;
+        }
+
+        if ($totalMeetings > $maxVisible) {
+            $moreCount = $totalMeetings - $maxVisible;
+            echo '<div class="meeting-count-badge" style="margin-top: 0.2rem; font-size: 0.65rem; padding: 0.2rem 0.4rem; text-align: center; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border-radius: 0.3rem; font-weight: 700; border: 1px solid rgba(139, 92, 246, 0.2);">+' . $moreCount . ' more</div>';
         }
         echo '</div>';
 

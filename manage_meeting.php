@@ -9,6 +9,8 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'sub_adm
 
 $preset_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 $isPastDate = ($preset_date < date('Y-m-d'));
+$isToday = ($preset_date === date('Y-m-d'));
+$currentTime = date('H:i');
 
 // Define Slots (11:00 AM to 8:00 PM, every 30 mins)
 $slots = [];
@@ -57,6 +59,7 @@ foreach ($allDbMeetings as &$m) {
 
     // Check if current user is involved (creator or participant)
     $m['is_involved'] = ($m['created_by'] == $currentUserId);
+    $m['can_edit'] = ($m['created_by'] == $currentUserId || $_SESSION['role'] === 'admin');
     if (!$m['is_involved']) {
         foreach ($m['participants'] as $p) {
             if ($p['id'] == $currentUserId) {
@@ -106,6 +109,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($isPastDate) {
         die("Error: Cannot schedule or modify meetings on past dates.");
     }
+
+    if ($isToday && $_POST['meeting_time'] < $currentTime && !isset($_POST['id'])) {
+        die("Error: Cannot schedule meetings in past time slots.");
+    }
     $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
     $title = $_POST['title'];
     $date = $_POST['meeting_date'];
@@ -144,6 +151,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($pdo) {
         if ($id > 0) {
+            // Check authorization before update
+            $authStmt = $pdo->prepare("SELECT created_by FROM meetings WHERE id = ?");
+            $authStmt->execute([$id]);
+            $creatorId = $authStmt->fetchColumn();
+            
+            if ($_SESSION['role'] !== 'admin' && $creatorId != $user_id) {
+                die("Error: You are not authorized to edit this meeting.");
+            }
+
             $stmt = $pdo->prepare("UPDATE meetings SET title = ?, meeting_date = ?, meeting_time = ?, duration = ?, is_rsl_employee = ?, meeting_link = ?, description = ? WHERE id = ?");
             $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $id]);
             $meetingId = $id;
@@ -219,9 +235,12 @@ include 'includes/header.php';
         $timeVal = date('H:i', strtotime($slotTime));
         $isBooked = isset($dayMeetings[$timeVal]);
         $meeting = $isBooked ? $dayMeetings[$timeVal] : null;
+        $isSlotPast = ($isPastDate || ($isToday && $timeVal < $currentTime));
         ?>
-        <div class="slot-card <?php echo $isBooked ? 'booked' : ''; ?>">
-            <div class="slot-time"><?php echo date('h:i A', strtotime($slotTime)); ?></div>
+        <div class="slot-card <?php echo $isBooked ? 'booked' : ''; ?> <?php echo $isSlotPast ? 'past' : ''; ?>">
+            <div class="slot-time" style="<?php echo $isSlotPast ? 'opacity: 0.5;' : ''; ?>">
+                <?php echo date('h:i A', strtotime($slotTime)); ?>
+            </div>
 
             <div class="slot-details">
                 <?php if ($isBooked): ?>
@@ -256,6 +275,10 @@ include 'includes/header.php';
                     <div style="font-size: 0.7rem; color: var(--text-muted);">
                         👤 Assigned by: <strong><?php echo htmlspecialchars($meeting['assign_by']); ?></strong>
                     </div>
+                <?php elseif ($isSlotPast): ?>
+                    <span style="color: var(--text-muted); font-weight: 600; opacity: 0.7;">
+                        <?php echo $isPastDate ? 'Closed' : 'Passed'; ?>
+                    </span>
                 <?php else: ?>
                     <span style="color: #10b981; font-weight: 600;">Available</span>
                 <?php endif; ?>
@@ -264,18 +287,19 @@ include 'includes/header.php';
             <div class="slot-actions">
                 <?php if ($isBooked): ?>
                     <?php if ($meeting['is_involved'] || $_SESSION['role'] === 'admin'): ?>
+                        <?php 
+                        $showEdit = $meeting['can_edit'] && !$isSlotPast;
+                        ?>
                         <button class="btn" style="width: 100%; border-color: #8b5cf6; color: #8b5cf6;"
                             onclick="openMeetingModal(<?php echo htmlspecialchars(json_encode($meeting)); ?>)">
-                            <?php echo $isPastDate ? 'View' : 'Edit'; ?>
+                            <?php echo $showEdit ? 'Edit' : 'View'; ?>
                         </button>
                     <?php else: ?>
                         <button class="btn" style="width: 100%; opacity: 0.5; cursor: not-allowed;" disabled>Booked</button>
                     <?php endif; ?>
-                <?php elseif (!$isPastDate): ?>
+                <?php elseif (!$isSlotPast): ?>
                     <button class="btn btn-primary" style="width: 100%; background: #8b5cf6; border-color: #8b5cf6;"
                         onclick="openMeetingModal(null, '<?php echo $slotTime; ?>')">Schedule</button>
-                <?php else: ?>
-                    <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">Closed</span>
                 <?php endif; ?>
             </div>
         </div>
@@ -445,15 +469,23 @@ include 'includes/header.php';
         updateParticipantAvailability(meeting ? meeting.id : null);
         modal.classList.add('active');
 
-        // Handle past date (Read-only mode)
+        // Handle past date/slot OR lack of edit permission (Read-only mode)
         const isPastDate = <?php echo $isPastDate ? 'true' : 'false'; ?>;
-        if (isPastDate) {
+        const isToday = <?php echo $isToday ? 'true' : 'false'; ?>;
+        const currentTime = '<?php echo $currentTime; ?>';
+        const userRole = '<?php echo $_SESSION['role']; ?>';
+        const currentUserId = '<?php echo $_SESSION['user_id']; ?>';
+        
+        const isSlotPast = isPastDate || (isToday && (meeting ? meeting.meeting_time < currentTime : time < currentTime));
+        const canEdit = !meeting || (meeting.created_by == currentUserId || userRole === 'admin');
+
+        if (isSlotPast || !canEdit) {
             document.querySelectorAll('#meetingForm input, #meetingForm select, #meetingForm textarea').forEach(el => {
                 el.disabled = true;
             });
             document.querySelector('#meetingForm button[type="submit"]').style.display = 'none';
             deleteBtn.style.display = 'none';
-            title.innerText = 'View Meeting Details';
+            title.innerText = canEdit ? 'View Meeting Details' : 'View Meeting (Read-Only)';
         } else {
             document.querySelectorAll('#meetingForm input, #meetingForm select, #meetingForm textarea').forEach(el => {
                 el.disabled = false;
