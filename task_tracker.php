@@ -146,7 +146,8 @@ include 'includes/header.php';
 
         .sticky-col-2 {
             position: sticky;
-            left: 100px; /* Adjust based on col 1 width */
+            left: 100px;
+            /* Adjust based on col 1 width */
             z-index: 10;
             background: white !important;
             border-right: 2px solid var(--border-color);
@@ -229,23 +230,26 @@ include 'includes/header.php';
                                 </div>
                             </td>
                             <td>
-                                <span class="priority-badge" 
-                                    style="<?php
-                                    if ($task['priority'] === 'Urgent') echo 'background: #fee2e2; color: #ef4444;';
-                                    elseif ($task['priority'] === 'High') echo 'background: #ffedd5; color: #f97316;';
-                                    else echo 'background: #f3f4f6; color: #6b7280;';
-                                    ?>">
+                                <span class="priority-badge" style="<?php
+                                if ($task['priority'] === 'Urgent')
+                                    echo 'background: #fee2e2; color: #ef4444;';
+                                elseif ($task['priority'] === 'High')
+                                    echo 'background: #ffedd5; color: #f97316;';
+                                else
+                                    echo 'background: #f3f4f6; color: #6b7280;';
+                                ?>">
                                     <?php echo $task['priority']; ?>
                                 </span>
                             </td>
                             <td>
                                 <div style="font-weight: 700; font-size: 0.85rem;">
-                                    <?php echo $task['actual_hours']; ?> 
-                                    <span style="font-weight: 400; font-size: 0.65rem; color: #94a3b8;">/ <?php echo $task['estimated_hours']; ?></span>
+                                    <?php echo $task['actual_hours']; ?>
+                                    <span style="font-weight: 400; font-size: 0.65rem; color: #94a3b8;">/
+                                        <?php echo $task['estimated_hours']; ?></span>
                                 </div>
                             </td>
                             <td>
-                                <span class="status-badge" 
+                                <span class="status-badge"
                                     style="background: <?php echo $task['status'] === 'Completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'; ?>;
                                            color: <?php echo $task['status'] === 'Completed' ? '#10b981' : '#f59e0b'; ?>;">
                                     <?php echo $task['status']; ?>
@@ -341,7 +345,7 @@ include 'includes/header.php';
                         <option value="Completed">Completed</option>
                         <option value="In Progress">In Progress</option>
                         <option value="Pending">Pending</option>
-                        <option value="Pending">Bloked</option>
+                        <option value="Pending">Blocked</option>
                     </select>
                 </div>
 
@@ -550,7 +554,7 @@ include 'includes/header.php';
             document.getElementById('modalTitle').innerText = 'Add New Task Entry';
             form.reset();
             document.getElementById('taskId').value = '';
-            
+
             // Clear restrictions for New Task
             const allFields = [
                 'taskDate', 'taskProject', 'taskModule', 'taskTitle',

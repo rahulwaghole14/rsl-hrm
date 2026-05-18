@@ -10,7 +10,7 @@
             <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div class="form-group">
                     <label>From Date <span style="color:red">*</span></label>
-                    <input type="date" name="from_date" id="modalFromDate" required onchange="calculateDays()">
+                    <input type="date" name="from_date" id="modalFromDate" required onchange="handleFromDateChange()">
                 </div>
                 <div class="form-group">
                     <label>To Date <span style="color:red">*</span></label>
@@ -163,10 +163,33 @@
 </style>
 
 <script>
+    function handleFromDateChange() {
+        const fromDateInput = document.getElementById('modalFromDate');
+        const toDateInput = document.getElementById('modalToDate');
+        
+        if (fromDateInput.value) {
+            toDateInput.setAttribute('min', fromDateInput.value);
+            if (toDateInput.value && toDateInput.value < fromDateInput.value) {
+                toDateInput.value = fromDateInput.value;
+            }
+        }
+        calculateDays();
+    }
+
     function openLeaveModal(date) {
         document.getElementById('modalFromDate').value = date;
         document.getElementById('modalToDate').value = date;
-        calculateDays();
+        
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const minDate = `${year}-${month}-${day}`;
+        
+        document.getElementById('modalFromDate').setAttribute('min', minDate);
+        
+        handleFromDateChange();
+        
         document.getElementById('leaveModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }

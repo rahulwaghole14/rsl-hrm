@@ -22,7 +22,7 @@ try {
         $params[] = $searchParam;
     }
 
-    $sql = "SELECT id, name, email, mob_no, dob, role, emp_id, department 
+    $sql = "SELECT id, name, email, mob_no, dob, role, emp_id, department, status 
             FROM users 
             WHERE " . implode(" AND ", $where) . " 
             ORDER BY name ASC";
@@ -82,6 +82,7 @@ include 'includes/header.php';
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">User</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Employee ID</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Role</th>
+                    <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Status</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Mobile</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; text-align: center;">Actions</th>
                 </tr>
@@ -127,6 +128,13 @@ include 'includes/header.php';
                                     ?>">
                                     <?php echo str_replace('_', ' ', $u['role']); ?>
                                 </span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <?php if (isset($u['status']) && $u['status'] === 'inactive'): ?>
+                                    <span style="font-size: 0.7rem; font-weight: 800; padding: 0.3rem 0.6rem; border-radius: 2rem; text-transform: uppercase; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;">Inactive</span>
+                                <?php else: ?>
+                                    <span style="font-size: 0.7rem; font-weight: 800; padding: 0.3rem 0.6rem; border-radius: 2rem; text-transform: uppercase; background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0;">Active</span>
+                                <?php endif; ?>
                             </td>
                             <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
                                 <?php echo htmlspecialchars($u['mob_no']); ?>
@@ -191,10 +199,19 @@ include 'includes/header.php';
                 </div>
             </div>
 
-            <div class="form-group" style="margin-top: 0.5rem;">
-                <label id="passwordLabel">Password</label>
-                <input type="password" name="password" id="userPassword" placeholder="Minimum 6 characters">
-                <small id="passwordHelp" style="color: var(--text-muted); display: none;">Leave blank to keep current password.</small>
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+                <div class="form-group">
+                    <label id="passwordLabel">Password</label>
+                    <input type="password" name="password" id="userPassword" placeholder="Minimum 6 characters">
+                    <small id="passwordHelp" style="color: var(--text-muted); display: none;">Leave blank to keep current password.</small>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" id="userStatus" required>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
@@ -213,6 +230,7 @@ include 'includes/header.php';
         document.getElementById('userPassword').required = true;
         document.getElementById('passwordHelp').style.display = 'none';
         document.getElementById('passwordLabel').innerText = 'Password';
+        document.getElementById('userStatus').value = 'active';
         
         toggleEmpId('employee');
         document.getElementById('userModal').classList.add('active');
@@ -230,6 +248,7 @@ include 'includes/header.php';
         document.getElementById('userPassword').required = false;
         document.getElementById('passwordHelp').style.display = 'block';
         document.getElementById('passwordLabel').innerText = 'New Password';
+        document.getElementById('userStatus').value = user.status || 'active';
         
         toggleEmpId(user.role);
         document.getElementById('userModal').classList.add('active');
