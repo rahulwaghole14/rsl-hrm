@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Animated Calendar Concepts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+            color: #0f172a;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        h1 { font-family: 'Outfit', sans-serif; text-align: center; margin-bottom: 10px; color: #1e3a8a; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 60px; font-size: 1.1rem; }
+
+        .concept-container {
+            max-width: 1100px;
+            margin: 0 auto 80px auto;
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.5);
+            animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .concept-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: #1e3a8a; 
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .concept-desc { color: #64748b; margin-bottom: 30px; font-size: 1rem; line-height: 1.6; }
+
+        .mock-grid { display: grid; grid-template-columns: repeat(7, 1fr); width: 100%; }
+        .mock-day-header { text-align: center; padding: 15px; font-family: 'Outfit'; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+
+        /* =========================================================
+           CONCEPT 1: RSL Immersive Glassmorphism
+           ========================================================= */
+        .c1-wrapper { 
+            background: linear-gradient(145deg, #1e3a8a 0%, #2563eb 100%);
+            padding: 24px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(30, 58, 138, 0.25); position: relative; overflow: hidden;
+        }
+        .c1-wrapper::before { content: ''; position: absolute; bottom: -50px; right: -50px; width: 300px; height: 300px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+        .c1-wrapper::after { content: ''; position: absolute; top: -50px; left: 100px; width: 200px; height: 200px; background: rgba(255,255,255,0.03); border-radius: 50%; }
+        .c1-grid { gap: 12px; position: relative; z-index: 10;}
+        .c1-day-header { color: rgba(255,255,255,0.7); }
+        .c1-cell { 
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            min-height: 110px; border-radius: 16px; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); color: white; cursor: pointer;
+            opacity: 0; animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .c1-cell:nth-child(1) { animation-delay: 0.1s; } .c1-cell:nth-child(2) { animation-delay: 0.15s; }
+        .c1-cell:nth-child(3) { animation-delay: 0.2s; } .c1-cell:nth-child(4) { animation-delay: 0.25s; }
+        .c1-cell:nth-child(5) { animation-delay: 0.3s; } .c1-cell:nth-child(6) { animation-delay: 0.35s; } .c1-cell:nth-child(7) { animation-delay: 0.4s; }
+        .c1-cell:hover { transform: translateY(-5px) scale(1.02); background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .c1-num { font-family: 'Outfit'; font-weight: 700; margin-bottom: 8px; font-size: 1.2rem; }
+        .c1-today { background: white !important; color: #1e3a8a; box-shadow: 0 0 20px rgba(255,255,255,0.2); border: none; }
+        .c1-today .c1-num { color: #2563eb; font-weight: 800; font-size: 1.4rem;}
+        .c1-tag { background: rgba(255,255,255,0.15); color: white; padding: 5px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
+        .c1-today .c1-tag { background: #eef2ff; color: #2563eb; border-color: #e0e7ff; }
+        .c1-tag.red { background: rgba(239, 68, 68, 0.3); color: #fecaca; border-color: rgba(239, 68, 68, 0.4);}
+
+        /* =========================================================
+           CONCEPT 2: RSL Clean Dashboard
+           ========================================================= */
+        .c2-wrapper { background: #f8fafc; padding: 24px; border-radius: 24px; border: 1px solid #e2e8f0; }
+        .c2-grid { gap: 12px; }
+        .c2-day-header { color: #64748b; }
+        .c2-cell { 
+            background: white; min-height: 110px; border-radius: 16px; padding: 12px; border: 1px solid transparent; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; position: relative; overflow: hidden;
+            opacity: 0; animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .c2-cell::after {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 60%);
+            transform: translate(-50%, -50%) scale(0); transition: transform 0.4s ease; border-radius: 50%; z-index: 0;
+        }
+        .c2-cell:hover::after { transform: translate(-50%, -50%) scale(2); }
+        .c2-cell:nth-child(1) { animation-delay: 0.1s; } .c2-cell:nth-child(2) { animation-delay: 0.15s; }
+        .c2-cell:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(37, 99, 235, 0.08); border-color: #bfdbfe; }
+        .c2-num { font-family: 'Outfit'; font-weight: 700; margin-bottom: 8px; font-size: 1.2rem; color: #0f172a; position: relative; z-index: 1; }
+        .c2-today { border: 2px solid #2563eb; background: #fafaf9; }
+        .c2-today .c2-num { color: #2563eb; font-weight: 800; font-size: 1.4rem; }
+        .c2-tag { background: #f1f5f9; color: #475569; padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; position: relative; z-index: 1; transition: background 0.2s; }
+        .c2-today .c2-tag { background: #dbeafe; color: #1e40af; }
+        .c2-tag.red { background: #fee2e2; color: #b91c1c; }
+
+        /* =========================================================
+           CONCEPT 3: RSL Executive Dark
+           ========================================================= */
+        .c3-wrapper { background: #0b0f19; padding: 32px; border-radius: 24px; box-shadow: inset 0 0 100px rgba(0,0,0,0.5); }
+        .c3-day-header { color: #94a3b8; }
+        .c3-grid { gap: 1px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden;}
+        .c3-cell { 
+            background: #0b0f19; min-height: 120px; padding: 16px; position: relative; transition: all 0.3s; cursor: pointer;
+            opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .c3-cell:nth-child(odd) { animation-delay: 0.2s; }
+        .c3-cell:hover { background: #131b2f; box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.2); }
+        /* Glowing top border on hover */
+        .c3-cell::before { content:''; position:absolute; top:0; left:0; width:100%; height:2px; background: transparent; transition: background 0.3s; }
+        .c3-cell:hover::before { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+        .c3-num { font-family: 'Outfit'; font-weight: 500; font-size: 1.2rem; color: #f8fafc; margin-bottom: 12px; }
+        .c3-today { background: #1e293b; }
+        .c3-today::before { background: #2563eb; box-shadow: 0 0 15px #2563eb; }
+        .c3-today .c3-num { color: #60a5fa; font-weight: 800; }
+        .c3-tag { background: rgba(255,255,255,0.05); color: #cbd5e1; padding: 4px 8px; border-radius: 4px; border-left: 2px solid #3b82f6; font-size: 0.75rem; font-weight: 500; margin-bottom: 6px; }
+        .c3-tag.red { border-left-color: #ef4444; color: #fca5a5; }
+
+        /* =========================================================
+           CONCEPT 4: Neumorphic Tactile Cards
+           ========================================================= */
+        .concept-container.neumorphic { background: #e2e8f0; border: none; box-shadow: none; }
+        .c4-wrapper { background: #e2e8f0; padding: 24px; border-radius: 24px; }
+        .c4-day-header { color: #64748b; }
+        .c4-grid { gap: 16px; }
+        .c4-cell { 
+            background: #e2e8f0; min-height: 110px; border-radius: 16px; padding: 12px; cursor: pointer;
+            box-shadow: 8px 8px 16px rgba(163,177,198,0.5), -8px -8px 16px rgba(255,255,255,0.8);
+            transition: all 0.2s ease-in-out;
+            opacity: 0; animation: popIn 0.5s ease forwards;
+        }
+        .c4-cell:nth-child(n) { animation-delay: 0.1s; }
+        /* On hover, press into the screen */
+        .c4-cell:hover { 
+            box-shadow: inset 6px 6px 10px rgba(163,177,198,0.5), inset -6px -6px 10px rgba(255,255,255,0.8);
+        }
+        .c4-num { font-family: 'Outfit'; font-weight: 700; margin-bottom: 8px; font-size: 1.2rem; color: #334155; }
+        .c4-today { box-shadow: inset 6px 6px 10px rgba(163,177,198,0.5), inset -6px -6px 10px rgba(255,255,255,0.8); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .c4-today .c4-num { color: #2563eb; }
+        .c4-tag { font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 6px; padding: 4px; }
+        .c4-tag::before { content:'•'; color: #3b82f6; margin-right: 4px; font-size: 1.2em; }
+        .c4-tag.red::before { color: #ef4444; }
+
+        /* =========================================================
+           CONCEPT 5: Hyper-Minimalist Active Grid
+           ========================================================= */
+        .c5-grid { gap: 4px; padding: 20px; }
+        .c5-day-header { color: #94a3b8; }
+        .c5-cell {
+            background: transparent; min-height: 100px; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; cursor: pointer; position: relative; z-index: 1;
+        }
+        /* Expanding circle hover animation */
+        .c5-cell::before {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0; height: 0; background: #f1f5f9; border-radius: 50%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: -1;
+        }
+        .c5-cell:hover::before { width: 90px; height: 90px; }
+        .c5-num { font-family: 'Inter'; font-weight: 500; font-size: 1.1rem; color: #1e293b; margin-top: 5px;}
+        .c5-today::before { width: 40px; height: 40px; background: #3b82f6; top: 25px; }
+        .c5-today:hover::before { width: 90px; height: 90px; background: #3b82f6; opacity: 0.9; }
+        .c5-today .c5-num { color: white; font-weight: 700; margin-top: 8px;}
+        
+        .c5-dots-container { display: flex; gap: 6px; margin-top: 15px; }
+        .c5-dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; }
+        .c5-dot.red { background: #ef4444; }
+
+
+        /* ANIMATIONS */
+        @keyframes slideUpFade {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Premium RSL Calendar Aesthetics</h1>
+    <div class="subtitle">5 highly detailed, fully animated calendar layouts.</div>
+
+    <!-- CONCEPT 1 -->
+    <div class="concept-container" style="animation-delay: 0s;">
+        <div class="concept-title">✨ Concept 1: Immersive Glass (Login Page Left)</div>
+        <div class="concept-desc">Uses the exact deep blue gradient from your login page. Features frosted glass cards with staggered pop-in animations and smooth 3D hover lifting.</div>
+        <div class="c1-wrapper">
+            <div class="mock-grid">
+                <div class="mock-day-header c1-day-header">Mon</div><div class="mock-day-header c1-day-header">Tue</div><div class="mock-day-header c1-day-header">Wed</div><div class="mock-day-header c1-day-header">Thu</div><div class="mock-day-header c1-day-header">Fri</div><div class="mock-day-header c1-day-header">Sat</div><div class="mock-day-header c1-day-header">Sun</div>
+            </div>
+            <div class="mock-grid c1-grid">
+                <div class="c1-cell" style="opacity: 0.3;"><div class="c1-num">28</div></div>
+                <div class="c1-cell" style="opacity: 0.3;"><div class="c1-num">29</div></div>
+                <div class="c1-cell" style="opacity: 0.3;"><div class="c1-num">30</div></div>
+                <div class="c1-cell"><div class="c1-num">1</div><div class="c1-tag red">Maharashtra Day</div></div>
+                <div class="c1-cell"><div class="c1-num">2</div></div>
+                <div class="c1-cell"><div class="c1-num">3</div></div>
+                <div class="c1-cell c1-today"><div class="c1-num">4</div><div class="c1-tag">Team Meeting</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONCEPT 2 -->
+    <div class="concept-container" style="animation-delay: 0.2s;">
+        <div class="concept-title">🚀 Concept 2: Clean Dashboard (Login Page Right)</div>
+        <div class="concept-desc">Matches the crisp, clean white aesthetic of the inputs on your login form. Uses large floating cards with a subtle, expanding radial ripple effect on hover.</div>
+        <div class="c2-wrapper">
+            <div class="mock-grid">
+                <div class="mock-day-header c2-day-header">Mon</div><div class="mock-day-header c2-day-header">Tue</div><div class="mock-day-header c2-day-header">Wed</div><div class="mock-day-header c2-day-header">Thu</div><div class="mock-day-header c2-day-header">Fri</div><div class="mock-day-header c2-day-header">Sat</div><div class="mock-day-header c2-day-header">Sun</div>
+            </div>
+            <div class="mock-grid c2-grid">
+                <div class="c2-cell" style="opacity: 0.5;"><div class="c2-num">28</div></div>
+                <div class="c2-cell" style="opacity: 0.5;"><div class="c2-num">29</div></div>
+                <div class="c2-cell" style="opacity: 0.5;"><div class="c2-num">30</div></div>
+                <div class="c2-cell"><div class="c2-num">1</div><div class="c2-tag red">Maharashtra Day</div></div>
+                <div class="c2-cell"><div class="c2-num">2</div></div>
+                <div class="c2-cell"><div class="c2-num">3</div></div>
+                <div class="c2-cell c2-today"><div class="c2-num">4</div><div class="c2-tag">Team Meeting</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONCEPT 3 -->
+    <div class="concept-container" style="animation-delay: 0.4s; background: #0b0f19; border-color: #1e293b;">
+        <div class="concept-title" style="color: white;">🌌 Concept 3: Executive Dark Glow</div>
+        <div class="concept-desc" style="color: #94a3b8;">A highly professional dark theme. Watch the cells carefully: when you hover, the top border glows with electric blue light. Perfect for an institutional, executive vibe.</div>
+        <div class="c3-wrapper">
+            <div class="mock-grid">
+                <div class="mock-day-header c3-day-header">Mon</div><div class="mock-day-header c3-day-header">Tue</div><div class="mock-day-header c3-day-header">Wed</div><div class="mock-day-header c3-day-header">Thu</div><div class="mock-day-header c3-day-header">Fri</div><div class="mock-day-header c3-day-header">Sat</div><div class="mock-day-header c3-day-header">Sun</div>
+            </div>
+            <div class="mock-grid c3-grid">
+                <div class="c3-cell" style="opacity: 0.5;"><div class="c3-num">28</div></div>
+                <div class="c3-cell" style="opacity: 0.5;"><div class="c3-num">29</div></div>
+                <div class="c3-cell" style="opacity: 0.5;"><div class="c3-num">30</div></div>
+                <div class="c3-cell"><div class="c3-num">1</div><div class="c3-tag red">Maharashtra Day</div></div>
+                <div class="c3-cell"><div class="c3-num">2</div></div>
+                <div class="c3-cell"><div class="c3-num">3</div></div>
+                <div class="c3-cell c3-today"><div class="c3-num">4</div><div class="c3-tag">Team Meeting</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONCEPT 4 -->
+    <div class="concept-container neumorphic" style="animation-delay: 0.6s;">
+        <div class="concept-title" style="color: #334155;">☁️ Concept 4: Neumorphic Tactile</div>
+        <div class="concept-desc" style="color: #64748b;">Instead of floating, elements look like they are molded from the background material. Hover over a day cell to see it get physically "pressed" into the screen using inset shadows.</div>
+        <div class="c4-wrapper">
+            <div class="mock-grid">
+                <div class="mock-day-header c4-day-header">Mon</div><div class="mock-day-header c4-day-header">Tue</div><div class="mock-day-header c4-day-header">Wed</div><div class="mock-day-header c4-day-header">Thu</div><div class="mock-day-header c4-day-header">Fri</div><div class="mock-day-header c4-day-header">Sat</div><div class="mock-day-header c4-day-header">Sun</div>
+            </div>
+            <div class="mock-grid c4-grid">
+                <div class="c4-cell" style="opacity: 0.5;"><div class="c4-num">28</div></div>
+                <div class="c4-cell" style="opacity: 0.5;"><div class="c4-num">29</div></div>
+                <div class="c4-cell" style="opacity: 0.5;"><div class="c4-num">30</div></div>
+                <div class="c4-cell"><div class="c4-num">1</div><div class="c4-tag red">Maharashtra Day</div></div>
+                <div class="c4-cell"><div class="c4-num">2</div></div>
+                <div class="c4-cell"><div class="c4-num">3</div></div>
+                <div class="c4-cell c4-today"><div class="c4-num">4</div><div class="c4-tag">Team Meeting</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONCEPT 5 -->
+    <div class="concept-container" style="animation-delay: 0.8s;">
+        <div class="concept-title">⚪ Concept 5: Hyper-Minimalist Active</div>
+        <div class="concept-desc">No borders, no cards. Just pure space. Hovering over a date triggers a smooth circular highlight that scales up from the center. Events are tiny dot indicators. Extremely clean.</div>
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 24px;">
+            <div class="mock-grid">
+                <div class="mock-day-header c5-day-header">Mon</div><div class="mock-day-header c5-day-header">Tue</div><div class="mock-day-header c5-day-header">Wed</div><div class="mock-day-header c5-day-header">Thu</div><div class="mock-day-header c5-day-header">Fri</div><div class="mock-day-header c5-day-header">Sat</div><div class="mock-day-header c5-day-header">Sun</div>
+            </div>
+            <div class="mock-grid c5-grid">
+                <div class="c5-cell" style="opacity: 0.5;"><div class="c5-num">28</div></div>
+                <div class="c5-cell" style="opacity: 0.5;"><div class="c5-num">29</div></div>
+                <div class="c5-cell" style="opacity: 0.5;"><div class="c5-num">30</div></div>
+                <div class="c5-cell"><div class="c5-num">1</div><div class="c5-dots-container"><div class="c5-dot red"></div></div></div>
+                <div class="c5-cell"><div class="c5-num">2</div></div>
+                <div class="c5-cell"><div class="c5-num">3</div></div>
+                <div class="c5-cell c5-today"><div class="c5-num">4</div><div class="c5-dots-container"><div class="c5-dot"></div></div></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

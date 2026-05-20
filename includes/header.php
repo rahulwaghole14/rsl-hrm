@@ -63,7 +63,7 @@ $isLoginPage = ($currentPage == 'login.php');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSL Calendar 2026</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css?v=<?php echo filemtime(__DIR__ . '/../assets/css/style.css'); ?>">
     <script>
         // Theme Logic
@@ -87,45 +87,66 @@ $isLoginPage = ($currentPage == 'login.php');
             <!-- FIXED SIDEBAR -->
             <aside class="sidebar">
                 <a href="index.php" style="text-decoration: none;">
-                    <h1>RSL Calendar</h1>
+                    <div class="logo-container">
+                        <img src="assets/img/rsl-logo.png" alt="RSL logo" onerror="this.src=''; this.alt='RSL Logo';">
+                    </div>
                 </a>
 
                 <nav class="nav-links">
-                    <a href="index.php"
-                        class="nav-btn <?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">Calendar</a>
-                    <a href="holidays.php"
-                        class="nav-btn <?php echo ($currentPage == 'holidays.php') ? 'active' : ''; ?>">Holidays</a>
+                    <a href="index.php" class="nav-btn <?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Calendar
+                    </a>
+                    <a href="holidays.php" class="nav-btn <?php echo ($currentPage == 'holidays.php') ? 'active' : ''; ?>">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                        Holidays
+                    </a>
 
                     <?php if ($isLoggedIn): ?>
-                        <?php
-                        $taskLink = ($userRole === 'admin') ? 'task_preview.php' : 'task_tracker.php';
-                        ?>
-                        <a href="<?php echo $taskLink; ?>"
-                            class="nav-btn <?php echo ($currentPage == 'task_tracker.php' || $currentPage == 'task_preview.php') ? 'active' : ''; ?>">Task
-                            Tracker</a>
+                        <?php $taskLink = ($userRole === 'admin') ? 'task_preview.php' : 'task_tracker.php'; ?>
+                        <a href="<?php echo $taskLink; ?>" class="nav-btn <?php echo ($currentPage == 'task_tracker.php' || $currentPage == 'task_preview.php') ? 'active' : ''; ?>">
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                            Task Tracker
+                        </a>
 
                         <?php if ($userRole === 'admin' || $userRole === 'sub_admin' || $userRole === 'employee'): ?>
-                            <a href="meetings.php"
-                                class="nav-btn <?php echo ($currentPage == 'meetings.php') ? 'active' : ''; ?>">Meetings</a>
+                            <a href="meetings.php" class="nav-btn <?php echo ($currentPage == 'meetings.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                Meetings
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($userRole !== 'admin'): ?>
-                            <a href="my_attendance.php"
-                                class="nav-btn <?php echo ($currentPage == 'my_attendance.php') ? 'active' : ''; ?>">Attendance</a>
+                            <a href="my_attendance.php" class="nav-btn <?php echo ($currentPage == 'my_attendance.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Attendance
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($userRole === 'admin'): ?>
-                            <a href="manage_users.php" class="nav-btn <?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">Users</a>
-                            <a href="admin_attendance.php"
-                                class="nav-btn <?php echo ($currentPage == 'admin_attendance.php') ? 'active' : ''; ?>">Attendance</a>
-                            <a href="manage_events.php"
-                                class="nav-btn <?php echo ($currentPage == 'manage_events.php') ? 'active' : ''; ?>">Events</a>
-<?php endif; ?>
+                            <a href="manage_users.php" class="nav-btn <?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                Users
+                            </a>
+                            <a href="admin_attendance.php" class="nav-btn <?php echo ($currentPage == 'admin_attendance.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Attendance
+                            </a>
+                            <a href="manage_events.php" class="nav-btn <?php echo ($currentPage == 'manage_events.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                Events
+                            </a>
+                        <?php endif; ?>
 
-                        <a href="logout.php" class="nav-btn btn-logout">Logout</a>
+                        <a href="logout.php" class="nav-btn btn-logout">
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            Logout
+                        </a>
                     <?php else: ?>
-                        <a href="login.php"
-                            class="nav-btn <?php echo ($currentPage == 'login.php') ? 'active' : ''; ?>">Login</a>
+                        <a href="login.php" class="nav-btn <?php echo ($currentPage == 'login.php') ? 'active' : ''; ?>">
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                            Login
+                        </a>
                     <?php endif; ?>
                 </nav>
             </aside>
@@ -140,8 +161,8 @@ $isLoginPage = ($currentPage == 'login.php');
                     <div class="header-left">
                         <?php if ($currentPage == 'index.php'): ?>
                             <div style="display: flex; align-items: center; gap: 1rem;">
-                                <a href="?month=<?php echo $navMonth - 1; ?>&year=<?php echo $navYear; ?>" class="nav-btn"
-                                    style="<?php echo ($navMonth <= 1) ? 'pointer-events: none; opacity: 0.5;' : ''; ?> font-weight: 700;">Prev</a>
+                                <a href="?month=<?php echo $navMonth - 1; ?>&year=<?php echo $navYear; ?>" class="header-nav-btn"
+                                    style="<?php echo ($navMonth <= 1) ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">Prev</a>
 
                                 <div class="month-selector-wrapper" style="position: relative;">
                                     <div class="current-date" onclick="toggleMonthPicker()"
@@ -161,8 +182,8 @@ $isLoginPage = ($currentPage == 'login.php');
                                     </div>
                                 </div>
 
-                                <a href="?month=<?php echo $navMonth + 1; ?>&year=<?php echo $navYear; ?>" class="nav-btn"
-                                    style="<?php echo ($navMonth >= 12) ? 'pointer-events: none; opacity: 0.5;' : ''; ?> font-weight: 700;">Next</a>
+                                <a href="?month=<?php echo $navMonth + 1; ?>&year=<?php echo $navYear; ?>" class="header-nav-btn"
+                                    style="<?php echo ($navMonth >= 12) ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">Next</a>
                             </div>
 
                             <style>
@@ -248,7 +269,11 @@ $isLoginPage = ($currentPage == 'login.php');
                     </div>
 
                     <div class="header-center">
-                        <span class="search-icon">🔍</span>
+                        <span class="search-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </span>
                         <input type="text" id="calendarSearch" class="search-bar" placeholder="Search events, holidays...">
                     </div>
 
@@ -268,27 +293,39 @@ $isLoginPage = ($currentPage == 'login.php');
 
 
                         <?php if ($isLoggedIn): ?>
-                            <div class="user-profile" onclick="openProfileModal()" style="cursor: pointer;">
-                                <div style="text-align: right;">
-                                    <div style="font-weight: 700; font-size: 0.9rem;"><?php echo htmlspecialchars($userName); ?>
+                            <?php
+                            // Generate initials for avatar
+                            $words = explode(" ", $userName);
+                            $initials = "";
+                            if (count($words) >= 2) {
+                                $initials = strtoupper(substr($words[0], 0, 1) . substr(end($words), 0, 1));
+                            } else {
+                                $initials = strtoupper(substr($userName, 0, 1));
+                            }
+                            ?>
+                            <!-- PROFILE TRIGGER with Hover Tooltip (Option 3) -->
+                            <div class="profile-tooltip-wrap">
+                                <div class="user-profile" onclick="openProfileModal()">
+                                    <div class="profile-text-info">
+                                        <div class="profile-name"><?php echo htmlspecialchars($userName); ?></div>
+                                        <div class="profile-role-label"><?php echo $userRole; ?></div>
                                     </div>
-                                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">
-                                        <?php echo $userRole; ?>
+                                    <div class="avatar" style="background:#4f46e5; color:white; font-size:0.9rem; letter-spacing:0.5px;">
+                                        <?php echo $initials; ?>
                                     </div>
                                 </div>
-                                <?php
-                                // Generate initials for avatar
-                                $words = explode(" ", $userName);
-                                $initials = "";
-                                if (count($words) >= 2) {
-                                    $initials = strtoupper(substr($words[0], 0, 1) . substr(end($words), 0, 1));
-                                } else {
-                                    $initials = strtoupper(substr($userName, 0, 1));
-                                }
-                                ?>
-                                <div class="avatar"
-                                    style="background: var(--primary-color); color: white; font-size: 0.9rem; letter-spacing: 0.5px;">
-                                    <?php echo $initials; ?>
+
+                                <!-- HOVER TOOLTIP (CSS-only, no JS needed) -->
+                                <div class="profile-hover-tooltip">
+                                    <div class="pht-inner">
+                                        <div class="pht-avatar"><?php echo $initials; ?></div>
+                                        <div>
+                                            <div class="pht-name"><?php echo htmlspecialchars($fullUserData['name'] ?? $userName); ?></div>
+                                            <div class="pht-email"><?php echo htmlspecialchars($fullUserData['email'] ?? ''); ?></div>
+                                        </div>
+                                    </div>
+                                    <div class="pht-divider"></div>
+                                    <div class="pht-footer">Click to view <span>full profile →</span></div>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -296,81 +333,229 @@ $isLoginPage = ($currentPage == 'login.php');
                 </header>
             <?php endif; ?>
 
-            <!-- PROFILE MODAL (READ ONLY) -->
+            <!-- PROFILE MODAL (Premium – Option 3) -->
             <div class="profile-overlay" id="profileModal" onclick="handleOverlayClick(event, 'profileModal')">
-                <div class="profile-modal-card" style="max-width: 500px;">
-                    <button class="profile-close-x" onclick="closeProfileModal()">&times;</button>
-                    <div class="profile-avatar-large"><?php echo $initials; ?></div>
-                    <h2 style="margin-bottom: 0.25rem;"><?php echo htmlspecialchars($fullUserData['name'] ?? $userName); ?></h2>
-                    <div class="profile-role-badge"><?php echo htmlspecialchars($fullUserData['role'] ?? $userRole); ?></div>
+                <div class="profile-modal-card">
+                    <button class="profile-close-x" onclick="closeProfileModal()">&#x2715;</button>
 
-                    <div class="profile-details-grid" style="grid-template-columns: 1fr 1.2fr;">
-                        <div class="profile-field">
+                    <!-- Spinning gradient ring avatar -->
+                    <div class="profile-avatar-ring"><?php echo $initials; ?></div>
+
+                    <h2 class="pmodal-name"><?php echo htmlspecialchars($fullUserData['name'] ?? $userName); ?></h2>
+                    <div class="pmodal-role-badge"><?php echo htmlspecialchars($fullUserData['role'] ?? $userRole); ?></div>
+
+                    <div class="pmodal-fields">
+                        <div class="pmodal-field">
                             <label>Employee ID</label>
                             <div><?php echo htmlspecialchars($fullUserData['emp_id'] ?? 'N/A'); ?></div>
                         </div>
-                        <div class="profile-field">
+                        <div class="pmodal-field">
                             <label>Mobile No</label>
                             <div><?php echo htmlspecialchars($fullUserData['mob_no'] ?? 'N/A'); ?></div>
                         </div>
-                        <div class="profile-field">
+                        <div class="pmodal-field">
                             <label>Email Address</label>
-                            <div style="word-wrap: break-word; font-size: 0.85rem; line-height: 1.2;"><?php echo htmlspecialchars($fullUserData['email'] ?? 'N/A'); ?></div>
+                            <div style="font-size:0.82rem;"><?php echo htmlspecialchars($fullUserData['email'] ?? 'N/A'); ?></div>
                         </div>
-                        <div class="profile-field">
+                        <div class="pmodal-field">
                             <label>Date of Birth</label>
-                            <div>
-                                <?php 
+                            <div><?php
                                 if (!empty($fullUserData['dob'])) {
                                     echo date('d/m/Y', strtotime($fullUserData['dob']));
-                                } else {
-                                    echo 'N/A';
-                                }
-                                ?>
-                            </div>
+                                } else { echo 'N/A'; }
+                            ?></div>
                         </div>
                     </div>
-                    <button onclick="closeProfileModal()" class="profile-close-btn">Close Profile</button>
+
+                    <button onclick="closeProfileModal()" class="pmodal-close-btn">Close Profile</button>
                 </div>
             </div>
 
             <style>
+                /* ---- Profile Trigger ---- */
+                .user-profile {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.6rem;
+                    cursor: pointer;
+                    padding: 5px 10px 5px 5px;
+                    border-radius: 100px;
+                    transition: background 0.2s;
+                }
+                .user-profile:hover { background: #f1f5f9; }
+
+                .profile-text-info { text-align: right; }
+                .profile-name { font-weight: 700; font-size: 0.88rem; color: #0f172a; }
+                .profile-role-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+
+                /* ---- Tooltip Wrapper ---- */
+                .profile-tooltip-wrap {
+                    position: relative;
+                    display: inline-flex;
+                }
+
+                /* ---- Hover Tooltip ---- */
+                .profile-hover-tooltip {
+                    position: absolute;
+                    top: calc(100% + 10px);
+                    right: 0;
+                    width: 230px;
+                    background: #0f172a;
+                    color: white;
+                    border-radius: 16px;
+                    padding: 1rem;
+                    box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    opacity: 0;
+                    pointer-events: none;
+                    transform: translateY(-6px);
+                    transition: opacity 0.2s ease, transform 0.2s ease;
+                }
+                /* Arrow */
+                .profile-hover-tooltip::before {
+                    content: '';
+                    position: absolute;
+                    top: -5px; right: 18px;
+                    width: 10px; height: 10px;
+                    background: #0f172a;
+                    transform: rotate(45deg);
+                    border-radius: 2px;
+                }
+                .profile-tooltip-wrap:hover .profile-hover-tooltip {
+                    opacity: 1;
+                    pointer-events: auto;
+                    transform: translateY(0);
+                }
+
+                .pht-inner { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.75rem; }
+                .pht-avatar {
+                    width: 40px; height: 40px; border-radius: 50%;
+                    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                    color: white; font-weight: 800; font-size: 0.9rem;
+                    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                }
+                .pht-name { font-weight: 700; font-size: 0.88rem; }
+                .pht-email { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
+                .pht-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0.5rem 0; }
+                .pht-footer { font-size: 0.72rem; color: #64748b; text-align: center; }
+                .pht-footer span { color: #818cf8; font-weight: 600; }
+
+                /* ---- Premium Modal ---- */
                 .profile-overlay {
-                    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-                    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+                    display: none; position: fixed; inset: 0;
+                    background: rgba(15,23,42,0.5);
+                    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
                     z-index: 9999; align-items: center; justify-content: center;
                 }
-                .profile-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+                .profile-overlay.active {
+                    display: flex;
+                    animation: pmodalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                @keyframes pmodalFadeIn {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
+                }
+
                 .profile-modal-card {
-                    background: white; border-radius: 1.5rem; padding: 2.5rem; width: 90%; max-width: 450px;
-                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-align: center; position: relative;
+                    background: white;
+                    border-radius: 24px;
+                    padding: 2.5rem 2rem;
+                    width: 90%; max-width: 420px;
+                    box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+                    text-align: center; position: relative;
+                    animation: pmodalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
                 }
-                .profile-close-x { position: absolute; top: 1.25rem; right: 1.25rem; border: none; background: none; font-size: 1.5rem; cursor: pointer; color: #5f6368; }
-                .profile-avatar-large {
-                    width: 90px; height: 90px; background: var(--primary-color); color: white; border-radius: 50%;
-                    display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 700;
-                    margin: 0 auto 1.5rem; box-shadow: 0 10px 15px rgba(99, 102, 241, 0.2);
+                @keyframes pmodalSlideUp {
+                    from { opacity: 0; transform: translateY(24px); }
+                    to   { opacity: 1; transform: translateY(0); }
                 }
-                .profile-role-badge {
-                    display: inline-block; padding: 0.25rem 1rem; background: #e8f0fe; color: #1a73e8;
-                    border-radius: 2rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 2rem;
+
+                .profile-close-x {
+                    position: absolute; top: 1.25rem; right: 1.25rem;
+                    border: none; background: none; font-size: 1.4rem;
+                    cursor: pointer; color: #94a3b8;
+                    transition: color 0.2s;
                 }
-                .profile-details-grid {
-                    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; text-align: left;
-                    background: #f8f9fa; padding: 1.5rem; border-radius: 1rem; border: 1px solid #eee;
+                .profile-close-x:hover { color: #0f172a; }
+
+                /* Spinning gradient ring avatar */
+                .profile-avatar-ring {
+                    width: 88px; height: 88px;
+                    border-radius: 50%;
+                    background: #4f46e5;
+                    color: white;
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 2rem; font-weight: 800;
+                    margin: 0 auto 1.25rem;
+                    position: relative;
+                    z-index: 1;
                 }
-                .profile-field label { display: block; font-size: 0.65rem; color: #5f6368; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem; }
-                .profile-field div { font-weight: 600; color: #202124; font-size: 0.9rem; }
-                .profile-close-btn {
-                    width: 100%; margin-top: 2rem; background: var(--primary-color); color: white; border: none; padding: 0.8rem;
-                    border-radius: 0.75rem; font-weight: 700; cursor: pointer; transition: background 0.2s;
+                .profile-avatar-ring::before {
+                    content: '';
+                    position: absolute;
+                    inset: -4px;
+                    border-radius: 50%;
+                    background: conic-gradient(#4f46e5, #7c3aed, #06b6d4, #4f46e5);
+                    z-index: -1;
+                    animation: ringSpinAnim 3s linear infinite;
                 }
-                .profile-close-btn:hover { opacity: 0.9; }
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                .profile-avatar-ring::after {
+                    content: '';
+                    position: absolute;
+                    inset: -6px;
+                    border-radius: 50%;
+                    background: white;
+                    z-index: -2;
+                }
+                @keyframes ringSpinAnim {
+                    to { transform: rotate(360deg); }
+                }
+
+                .pmodal-name {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1.3rem; font-weight: 800;
+                    color: #0f172a; margin-bottom: 0.25rem;
+                }
+                .pmodal-role-badge {
+                    display: inline-block;
+                    margin: 0.35rem 0 1.5rem;
+                    background: #eef2ff; color: #4f46e5;
+                    font-size: 0.7rem; font-weight: 700;
+                    text-transform: uppercase; letter-spacing: 0.07em;
+                    padding: 4px 14px; border-radius: 100px;
+                }
+
+                .pmodal-fields {
+                    display: grid; grid-template-columns: 1fr 1fr;
+                    gap: 0.75rem; text-align: left;
+                }
+                .pmodal-field {
+                    background: #f8fafc;
+                    border-radius: 12px;
+                    padding: 0.7rem 1rem;
+                }
+                .pmodal-field label {
+                    display: block; font-size: 0.62rem; font-weight: 700;
+                    color: #94a3b8; text-transform: uppercase;
+                    letter-spacing: 0.06em; margin-bottom: 3px;
+                }
+                .pmodal-field div {
+                    font-size: 0.88rem; font-weight: 600; color: #0f172a;
+                }
+
+                .pmodal-close-btn {
+                    width: 100%; margin-top: 1.5rem;
+                    background: #4f46e5; color: white;
+                    border: none; padding: 0.85rem;
+                    border-radius: 14px; font-size: 0.95rem;
+                    font-weight: 700; cursor: pointer;
+                    transition: background 0.2s;
+                }
+                .pmodal-close-btn:hover { background: #3730a3; }
             </style>
 
             <script>
-                function openProfileModal() { document.getElementById('profileModal').classList.add('active'); }
+                function openProfileModal()  { document.getElementById('profileModal').classList.add('active'); }
                 function closeProfileModal() { document.getElementById('profileModal').classList.remove('active'); }
                 function handleOverlayClick(e, id) { if (e.target.id === id) closeProfileModal(); }
             </script>

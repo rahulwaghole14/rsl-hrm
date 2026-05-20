@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Header Concepts – RSL Calendar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            padding: 2rem;
+            color: #0f172a;
+        }
+
+        h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; margin-bottom: 0.25rem; }
+        .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 2.5rem; }
+
+        .concept-wrap {
+            margin-bottom: 2.5rem;
+        }
+        .concept-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .concept-meta .tag {
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 3px 12px;
+            border-radius: 100px;
+        }
+        .concept-meta h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .concept-meta p { font-size: 0.8rem; color: #94a3b8; }
+
+        /* ================================================
+           SHARED LAYOUT SHELL
+           ================================================ */
+        .shell {
+            display: flex;
+            height: 70px;
+            align-items: center;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .shell-sidebar {
+            width: 260px;
+            background: white;
+            height: 100%;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+        }
+        .shell-sidebar img {
+            height: 36px;
+            object-fit: contain;
+        }
+        .rsl-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .shell-header {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.75rem;
+        }
+
+        /* ================================================
+           VERSION 1 — "Clean Flat" (Baseline improved)
+           ================================================ */
+        .v1 .shell-header { background: white; border-bottom: 1px solid #e2e8f0; }
+
+        .v1 .nav-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .v1 .arrow-btn {
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .v1 .arrow-btn:hover { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
+
+        .v1 .month-chip {
+            padding: 0.45rem 1rem;
+            background: #eef2ff;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #4f46e5;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 0.35rem;
+            transition: all 0.2s;
+        }
+        .v1 .month-chip:hover { background: #e0e7ff; }
+        .v1 .month-chip svg { width: 14px; height: 14px; }
+
+        .v1 .search-wrap {
+            position: relative;
+            width: 280px;
+        }
+        .v1 .search-wrap input {
+            width: 100%;
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border-radius: 100px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .v1 .search-wrap input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129,140,248,0.15); }
+        .v1 .search-icon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem; }
+
+        .v1 .toggle-pill {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 3px;
+            gap: 2px;
+        }
+        .v1 .toggle-btn {
+            padding: 0.35rem 0.9rem;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .v1 .toggle-btn.active { background: white; color: #4f46e5; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+        /* ================================================
+           VERSION 2 — "Frosted / Elevated"
+           ================================================ */
+        .v2 .shell-header {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226,232,240,0.8);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+        }
+
+        .v2 .nav-group { display: flex; align-items: center; gap: 0.6rem; }
+
+        .v2 .arrow-btn {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #f1f5f9;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: #475569;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: all 0.25s;
+        }
+        .v2 .arrow-btn:hover { background: #4f46e5; color: white; transform: scale(1.1); }
+
+        .v2 .month-display {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            cursor: pointer;
+            padding: 0.3rem 0.75rem;
+            border-radius: 8px;
+            transition: background 0.2s;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .v2 .month-display:hover { background: #f1f5f9; }
+        .v2 .month-display .year { color: #94a3b8; font-weight: 600; font-size: 0.95rem; }
+
+        .v2 .search-wrap {
+            position: relative;
+            width: 260px;
+        }
+        .v2 .search-wrap input {
+            width: 100%;
+            padding: 0.6rem 1rem 0.6rem 2.6rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            font-size: 0.85rem;
+            outline: none;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            transition: all 0.2s;
+        }
+        .v2 .search-wrap input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .v2 .search-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+
+        .v2 .slider-toggle {
+            position: relative;
+            display: flex;
+            background: #eef2ff;
+            border-radius: 12px;
+            padding: 3px;
+        }
+        .v2 .slider-toggle .slide-bg {
+            position: absolute;
+            top: 3px; left: 3px;
+            width: calc(50% - 3px);
+            height: calc(100% - 6px);
+            background: #4f46e5;
+            border-radius: 9px;
+            transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+        }
+        .v2 .slider-toggle.week-active .slide-bg { transform: translateX(100%); }
+        .v2 .stbtn {
+            position: relative;
+            z-index: 1;
+            padding: 0.35rem 1rem;
+            border: none;
+            background: transparent;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #4f46e5;
+            cursor: pointer;
+            border-radius: 9px;
+            transition: color 0.2s;
+            min-width: 60px;
+            text-align: center;
+        }
+        .v2 .stbtn.active { color: white; }
+
+        /* ================================================
+           VERSION 3 — "Bold / Dark Bar"
+           ================================================ */
+        .v3 .shell-header {
+            background: #0f172a;
+        }
+
+        .v3 .nav-group { display: flex; align-items: center; gap: 0.5rem; }
+
+        .v3 .arrow-btn {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .v3 .arrow-btn:hover { background: #4f46e5; color: white; border-color: #4f46e5; }
+
+        .v3 .month-chip {
+            padding: 0.4rem 0.9rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: white;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 0.35rem;
+            transition: background 0.2s;
+        }
+        .v3 .month-chip:hover { background: rgba(255,255,255,0.12); }
+        .v3 .month-chip .yr { color: #64748b; }
+
+        .v3 .search-wrap {
+            position: relative;
+            width: 260px;
+        }
+        .v3 .search-wrap input {
+            width: 100%;
+            padding: 0.55rem 1rem 0.55rem 2.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.07);
+            color: white;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .v3 .search-wrap input::placeholder { color: #475569; }
+        .v3 .search-wrap input:focus { border-color: #4f46e5; background: rgba(255,255,255,0.1); }
+        .v3 .search-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #475569; }
+
+        .v3 .right-group { display: flex; align-items: center; gap: 0.75rem; }
+        .v3 .toggle-pill {
+            display: flex;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 3px;
+        }
+        .v3 .toggle-btn {
+            padding: 0.3rem 0.8rem;
+            border-radius: 7px;
+            border: none;
+            background: transparent;
+            font-size: 0.8rem; font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .v3 .toggle-btn.active { background: #4f46e5; color: white; }
+
+        /* ================================================
+           VERSION 4 — "Soft Indigo Accent"
+           ================================================ */
+        .v4 .shell-header {
+            background: #f8faff;
+            border-bottom: 2px solid #e0e7ff;
+        }
+
+        .v4 .nav-group { display: flex; align-items: center; gap: 0.4rem; }
+
+        .v4 .arrow-btn {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: #6366f1;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .v4 .arrow-btn:hover { background: #eef2ff; }
+
+        .v4 .month-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .v4 .month-badge .mon-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #4f46e5;
+        }
+        .v4 .month-badge .yr-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .v4 .month-badge .drop-icon {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .v4 .search-wrap {
+            position: relative;
+            width: 280px;
+        }
+        .v4 .search-wrap input {
+            width: 100%;
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border-radius: 100px;
+            border: 1.5px solid #e0e7ff;
+            background: white;
+            font-size: 0.85rem;
+            outline: none;
+            color: #0f172a;
+            transition: all 0.2s;
+        }
+        .v4 .search-wrap input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+        .v4 .search-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #a5b4fc; font-size: 0.9rem; }
+
+        .v4 .pill-toggle {
+            display: flex;
+            border: 1.5px solid #e0e7ff;
+            border-radius: 100px;
+            overflow: hidden;
+            background: white;
+        }
+        .v4 .pt-btn {
+            padding: 0.35rem 1.1rem;
+            border: none;
+            background: transparent;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .v4 .pt-btn.active { background: #4f46e5; color: white; }
+    </style>
+</head>
+<body>
+
+    <h1>Header Bar — 4 Concepts</h1>
+    <p class="subtitle">All versions shown with the sidebar context. Interact with each one.</p>
+
+    <!-- ============================
+         VERSION 1 — Clean Flat
+         ============================ -->
+    <div class="concept-wrap v1">
+        <div class="concept-meta">
+            <div class="tag">Version 1</div>
+            <h3>Clean & Flat</h3>
+            <p>Refined version of the current — icon arrows, indigo month chip, pill toggle</p>
+        </div>
+        <div class="shell">
+            <div class="shell-sidebar">
+                <span class="rsl-text">RSL</span>
+            </div>
+            <div class="shell-header">
+                <!-- Left: Nav -->
+                <div class="nav-group">
+                    <button class="arrow-btn">‹</button>
+                    <div class="month-chip">
+                        May 2026
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                    <button class="arrow-btn">›</button>
+                </div>
+                <!-- Center: Search -->
+                <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search events, holidays...">
+                </div>
+                <!-- Right: Toggle -->
+                <div class="toggle-pill">
+                    <button class="toggle-btn active">Month</button>
+                    <button class="toggle-btn">Week</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+         VERSION 2 — Frosted/Elevated
+         ============================ -->
+    <div class="concept-wrap v2">
+        <div class="concept-meta">
+            <div class="tag">Version 2 ⭐</div>
+            <h3>Frosted Glass + Sliding Toggle</h3>
+            <p>Circle arrow buttons, large month text, animated slide toggle</p>
+        </div>
+        <div class="shell">
+            <div class="shell-sidebar">
+                <span class="rsl-text">RSL</span>
+            </div>
+            <div class="shell-header">
+                <div class="nav-group">
+                    <button class="arrow-btn">‹</button>
+                    <div class="month-display">
+                        May <span class="year">2026</span> ▾
+                    </div>
+                    <button class="arrow-btn">›</button>
+                </div>
+                <div class="search-wrap">
+                    <span class="search-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </span>
+                    <input type="text" placeholder="Search events, holidays...">
+                </div>
+                <div class="slider-toggle" id="v2toggle">
+                    <div class="slide-bg"></div>
+                    <button class="stbtn active" onclick="switchToggle2('month')">Month</button>
+                    <button class="stbtn" onclick="switchToggle2('week')">Week</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+         VERSION 3 — Bold Dark Bar
+         ============================ -->
+    <div class="concept-wrap v3">
+        <div class="concept-meta">
+            <div class="tag">Version 3</div>
+            <h3>Dark Header Bar</h3>
+            <p>High-contrast dark top bar — like VS Code / Linear style</p>
+        </div>
+        <div class="shell">
+            <div class="shell-sidebar" style="background:#1e293b; border-color:#334155;">
+                <span class="rsl-text">RSL</span>
+            </div>
+            <div class="shell-header">
+                <div class="nav-group">
+                    <button class="arrow-btn">‹</button>
+                    <div class="month-chip">May <span class="yr">2026</span> ▾</div>
+                    <button class="arrow-btn">›</button>
+                </div>
+                <div class="search-wrap">
+                    <span class="search-icon">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </span>
+                    <input type="text" placeholder="Search events, holidays...">
+                </div>
+                <div class="right-group">
+                    <div class="toggle-pill">
+                        <button class="toggle-btn active">Month</button>
+                        <button class="toggle-btn">Week</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+         VERSION 4 — Soft Indigo Accent
+         ============================ -->
+    <div class="concept-wrap v4">
+        <div class="concept-meta">
+            <div class="tag">Version 4</div>
+            <h3>Soft Indigo Accent</h3>
+            <p>Tinted background, separated Month/Year, fully pill-shaped elements</p>
+        </div>
+        <div class="shell">
+            <div class="shell-sidebar">
+                <span class="rsl-text">RSL</span>
+            </div>
+            <div class="shell-header">
+                <div class="nav-group">
+                    <button class="arrow-btn">‹</button>
+                    <div class="month-badge">
+                        <span class="mon-text">May</span>
+                        <span class="yr-text">2026</span>
+                        <span class="drop-icon">▼</span>
+                    </div>
+                    <button class="arrow-btn">›</button>
+                </div>
+                <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search events, holidays...">
+                </div>
+                <div class="pill-toggle">
+                    <button class="pt-btn active">Month</button>
+                    <button class="pt-btn">Week</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchToggle2(view) {
+            const el = document.getElementById('v2toggle');
+            const btns = el.querySelectorAll('.stbtn');
+            if (view === 'month') {
+                el.classList.remove('week-active');
+                btns[0].classList.add('active');
+                btns[1].classList.remove('active');
+            } else {
+                el.classList.add('week-active');
+                btns[0].classList.remove('active');
+                btns[1].classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

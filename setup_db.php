@@ -1,13 +1,14 @@
 <?php
 // CHANGE THESE FOR LIVE SERVER
-$host = 'localhost';
+$host = '127.0.0.1';
+$port = '3307';
 $user = 'root';
 $pass = '';
 $db   = 'company_calendar';
 
 
 try {
-    $pdo = new PDO("mysql:host=$host", $user, $pass);
+    $pdo = new PDO("mysql:host=$host;port=$port", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Create Database

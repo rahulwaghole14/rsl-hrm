@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Sidebar Concepts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+            color: #0f172a;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        h1 { font-family: 'Outfit', sans-serif; text-align: center; margin-bottom: 10px; color: #1e3a8a; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 60px; font-size: 1.1rem; }
+
+        /* Container to hold all sidebars side-by-side */
+        .sidebars-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .concept-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .concept-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            text-align: center;
+            max-width: 280px;
+        }
+        
+        .concept-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-align: center;
+            max-width: 280px;
+            line-height: 1.5;
+        }
+
+        /* Common Sidebar Reset */
+        .mock-sidebar {
+            width: 280px;
+            height: 700px; /* Simulated height */
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: relative;
+        }
+
+        .nav-list { display: flex; flex-direction: column; gap: 8px; margin-top: 40px; flex: 1; }
+        
+        /* Simulated icons using emojis for the mock */
+        .i-cal::before { content: '📅'; margin-right: 12px; font-size: 1.1em; opacity: 0.8;}
+        .i-hol::before { content: '🏝️'; margin-right: 12px; font-size: 1.1em; opacity: 0.8;}
+        .i-tsk::before { content: '✅'; margin-right: 12px; font-size: 1.1em; opacity: 0.8;}
+        .i-mtg::before { content: '🤝'; margin-right: 12px; font-size: 1.1em; opacity: 0.8;}
+        .i-att::before { content: '⏱️'; margin-right: 12px; font-size: 1.1em; opacity: 0.8;}
+        .i-out::before { content: '🚪'; margin-right: 12px; font-size: 1.1em; opacity: 0.8;}
+
+        /* =========================================================
+           CONCEPT 1: The Floating Cloud (Modern Dashboard)
+           ========================================================= */
+        .sb-floating {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+        .sb-floating .logo { font-family: 'Outfit'; font-size: 1.8rem; font-weight: 800; color: #2563eb; letter-spacing: -1px; text-align: center; }
+        .sb-floating .nav-item {
+            padding: 14px 20px;
+            border-radius: 16px;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sb-floating .nav-item:hover { background: #f8fafc; color: #0f172a; transform: translateX(4px); }
+        .sb-floating .nav-item.active { background: #eff6ff; color: #2563eb; }
+        .sb-floating .nav-item.active::before { opacity: 1; }
+        .sb-floating .logout { color: #ef4444; margin-top: auto; }
+        .sb-floating .logout:hover { background: #fef2f2; transform: translateX(0) scale(1.02); }
+
+
+        /* =========================================================
+           CONCEPT 2: Immersive Glass (RSL Login Style)
+           ========================================================= */
+        .sb-glass {
+            background: linear-gradient(160deg, #1e3a8a 0%, #2563eb 100%);
+            border-radius: 0 32px 32px 0; /* Attach to left edge, round right edge */
+            box-shadow: 20px 0 50px rgba(30, 58, 138, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .sb-glass::after { content: ''; position: absolute; top: -100px; left: -50px; width: 250px; height: 250px; background: rgba(255,255,255,0.05); border-radius: 50%; pointer-events: none;}
+        
+        .sb-glass .logo { 
+            font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; 
+            color: transparent; 
+            /* Imitating the Neon green/blue RSL logo from the screenshot */
+            background: linear-gradient(90deg, #4ade80, #3b82f6);
+            -webkit-background-clip: text;
+            text-align: center;
+            letter-spacing: 2px;
+            filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.4));
+        }
+        
+        .sb-glass .nav-item {
+            padding: 14px 20px;
+            border-radius: 12px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 10;
+        }
+        .sb-glass .nav-item:hover { color: white; background: rgba(255,255,255,0.1); }
+        .sb-glass .nav-item.active { 
+            background: rgba(255,255,255,0.2); 
+            color: white; 
+            font-weight: 700; 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .sb-glass .logout { color: #fca5a5; margin-top: auto; }
+        .sb-glass .logout:hover { background: rgba(239, 68, 68, 0.2); color: white; }
+
+
+        /* =========================================================
+           CONCEPT 3: The Executive Edge (Minimalist Line-Art)
+           ========================================================= */
+        .sb-edge {
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            /* No extreme rounding, very structured */
+        }
+        .sb-edge .logo { font-family: 'Outfit'; font-size: 1.6rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 3px; padding-left: 20px;}
+        .sb-edge .nav-item {
+            padding: 14px 20px;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent; /* Indicator line */
+            border-radius: 0 8px 8px 0;
+            margin-right: 10px;
+        }
+        .sb-edge .nav-item:hover { color: #0f172a; background: #f1f5f9; border-left-color: #cbd5e1; }
+        .sb-edge .nav-item.active { 
+            color: #2563eb; 
+            background: #eff6ff;
+            border-left-color: #2563eb; /* Strong active indicator */
+        }
+        .sb-edge .logout { color: #dc2626; margin-top: auto; border-radius: 8px; margin-left: 20px; border-left: none;}
+        .sb-edge .logout:hover { background: #fee2e2; }
+
+
+        /* =========================================================
+           CONCEPT 4: Neumorphic Dark (Tactile & Deep)
+           ========================================================= */
+        .sb-neu {
+            background: #1e293b;
+            box-shadow: 15px 0 30px rgba(0,0,0,0.2);
+            border-radius: 0 24px 24px 0;
+        }
+        .sb-neu .logo { font-family: 'Outfit'; font-size: 1.8rem; font-weight: 700; color: #e2e8f0; text-align: center; }
+        .sb-neu .nav-item {
+            padding: 14px 20px;
+            margin: 4px 10px;
+            border-radius: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            /* Outset shadow for unselected */
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.3), -4px -4px 10px rgba(255,255,255,0.02);
+            background: #1e293b;
+        }
+        .sb-neu .nav-item:hover { color: #f8fafc; }
+        .sb-neu .nav-item.active { 
+            color: #3b82f6; 
+            /* Inset shadow for "pressed" active state */
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.4), inset -4px -4px 8px rgba(255,255,255,0.03);
+            background: #192231;
+        }
+        .sb-neu .logout { color: #ef4444; margin-top: auto; }
+        .sb-neu .logout:hover { box-shadow: inset 4px 4px 8px rgba(0,0,0,0.4); }
+
+    </style>
+</head>
+<body>
+
+    <h1>Premium Sidebar Concepts</h1>
+    <div class="subtitle">4 distinct visual treatments for your left navigation.</div>
+
+    <div class="sidebars-wrapper">
+        
+        <!-- CONCEPT 1 -->
+        <div class="concept-col">
+            <div class="concept-title">☁️ Concept 1:<br>The Floating Cloud</div>
+            <div class="concept-desc">Detached from the edges, airy, heavily rounded. Active items are pill-shaped. Hovering smoothly glides the text to the right.</div>
+            <aside class="mock-sidebar sb-floating">
+                <div class="logo">RSL Cal.</div>
+                <div class="nav-list">
+                    <div class="nav-item active i-cal">Calendar</div>
+                    <div class="nav-item i-hol">Holidays</div>
+                    <div class="nav-item i-tsk">Task Tracker</div>
+                    <div class="nav-item i-mtg">Meetings</div>
+                    <div class="nav-item i-att">Attendance</div>
+                    <div class="nav-item i-out logout">Logout</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- CONCEPT 2 -->
+        <div class="concept-col">
+            <div class="concept-title">✨ Concept 2:<br>Immersive Glass</div>
+            <div class="concept-desc">Matches the deep blue of your login page. Features a Neon green/blue RSL logo mimicking your screenshot. Active states are frosted glass cards.</div>
+            <aside class="mock-sidebar sb-glass">
+                <div class="logo">RSL</div>
+                <div class="nav-list">
+                    <div class="nav-item active i-cal">Calendar</div>
+                    <div class="nav-item i-hol">Holidays</div>
+                    <div class="nav-item i-tsk">Task Tracker</div>
+                    <div class="nav-item i-mtg">Meetings</div>
+                    <div class="nav-item i-att">Attendance</div>
+                    <div class="nav-item i-out logout">Logout</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- CONCEPT 3 -->
+        <div class="concept-col">
+            <div class="concept-title">🏛️ Concept 3:<br>The Executive Edge</div>
+            <div class="concept-desc">Highly structured and professional. Uses a bold left-border indicator for the active state. Clean, sharp typography.</div>
+            <aside class="mock-sidebar sb-edge">
+                <div class="logo">RSL.</div>
+                <div class="nav-list">
+                    <div class="nav-item active i-cal">Calendar</div>
+                    <div class="nav-item i-hol">Holidays</div>
+                    <div class="nav-item i-tsk">Task Tracker</div>
+                    <div class="nav-item i-mtg">Meetings</div>
+                    <div class="nav-item i-att">Attendance</div>
+                    <div class="nav-item i-out logout">Logout</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- CONCEPT 4 -->
+        <div class="concept-col">
+            <div class="concept-title">🌑 Concept 4:<br>Neumorphic Dark</div>
+            <div class="concept-desc">Tactile buttons that look physically extruded from the background. The active tab is "pressed in" using intricate inset shadows.</div>
+            <aside class="mock-sidebar sb-neu">
+                <div class="logo">RSL App</div>
+                <div class="nav-list">
+                    <div class="nav-item active i-cal">Calendar</div>
+                    <div class="nav-item i-hol">Holidays</div>
+                    <div class="nav-item i-tsk">Task Tracker</div>
+                    <div class="nav-item i-mtg">Meetings</div>
+                    <div class="nav-item i-att">Attendance</div>
+                    <div class="nav-item i-out logout">Logout</div>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+
+</body>
+</html>
