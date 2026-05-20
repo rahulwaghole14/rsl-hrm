@@ -63,7 +63,9 @@ $isLoginPage = ($currentPage == 'login.php');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSL Calendar 2026</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css?v=<?php echo filemtime(__DIR__ . '/../assets/css/style.css'); ?>">
     <script>
         // Theme Logic
@@ -94,57 +96,100 @@ $isLoginPage = ($currentPage == 'login.php');
 
                 <nav class="nav-links">
                     <a href="index.php" class="nav-btn <?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">
-                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
                         Calendar
                     </a>
                     <a href="holidays.php" class="nav-btn <?php echo ($currentPage == 'holidays.php') ? 'active' : ''; ?>">
-                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z">
+                            </path>
+                        </svg>
                         Holidays
                     </a>
 
                     <?php if ($isLoggedIn): ?>
                         <?php $taskLink = ($userRole === 'admin') ? 'task_preview.php' : 'task_tracker.php'; ?>
-                        <a href="<?php echo $taskLink; ?>" class="nav-btn <?php echo ($currentPage == 'task_tracker.php' || $currentPage == 'task_preview.php') ? 'active' : ''; ?>">
-                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        <a href="<?php echo $taskLink; ?>"
+                            class="nav-btn <?php echo ($currentPage == 'task_tracker.php' || $currentPage == 'task_preview.php') ? 'active' : ''; ?>">
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                                </path>
+                            </svg>
                             Task Tracker
                         </a>
 
                         <?php if ($userRole === 'admin' || $userRole === 'sub_admin' || $userRole === 'employee'): ?>
                             <a href="meetings.php" class="nav-btn <?php echo ($currentPage == 'meetings.php') ? 'active' : ''; ?>">
-                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                    </path>
+                                </svg>
                                 Meetings
                             </a>
                         <?php endif; ?>
 
                         <?php if ($userRole !== 'admin'): ?>
-                            <a href="my_attendance.php" class="nav-btn <?php echo ($currentPage == 'my_attendance.php') ? 'active' : ''; ?>">
-                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <a href="my_attendance.php"
+                                class="nav-btn <?php echo ($currentPage == 'my_attendance.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                                 Attendance
                             </a>
                         <?php endif; ?>
 
                         <?php if ($userRole === 'admin'): ?>
-                            <a href="manage_users.php" class="nav-btn <?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">
-                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            <a href="manage_users.php"
+                                class="nav-btn <?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                                    </path>
+                                </svg>
                                 Users
                             </a>
-                            <a href="admin_attendance.php" class="nav-btn <?php echo ($currentPage == 'admin_attendance.php') ? 'active' : ''; ?>">
-                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <a href="admin_attendance.php"
+                                class="nav-btn <?php echo ($currentPage == 'admin_attendance.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                                 Attendance
                             </a>
-                            <a href="manage_events.php" class="nav-btn <?php echo ($currentPage == 'manage_events.php') ? 'active' : ''; ?>">
-                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <a href="manage_events.php"
+                                class="nav-btn <?php echo ($currentPage == 'manage_events.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                    </path>
+                                </svg>
                                 Events
                             </a>
                         <?php endif; ?>
 
                         <a href="logout.php" class="nav-btn btn-logout">
-                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                </path>
+                            </svg>
                             Logout
                         </a>
                     <?php else: ?>
                         <a href="login.php" class="nav-btn <?php echo ($currentPage == 'login.php') ? 'active' : ''; ?>">
-                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1">
+                                </path>
+                            </svg>
                             Login
                         </a>
                     <?php endif; ?>
@@ -161,8 +206,15 @@ $isLoginPage = ($currentPage == 'login.php');
                     <div class="header-left">
                         <?php if ($currentPage == 'index.php'): ?>
                             <div style="display: flex; align-items: center; gap: 1rem;">
-                                <a href="?month=<?php echo $navMonth - 1; ?>&year=<?php echo $navYear; ?>" class="header-nav-btn"
-                                    style="<?php echo ($navMonth <= 1) ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">Prev</a>
+                                <a href="?month=<?php echo $navMonth - 1; ?>&year=<?php echo $navYear; ?>"
+                                    class="header-nav-btn"
+                                    style="<?php echo ($navMonth <= 1) ? 'pointer-events: none; opacity: 0.5;' : ''; ?> padding: 0.5rem; width: 38px; height: 38px;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </a>
 
                                 <div class="month-selector-wrapper" style="position: relative;">
                                     <div class="current-date" onclick="toggleMonthPicker()"
@@ -182,8 +234,15 @@ $isLoginPage = ($currentPage == 'login.php');
                                     </div>
                                 </div>
 
-                                <a href="?month=<?php echo $navMonth + 1; ?>&year=<?php echo $navYear; ?>" class="header-nav-btn"
-                                    style="<?php echo ($navMonth >= 12) ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">Next</a>
+                                <a href="?month=<?php echo $navMonth + 1; ?>&year=<?php echo $navYear; ?>"
+                                    class="header-nav-btn"
+                                    style="<?php echo ($navMonth >= 12) ? 'pointer-events: none; opacity: 0.5;' : ''; ?> padding: 0.5rem; width: 38px; height: 38px;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                        </path>
+                                    </svg>
+                                </a>
                             </div>
 
                             <style>
@@ -259,7 +318,7 @@ $isLoginPage = ($currentPage == 'login.php');
                                     document.getElementById('monthPicker').classList.toggle('active');
                                 }
                                 // Close dropdown when clicking outside
-                                document.addEventListener('click', function  (e) {                             const wrapper = document.querySelector('.month-selector-wrapper');                             if (wrapper && !wrapper.contains(e.target)) {                                 document.getElementById('monthPicker').classList.remove('active');                             }                         });
+                                document.addEventListener('click', function (e) { const wrapper = document.querySelector('.month-selector-wrapper'); if (wrapper && !wrapper.contains(e.target)) { document.getElementById('monthPicker').classList.remove('active'); } });
                             </script>
                         <?php else: ?>
                             <div class="current-date" style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">
@@ -270,8 +329,10 @@ $isLoginPage = ($currentPage == 'login.php');
 
                     <div class="header-center">
                         <span class="search-icon">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </span>
                         <input type="text" id="calendarSearch" class="search-bar" placeholder="Search events, holidays...">
@@ -310,7 +371,8 @@ $isLoginPage = ($currentPage == 'login.php');
                                         <div class="profile-name"><?php echo htmlspecialchars($userName); ?></div>
                                         <div class="profile-role-label"><?php echo $userRole; ?></div>
                                     </div>
-                                    <div class="avatar" style="background:#4f46e5; color:white; font-size:0.9rem; letter-spacing:0.5px;">
+                                    <div class="avatar"
+                                        style="background:#4f46e5; color:white; font-size:0.9rem; letter-spacing:0.5px;">
                                         <?php echo $initials; ?>
                                     </div>
                                 </div>
@@ -320,8 +382,11 @@ $isLoginPage = ($currentPage == 'login.php');
                                     <div class="pht-inner">
                                         <div class="pht-avatar"><?php echo $initials; ?></div>
                                         <div>
-                                            <div class="pht-name"><?php echo htmlspecialchars($fullUserData['name'] ?? $userName); ?></div>
-                                            <div class="pht-email"><?php echo htmlspecialchars($fullUserData['email'] ?? ''); ?></div>
+                                            <div class="pht-name">
+                                                <?php echo htmlspecialchars($fullUserData['name'] ?? $userName); ?>
+                                            </div>
+                                            <div class="pht-email"><?php echo htmlspecialchars($fullUserData['email'] ?? ''); ?>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="pht-divider"></div>
@@ -342,7 +407,8 @@ $isLoginPage = ($currentPage == 'login.php');
                     <div class="profile-avatar-ring"><?php echo $initials; ?></div>
 
                     <h2 class="pmodal-name"><?php echo htmlspecialchars($fullUserData['name'] ?? $userName); ?></h2>
-                    <div class="pmodal-role-badge"><?php echo htmlspecialchars($fullUserData['role'] ?? $userRole); ?></div>
+                    <div class="pmodal-role-badge"><?php echo htmlspecialchars($fullUserData['role'] ?? $userRole); ?>
+                    </div>
 
                     <div class="pmodal-fields">
                         <div class="pmodal-field">
@@ -355,14 +421,18 @@ $isLoginPage = ($currentPage == 'login.php');
                         </div>
                         <div class="pmodal-field">
                             <label>Email Address</label>
-                            <div style="font-size:0.82rem;"><?php echo htmlspecialchars($fullUserData['email'] ?? 'N/A'); ?></div>
+                            <div style="font-size:0.82rem;">
+                                <?php echo htmlspecialchars($fullUserData['email'] ?? 'N/A'); ?>
+                            </div>
                         </div>
                         <div class="pmodal-field">
                             <label>Date of Birth</label>
                             <div><?php
-                                if (!empty($fullUserData['dob'])) {
-                                    echo date('d/m/Y', strtotime($fullUserData['dob']));
-                                } else { echo 'N/A'; }
+                            if (!empty($fullUserData['dob'])) {
+                                echo date('d/m/Y', strtotime($fullUserData['dob']));
+                            } else {
+                                echo 'N/A';
+                            }
                             ?></div>
                         </div>
                     </div>
@@ -382,11 +452,27 @@ $isLoginPage = ($currentPage == 'login.php');
                     border-radius: 100px;
                     transition: background 0.2s;
                 }
-                .user-profile:hover { background: #f1f5f9; }
 
-                .profile-text-info { text-align: right; }
-                .profile-name { font-weight: 700; font-size: 0.88rem; color: #0f172a; }
-                .profile-role-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+                .user-profile:hover {
+                    background: #f1f5f9;
+                }
+
+                .profile-text-info {
+                    text-align: right;
+                }
+
+                .profile-name {
+                    font-weight: 700;
+                    font-size: 0.88rem;
+                    color: #0f172a;
+                }
+
+                .profile-role-label {
+                    font-size: 0.65rem;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
 
                 /* ---- Tooltip Wrapper ---- */
                 .profile-tooltip-wrap {
@@ -404,92 +490,167 @@ $isLoginPage = ($currentPage == 'login.php');
                     color: white;
                     border-radius: 16px;
                     padding: 1rem;
-                    box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+                    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
                     z-index: 1000;
                     opacity: 0;
                     pointer-events: none;
                     transform: translateY(-6px);
                     transition: opacity 0.2s ease, transform 0.2s ease;
                 }
+
                 /* Arrow */
                 .profile-hover-tooltip::before {
                     content: '';
                     position: absolute;
-                    top: -5px; right: 18px;
-                    width: 10px; height: 10px;
+                    top: -5px;
+                    right: 18px;
+                    width: 10px;
+                    height: 10px;
                     background: #0f172a;
                     transform: rotate(45deg);
                     border-radius: 2px;
                 }
+
                 .profile-tooltip-wrap:hover .profile-hover-tooltip {
                     opacity: 1;
                     pointer-events: auto;
                     transform: translateY(0);
                 }
 
-                .pht-inner { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.75rem; }
-                .pht-avatar {
-                    width: 40px; height: 40px; border-radius: 50%;
-                    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-                    color: white; font-weight: 800; font-size: 0.9rem;
-                    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                .pht-inner {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.65rem;
+                    margin-bottom: 0.75rem;
                 }
-                .pht-name { font-weight: 700; font-size: 0.88rem; }
-                .pht-email { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
-                .pht-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0.5rem 0; }
-                .pht-footer { font-size: 0.72rem; color: #64748b; text-align: center; }
-                .pht-footer span { color: #818cf8; font-weight: 600; }
+
+                .pht-avatar {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                    color: white;
+                    font-weight: 800;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+
+                .pht-name {
+                    font-weight: 700;
+                    font-size: 0.88rem;
+                }
+
+                .pht-email {
+                    font-size: 0.72rem;
+                    color: #94a3b8;
+                    margin-top: 2px;
+                }
+
+                .pht-divider {
+                    height: 1px;
+                    background: rgba(255, 255, 255, 0.1);
+                    margin: 0.5rem 0;
+                }
+
+                .pht-footer {
+                    font-size: 0.72rem;
+                    color: #64748b;
+                    text-align: center;
+                }
+
+                .pht-footer span {
+                    color: #818cf8;
+                    font-weight: 600;
+                }
 
                 /* ---- Premium Modal ---- */
                 .profile-overlay {
-                    display: none; position: fixed; inset: 0;
-                    background: rgba(15,23,42,0.5);
-                    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-                    z-index: 9999; align-items: center; justify-content: center;
+                    display: none;
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(15, 23, 42, 0.5);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    z-index: 9999;
+                    align-items: center;
+                    justify-content: center;
                 }
+
                 .profile-overlay.active {
                     display: flex;
                     animation: pmodalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
+
                 @keyframes pmodalFadeIn {
-                    from { opacity: 0; }
-                    to   { opacity: 1; }
+                    from {
+                        opacity: 0;
+                    }
+
+                    to {
+                        opacity: 1;
+                    }
                 }
 
                 .profile-modal-card {
                     background: white;
                     border-radius: 24px;
                     padding: 2.5rem 2rem;
-                    width: 90%; max-width: 420px;
-                    box-shadow: 0 30px 60px rgba(0,0,0,0.2);
-                    text-align: center; position: relative;
+                    width: 90%;
+                    max-width: 420px;
+                    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+                    text-align: center;
+                    position: relative;
                     animation: pmodalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
                 }
+
                 @keyframes pmodalSlideUp {
-                    from { opacity: 0; transform: translateY(24px); }
-                    to   { opacity: 1; transform: translateY(0); }
+                    from {
+                        opacity: 0;
+                        transform: translateY(24px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
                 }
 
                 .profile-close-x {
-                    position: absolute; top: 1.25rem; right: 1.25rem;
-                    border: none; background: none; font-size: 1.4rem;
-                    cursor: pointer; color: #94a3b8;
+                    position: absolute;
+                    top: 1.25rem;
+                    right: 1.25rem;
+                    border: none;
+                    background: none;
+                    font-size: 1.4rem;
+                    cursor: pointer;
+                    color: #94a3b8;
                     transition: color 0.2s;
                 }
-                .profile-close-x:hover { color: #0f172a; }
+
+                .profile-close-x:hover {
+                    color: #0f172a;
+                }
 
                 /* Spinning gradient ring avatar */
                 .profile-avatar-ring {
-                    width: 88px; height: 88px;
+                    width: 88px;
+                    height: 88px;
                     border-radius: 50%;
                     background: #4f46e5;
                     color: white;
-                    display: flex; align-items: center; justify-content: center;
-                    font-size: 2rem; font-weight: 800;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 2rem;
+                    font-weight: 800;
                     margin: 0 auto 1.25rem;
                     position: relative;
                     z-index: 1;
                 }
+
                 .profile-avatar-ring::before {
                     content: '';
                     position: absolute;
@@ -499,6 +660,7 @@ $isLoginPage = ($currentPage == 'login.php');
                     z-index: -1;
                     animation: ringSpinAnim 3s linear infinite;
                 }
+
                 .profile-avatar-ring::after {
                     content: '';
                     position: absolute;
@@ -507,55 +669,84 @@ $isLoginPage = ($currentPage == 'login.php');
                     background: white;
                     z-index: -2;
                 }
+
                 @keyframes ringSpinAnim {
-                    to { transform: rotate(360deg); }
+                    to {
+                        transform: rotate(360deg);
+                    }
                 }
 
                 .pmodal-name {
                     font-family: 'Outfit', sans-serif;
-                    font-size: 1.3rem; font-weight: 800;
-                    color: #0f172a; margin-bottom: 0.25rem;
+                    font-size: 1.3rem;
+                    font-weight: 800;
+                    color: #0f172a;
+                    margin-bottom: 0.25rem;
                 }
+
                 .pmodal-role-badge {
                     display: inline-block;
                     margin: 0.35rem 0 1.5rem;
-                    background: #eef2ff; color: #4f46e5;
-                    font-size: 0.7rem; font-weight: 700;
-                    text-transform: uppercase; letter-spacing: 0.07em;
-                    padding: 4px 14px; border-radius: 100px;
+                    background: #eef2ff;
+                    color: #4f46e5;
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.07em;
+                    padding: 4px 14px;
+                    border-radius: 100px;
                 }
 
                 .pmodal-fields {
-                    display: grid; grid-template-columns: 1fr 1fr;
-                    gap: 0.75rem; text-align: left;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.75rem;
+                    text-align: left;
                 }
+
                 .pmodal-field {
                     background: #f8fafc;
                     border-radius: 12px;
                     padding: 0.7rem 1rem;
                 }
+
                 .pmodal-field label {
-                    display: block; font-size: 0.62rem; font-weight: 700;
-                    color: #94a3b8; text-transform: uppercase;
-                    letter-spacing: 0.06em; margin-bottom: 3px;
+                    display: block;
+                    font-size: 0.62rem;
+                    font-weight: 700;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                    margin-bottom: 3px;
                 }
+
                 .pmodal-field div {
-                    font-size: 0.88rem; font-weight: 600; color: #0f172a;
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    color: #0f172a;
                 }
 
                 .pmodal-close-btn {
-                    width: 100%; margin-top: 1.5rem;
-                    background: #4f46e5; color: white;
-                    border: none; padding: 0.85rem;
-                    border-radius: 14px; font-size: 0.95rem;
-                    font-weight: 700; cursor: pointer;
+                    width: 100%;
+                    margin-top: 1.5rem;
+                    background: #4f46e5;
+                    color: white;
+                    border: none;
+                    padding: 0.85rem;
+                    border-radius: 14px;
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    cursor: pointer;
                     transition: background 0.2s;
                 }
-                .pmodal-close-btn:hover { background: #3730a3; }
+
+                .pmodal-close-btn:hover {
+                    background: #3730a3;
+                }
             </style>
 
             <script>
-                function openProfileModal()  { document.getElementById('profileModal').classList.add('active'); }
+                function openProfileModal() { document.getElementById('profileModal').classList.add('active'); }
                 function closeProfileModal() { document.getElementById('profileModal').classList.remove('active'); }
                 function handleOverlayClick(e, id) { if (e.target.id === id) closeProfileModal(); }
             </script>
