@@ -77,7 +77,7 @@ include 'includes/header.php';
         style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; gap: 1rem;">
         <h2 style="font-size: 1.8rem; text-align: center; width: 100%; color: var(--text-main);">Employee Attendance</h2>
         <div class="filter-card"
-            style="background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;">
+            style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
                 <div style="flex: 1; min-width: 200px;">
                     <label
@@ -130,35 +130,91 @@ include 'includes/header.php';
         </div>
     <?php endif; ?>
 
-    <div class="attendance-table-container"
-        style="background: var(--card-bg); border-radius: 1rem; border: 1px solid var(--border-color); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    <style>
+        .dense-terminal-container {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            overflow: auto;
+            max-height: 75vh;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);
+            position: relative;
+        }
+
+        .dense-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            font-size: 0.8rem;
+        }
+
+        .dense-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+        }
+
+        /* Sticky Columns */
+        .sticky-col-1 {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .sticky-col-2 {
+            position: sticky;
+            left: 120px; /* Adjust based on Date col width */
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(8px);
+            border-right: 2px solid rgba(255, 255, 255, 0.4);
+        }
+
+        /* Header z-index needs to be higher than sticky cols */
+        .dense-table thead th.sticky-col-1,
+        .dense-table thead th.sticky-col-2 {
+            z-index: 30;
+        }
+
+        .dense-table tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .dense-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
+            white-space: nowrap;
+        }
+    </style>
+
+    <div class="dense-terminal-container">
+        <table class="dense-table">
             <thead>
-                <tr style="background: var(--weekend-bg); border-bottom: 1px solid var(--border-color);">
-                    <th
-                        style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
-                        Date</th>
-                    <th
-                        style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
-                        Employee</th>
-                    <th
-                        style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
-                        Emp ID</th>
-                    <th
-                        style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
-                        Check In</th>
-                    <th
-                        style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
-                        Check Out</th>
-                    <th
-                        style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
-                        Mode</th>
-                    <th
-                        style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
-                        Status / Total</th>
-                    <th
-                        style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
-                        Actions</th>
+                <tr>
+                    <th class="sticky-col-1" style="width: 120px; min-width: 120px;">Date</th>
+                    <th class="sticky-col-2" style="width: 250px; min-width: 250px;">Employee</th>
+                    <th>Emp ID</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Mode</th>
+                    <th>Status / Total</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -171,12 +227,9 @@ include 'includes/header.php';
                     </tr>
                 <?php else: ?>
                     <?php foreach ($records as $row): ?>
-                        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;"
-                            onmouseover="this.style.background='var(--bg-color)'"
-                            onmouseout="this.style.background='transparent'">
-                            <td style="padding: 1rem; font-weight: 600;"><?php echo date('d M Y', strtotime($row['date'])); ?>
-                            </td>
-                            <td style="padding: 1rem;">
+                        <tr>
+                            <td class="sticky-col-1" style="font-weight: 600;"><?php echo date('d M Y', strtotime($row['date'])); ?></td>
+                            <td class="sticky-col-2">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" 
                                      onclick='showEmployeeDetails(<?php echo json_encode(["id" => $row["user_id"], "name" => $row["name"], "email" => $row["email"], "role" => $row["role"], "emp_id" => $row["emp_id"]]); ?>)'>
                                     <div
@@ -186,26 +239,26 @@ include 'includes/header.php';
                                     <strong style="color: var(--primary-color);"><?php echo htmlspecialchars($row['name']); ?></strong>
                                 </div>
                             </td>
-                            <td style="padding: 1rem; color: var(--text-muted); font-family: monospace;">
+                            <td style="color: var(--text-muted); font-family: monospace;">
                                 <?php echo htmlspecialchars($row['emp_id']); ?>
                             </td>
-                            <td style="padding: 1rem;">
+                            <td>
                                 <span style="color: var(--primary-color); font-weight: 600;">
                                     <?php echo $row['check_in_time'] ? date('h:i A', strtotime($row['check_in_time'])) : '-'; ?>
                                 </span>
                             </td>
-                            <td style="padding: 1rem;">
+                            <td>
                                 <span style="color: #ef4444; font-weight: 600;">
                                     <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
                                 </span>
                             </td>
-                            <td style="padding: 1rem;">
+                            <td>
                                 <span
                                     style="font-size: 0.75rem; font-weight: 800; color: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? '#8b5cf6' : '#10b981'; ?>; background: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)'; ?>; padding: 0.3rem 0.6rem; border-radius: 0.5rem; border: 1px solid <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)'; ?>;">
                                     <?php echo htmlspecialchars($row['work_mode'] ?? 'WFO'); ?>
                                 </span>
                             </td>
-                            <td style="padding: 1rem;">
+                            <td>
                                 <?php if ($row['check_out_time']): ?>
                                     <span
                                         style="background: #dcfce7; color: #16a34a; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #bbf7d0;">
@@ -220,7 +273,7 @@ include 'includes/header.php';
                                     </span>
                                 <?php endif; ?>
                             </td>
-                            <td style="padding: 1rem;">
+                            <td>
                                 <a href="edit_attendance.php?id=<?php echo $row['id']; ?>" class="btn"
                                     style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--primary-color); color: var(--primary-color); text-decoration: none;">Edit</a>
                             </td>

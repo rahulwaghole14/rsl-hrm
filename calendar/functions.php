@@ -189,8 +189,13 @@ function renderCalendar($year, $month)
                 // Display Birthdays
                 $dayBirthdays = isset($birthdays[$day_padded]) ? $birthdays[$day_padded] : [];
                 foreach ($dayBirthdays as $bdayName) {
-                    echo '<div class="birthday-tag" title="Happy Birthday!">';
-                    echo '🎂 ' . htmlspecialchars($bdayName);
+                    $bwords = explode(" ", $bdayName);
+                    $binitials = "";
+                    foreach ($bwords as $w) { if(!empty($w)) $binitials .= strtoupper($w[0]); }
+                    $bdisplayInitials = substr($binitials, 0, 2);
+
+                    echo '<div class="birthday-tag" title="Happy Birthday ' . htmlspecialchars($bdayName) . '!">';
+                    echo '🎂' . htmlspecialchars($bdisplayInitials);
                     echo '</div>';
                 }
 
@@ -385,17 +390,28 @@ function renderWeekView($year, $month)
         echo '<div class="day-tags-top">';
         $dayBirthdays = isset($birthdays[$day_padded]) ? $birthdays[$day_padded] : [];
         foreach ($dayBirthdays as $bdayName) {
-            echo '<div class="birthday-tag" title="Happy Birthday!">🎂 ' . htmlspecialchars($bdayName) . '</div>';
+            $bwords = explode(" ", $bdayName);
+            $binitials = "";
+            foreach ($bwords as $w) { if(!empty($w)) $binitials .= strtoupper($w[0]); }
+            $bdisplayInitials = substr($binitials, 0, 2);
+
+            echo '<div class="birthday-tag" title="Happy Birthday ' . htmlspecialchars($bdayName) . '!">🎂' . htmlspecialchars($bdisplayInitials) . '</div>';
         }
         foreach ($dayLeaves as $leave) {
+            $words = explode(" ", $leave['user_name'] ?? 'U');
+            $initials = "";
+            foreach ($words as $w) { $initials .= strtoupper($w[0] ?? ''); }
+            $displayInitials = substr($initials, 0, 2);
+            $title = "Leave: " . htmlspecialchars($leave['user_name']) . " (" . ucfirst(str_replace('_', ' ', $leave['status'])) . ")";
+
             if ($isAdmin) {
                 $leaveJson = htmlspecialchars(json_encode($leave));
-                echo '<div class="leave-tag status-' . $leave['status'] . '" onclick="event.stopPropagation(); openAdminViewModal(' . $leaveJson . ')" title="View Request">';
-                echo 'Leave: ' . htmlspecialchars($leave['user_name']);
+                echo '<div class="leave-tag status-' . $leave['status'] . '" onclick="event.stopPropagation(); openAdminViewModal(' . $leaveJson . ')" title="' . $title . '">';
+                echo $displayInitials;
                 echo '</div>';
             } elseif ($leave['user_id'] == $currentUserId) {
-                echo '<div class="leave-tag status-' . $leave['status'] . '" style="cursor:default;" onclick="event.stopPropagation();">';
-                echo 'Leave: ' . ucfirst($leave['status']);
+                echo '<div class="leave-tag status-' . $leave['status'] . '" style="cursor:default;" onclick="event.stopPropagation();" title="Your ' . $title . '">';
+                echo $displayInitials;
                 echo '</div>';
             }
         }

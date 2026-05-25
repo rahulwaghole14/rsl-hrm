@@ -63,6 +63,7 @@ $isLoginPage = ($currentPage == 'login.php');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSL Calendar 2026</title>
+    <link rel="icon" type="image/png" href="assets/img/rsl-logo.png">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
@@ -256,20 +257,27 @@ $isLoginPage = ($currentPage == 'login.php');
                                     top: 100%;
                                     left: 50%;
                                     transform: translateX(-50%);
-                                    background: var(--card-bg);
-                                    border: 1px solid var(--border-color);
-                                    border-radius: 1rem;
-                                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                                    background: rgba(255, 255, 255, 0.65);
+                                    backdrop-filter: blur(16px);
+                                    -webkit-backdrop-filter: blur(16px);
+                                    border: 1px solid rgba(255, 255, 255, 0.6);
+                                    border-radius: 0.75rem;
+                                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05);
                                     z-index: 5000;
-                                    width: 320px;
+                                    width: 260px;
                                     margin-top: 12px;
-                                    padding: 0.75rem;
+                                    padding: 0.5rem;
+                                }
+
+                                [data-theme="dark"] .month-picker-dropdown {
+                                    background: rgba(30, 41, 59, 0.65);
+                                    border-color: rgba(255, 255, 255, 0.1);
                                 }
 
                                 .month-picker-dropdown.active {
                                     display: grid;
                                     grid-template-columns: repeat(3, 1fr);
-                                    gap: 0.5rem;
+                                    gap: 0.25rem;
                                     animation: slideDown 0.2s ease;
                                 }
 
@@ -364,6 +372,140 @@ $isLoginPage = ($currentPage == 'login.php');
                                 $initials = strtoupper(substr($userName, 0, 1));
                             }
                             ?>
+                            
+                            <?php
+                            global $pdo;
+                            if (!isset($pdo) || $pdo === null) {
+                                require_once __DIR__ . '/../config/db.php';
+                            }
+                            
+                            $notifications = [];
+                            $showNotificationBell = false;
+
+                            if ($currentPage === 'index.php' || $currentPage === 'meetings.php') {
+                                $showNotificationBell = true;
+                            }
+
+                            $curRole = $_SESSION['role'] ?? 'employee';
+                            $curUserId = $_SESSION['user_id'] ?? null;
+
+                            if (isset($pdo) && $pdo !== null) {
+                                if ($currentPage === 'index.php') {
+                                    $today = date('Y-m-d');
+                                    $nextMonth = date('Y-m-d', strtotime('+1 month'));
+                                    
+                                    try {
+                                        $stmt = $pdo->prepare("SELECT title, event_date, type FROM events WHERE event_date >= ? AND event_date <= ? AND title != 'Weekend' ORDER BY event_date ASC");
+                                        $stmt->execute([$today, $nextMonth]);
+                                        $events = $stmt->fetchAll();
+                                        
+                                        foreach ($events as $ev) {
+                                            $dateStr = date('d M', strtotime($ev['event_date']));
+                                            $notifications[] = [
+                                                'icon' => $ev['type'] === 'holiday' ? '🎉' : '📅',
+                                                'title' => htmlspecialchars($ev['title']),
+                                                'subtitle' => ucfirst($ev['type']) . ' on ' . $dateStr
+                                            ];
+                                        }
+                                    } catch (Exception $e) {}
+                                } elseif ($currentPage === 'meetings.php') {
+                                    $today = date('Y-m-d');
+                                    $currentTime = date('H:i:s');
+                                    
+                                    try {
+                                        $stmt = $pdo->prepare("SELECT DISTINCT m.title, m.start_time 
+                                                              FROM meetings m 
+                                                              JOIN users u ON m.created_by = u.id 
+                                                              LEFT JOIN meeting_participants mp ON m.id = mp.meeting_id
+                                                              WHERE m.meeting_date = ? AND m.start_time >= ? 
+                                                              AND (
+                                                                  (m.is_rsl_employee = 0 AND NOT (u.role = 'sub_admin' AND ? = 'employee'))
+                                                                  OR m.created_by = ? 
+                                                                  OR mp.user_id = ?
+                                                              )
+                                                              ORDER BY m.start_time ASC");
+                                        $stmt->execute([$today, $currentTime, $curRole, $curUserId, $curUserId]);
+                                        $meetingsList = $stmt->fetchAll();
+                                        
+                                        foreach ($meetingsList as $mtg) {
+                                            $timeStr = date('h:i A', strtotime($mtg['start_time']));
+                                            $notifications[] = [
+                                                'icon' => '🕒',
+                                                'title' => htmlspecialchars($mtg['title']),
+                                                'subtitle' => 'Today at ' . $timeStr
+                                            ];
+                                        }
+                                    } catch (Exception $e) {}
+                                }
+                            }
+                            ?>
+                            
+                            <?php if ($showNotificationBell): ?>
+                            <div class="notification-wrap" style="position: relative; margin-right: 1.5rem; display: flex; align-items: center; cursor: pointer;" onclick="document.getElementById('notifDropdown').classList.toggle('active')">
+                                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-muted); transition: color 0.2s;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                </svg>
+                                <?php if (count($notifications) > 0): ?>
+                                    <span style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #fff;"><?php echo count($notifications); ?></span>
+                                <?php endif; ?>
+                                
+                                <div id="notifDropdown" class="notif-dropdown">
+                                    <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: 700; color: var(--text-main);">Notifications</div>
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        <?php if (count($notifications) > 0): ?>
+                                            <?php foreach ($notifications as $n): ?>
+                                                <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; gap: 0.75rem; align-items: flex-start; transition: background 0.2s;" onmouseover="this.style.background='var(--bg-color)'" onmouseout="this.style.background='transparent'">
+                                                    <div style="font-size: 1.2rem;"><?php echo $n['icon']; ?></div>
+                                                    <div>
+                                                        <div style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;"><?php echo $n['title']; ?></div>
+                                                        <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem;"><?php echo $n['subtitle']; ?></div>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <div style="padding: 1.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No upcoming notifications</div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <style>
+                                .notification-wrap:hover svg { color: var(--primary-color) !important; }
+                                .notif-dropdown {
+                                    display: none;
+                                    position: absolute;
+                                    top: calc(100% + 15px);
+                                    right: -10px;
+                                    width: 300px;
+                                    background: rgba(255, 255, 255, 0.9);
+                                    backdrop-filter: blur(16px);
+                                    -webkit-backdrop-filter: blur(16px);
+                                    border: 1px solid rgba(255, 255, 255, 0.6);
+                                    border-radius: 1rem;
+                                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                                    z-index: 5000;
+                                    overflow: hidden;
+                                }
+                                [data-theme="dark"] .notif-dropdown {
+                                    background: rgba(30, 41, 59, 0.9);
+                                    border-color: rgba(255, 255, 255, 0.1);
+                                }
+                                .notif-dropdown.active {
+                                    display: block;
+                                    animation: slideDown 0.2s ease;
+                                }
+                            </style>
+                            <script>
+                                document.addEventListener('click', function(e) {
+                                    const wrap = document.querySelector('.notification-wrap');
+                                    if (wrap && !wrap.contains(e.target)) {
+                                        const dd = document.getElementById('notifDropdown');
+                                        if (dd) dd.classList.remove('active');
+                                    }
+                                });
+                            </script>
+                            <?php endif; ?>
+
                             <!-- PROFILE TRIGGER with Hover Tooltip (Option 3) -->
                             <div class="profile-tooltip-wrap">
                                 <div class="user-profile" onclick="openProfileModal()">
@@ -378,7 +520,7 @@ $isLoginPage = ($currentPage == 'login.php');
                                 </div>
 
                                 <!-- HOVER TOOLTIP (CSS-only, no JS needed) -->
-                                <div class="profile-hover-tooltip">
+                                <div class="profile-hover-tooltip" onclick="openProfileModal()" style="cursor: pointer;">
                                     <div class="pht-inner">
                                         <div class="pht-avatar"><?php echo $initials; ?></div>
                                         <div>

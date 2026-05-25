@@ -65,7 +65,7 @@ include 'includes/header.php';
     <div class="attendance-dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
         <!-- Attendance Control -->
         <div class="card attendance-control-card"
-            style="background: var(--card-bg); padding: 2rem; border-radius: 1.5rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin: 0;">
+            style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.5rem; margin: 0;">
             <h3 style="color: var(--text-muted); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em;">
                 Daily Check-In</h3>
             
@@ -165,7 +165,7 @@ include 'includes/header.php';
 
         <!-- Attendance Graph -->
         <div class="card attendance-graph-card"
-            style="background: var(--card-bg); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin: 0;">
+            style="margin: 0;">
             <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-main);">Last 7 Days</h3>
             <div style="height: 250px;">
                 <canvas id="attendanceChart"></canvas>
@@ -174,13 +174,13 @@ include 'includes/header.php';
     </div>
 
     <!-- Attendance Table -->
-    <div class="attendance-table-container" style="background: var(--card-bg); border-radius: 1rem; border: 1px solid var(--border-color); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-top: 2rem;">
-        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
+    <div class="attendance-table-container">
+        <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.3);">
             <h3 style="font-size: 1.1rem;">Recent History</h3>
         </div>
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
-                <tr style="border-bottom: 2px solid var(--border-color); background: var(--bg-color);">
+                <tr style="border-bottom: 2px solid rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.2);">
                     <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Date</th>
                     <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Check In</th>
                     <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Check Out</th>

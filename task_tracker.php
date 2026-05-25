@@ -57,7 +57,7 @@ include 'includes/header.php';
         <h2 style="font-size: 1.8rem; text-align: center; width: 100%; color: var(--text-main);">Task Tracker</h2>
 
         <div class="filter-card"
-            style="background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;">
+            style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
                 <?php if ($is_admin): ?>
                     <div style="flex: 1; min-width: 200px;">
@@ -105,12 +105,14 @@ include 'includes/header.php';
 
     <style>
         .dense-terminal-container {
-            background: var(--card-bg);
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: 1rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             overflow: auto;
             max-height: 75vh;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);
             position: relative;
         }
 
@@ -126,12 +128,14 @@ include 'includes/header.php';
             position: sticky;
             top: 0;
             z-index: 20;
-            background: #f8fafc;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             color: var(--text-muted);
             text-transform: uppercase;
             font-weight: 700;
             padding: 0.75rem 1rem;
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.5);
             white-space: nowrap;
         }
 
@@ -140,8 +144,9 @@ include 'includes/header.php';
             position: sticky;
             left: 0;
             z-index: 10;
-            background: white !important;
-            border-right: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
         }
 
         .sticky-col-2 {
@@ -149,8 +154,9 @@ include 'includes/header.php';
             left: 100px;
             /* Adjust based on col 1 width */
             z-index: 10;
-            background: white !important;
-            border-right: 2px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(8px);
+            border-right: 2px solid rgba(255, 255, 255, 0.4);
         }
 
         /* Header z-index needs to be higher than sticky cols */
@@ -160,13 +166,13 @@ include 'includes/header.php';
         }
 
         .dense-table tbody tr:hover td {
-            background: #f1f5f9 !important;
+            background: rgba(255, 255, 255, 0.5) !important;
         }
 
         .dense-table td {
             padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-            background: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
             white-space: nowrap;
         }
 
