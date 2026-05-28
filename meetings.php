@@ -13,18 +13,21 @@ if ($year != 2026) {
     $year = 2026;
 }
 
-if ($month < 1) $month = 1;
-if ($month > 12) $month = 12;
+if ($month < 1)
+    $month = 1;
+if ($month > 12)
+    $month = 12;
 
 $monthName = date('F', mktime(0, 0, 0, $month, 1, $year));
 
 include 'includes/header.php';
 ?>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+<div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h2 style="font-size: 1.5rem; color: #8b5cf6;">Meeting Calendar - <?php echo "$monthName $year"; ?></h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Manage and schedule your company meetings</p>
+        <h2 style="font-size: 1.5rem; color: #070113ff;">Meeting Calendar - <?php echo "$monthName $year"; ?></h2>
+        <!-- <p style="color: var(--text-muted); font-size: 0.9rem;">Manage and schedule your company meetings</p> -->
     </div>
 
     <div class="calendar-nav">
@@ -56,7 +59,9 @@ include 'includes/header.php';
 
 <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
-        <div style="width: 12px; height: 12px; background: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; border-radius: 2px;"></div>
+        <div
+            style="width: 12px; height: 12px; background: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; border-radius: 2px;">
+        </div>
         <span>Scheduled Meeting</span>
     </div>
 </div>

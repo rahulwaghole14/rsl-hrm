@@ -182,22 +182,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 
-    // EMAIL NOTIFICATION LOGIC
+    // EMAIL AND WHATSAPP NOTIFICATION LOGIC
+    require_once 'includes/whatsapp_helper.php';
+
     if ($is_rsl_employee && !empty($rsl_employee_ids)) {
         require_once 'includes/mail_helper.php';
 
         // Fetch organizer
-        $stmt = $pdo->prepare("SELECT name, email FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT name, email, mob_no, role FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $organizer = $stmt->fetch();
 
         // Fetch all participants
         $placeholders = implode(',', array_fill(0, count($rsl_employee_ids), '?'));
-        $stmt = $pdo->prepare("SELECT name, email FROM users WHERE id IN ($placeholders)");
+        $stmt = $pdo->prepare("SELECT name, email, mob_no FROM users WHERE id IN ($placeholders)");
         $stmt->execute($rsl_employee_ids);
         $participants = $stmt->fetchAll();
 
         if ($organizer) {
+            // Send WhatsApp confirmation to the organizer
+            if (!empty($organizer['mob_no'])) {
+                $orgMsg = "🔔 *Internal Meeting Scheduled* 🔔\n\n";
+                $orgMsg .= "Hello *" . $organizer['name'] . "*,\n\n";
+                $orgMsg .= "You have successfully scheduled a new internal meeting.\n\n";
+                $orgMsg .= "*Title:* " . $title . "\n";
+                $orgMsg .= "*Date:* " . date('d M Y', strtotime($date)) . "\n";
+                $orgMsg .= "*Time:* " . date('h:i A', strtotime($time)) . "\n";
+                if ($meeting_link) {
+                    $orgMsg .= "*Link:* " . $meeting_link . "\n";
+                }
+                if ($description) {
+                    $orgMsg .= "*Description:* " . $description . "\n";
+                }
+                sendWhatsAppMessage($organizer['mob_no'], $orgMsg);
+            }
+
             foreach ($participants as $p) {
                 sendMeetingEmail(
                     $organizer['name'],
@@ -211,6 +230,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $organizer['email'],
                     'Meeting Invitation'
                 );
+
+                // WhatsApp Notification
+                if (!empty($p['mob_no'])) {
+                    $waMessage = "🔔 *Internal Meeting Scheduled* 🔔\n\n";
+                    $waMessage .= "Hello *" . $p['name'] . "*,\n\n";
+                    $waMessage .= "A new internal meeting has been scheduled for you.\n\n";
+                    $waMessage .= "*Title:* " . $title . "\n";
+                    $waMessage .= "*Date:* " . date('d M Y', strtotime($date)) . "\n";
+                    $waMessage .= "*Time:* " . date('h:i A', strtotime($time)) . "\n";
+                    $waMessage .= "*Assigned By:* " . $organizer['name'] . "\n";
+                    if ($meeting_link) {
+                        $waMessage .= "*Link:* " . $meeting_link . "\n";
+                    }
+                    if ($description) {
+                        $waMessage .= "*Description:* " . $description . "\n";
+                    }
+                    $waMessage .= "\nPlease make sure to attend.";
+                    sendWhatsAppMessage($p['mob_no'], $waMessage);
+                }
+            }
+        }
+    } else if (!$is_rsl_employee) {
+        // External meeting logic for subadmin
+        $stmt = $pdo->prepare("SELECT name, role, mob_no FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $organizer = $stmt->fetch();
+
+        if ($organizer && $organizer['role'] === 'sub_admin') {
+            // Fetch all admins
+            $adminStmt = $pdo->query("SELECT name, mob_no FROM users WHERE role = 'admin'");
+            $admins = $adminStmt->fetchAll();
+
+            $waMessageBase = "🌐 *External Meeting Scheduled* 🌐\n\n";
+            $waMessageBase .= "An external meeting has been scheduled by a Sub-Admin.\n\n";
+            $waMessageBase .= "*Title:* " . $title . "\n";
+            $waMessageBase .= "*Date:* " . date('d M Y', strtotime($date)) . "\n";
+            $waMessageBase .= "*Time:* " . date('h:i A', strtotime($time)) . "\n";
+            $waMessageBase .= "*Scheduled By:* " . $organizer['name'] . "\n";
+            if ($meeting_link) {
+                $waMessageBase .= "*Link:* " . $meeting_link . "\n";
+            }
+            if ($description) {
+                $waMessageBase .= "*Description:* " . $description . "\n";
+            }
+
+            // Send to Organizer (Sub-Admin)
+            if (!empty($organizer['mob_no'])) {
+                sendWhatsAppMessage($organizer['mob_no'], "Hello *" . $organizer['name'] . "*,\n\n" . $waMessageBase);
+            }
+
+            // Send to Admins
+            foreach ($admins as $admin) {
+                if (!empty($admin['mob_no'])) {
+                    sendWhatsAppMessage($admin['mob_no'], "Hello *" . $admin['name'] . "*,\n\n" . $waMessageBase);
+                }
             }
         }
     }

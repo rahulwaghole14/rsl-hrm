@@ -413,22 +413,22 @@ $isLoginPage = ($currentPage == 'login.php');
                                     $currentTime = date('H:i:s');
                                     
                                     try {
-                                        $stmt = $pdo->prepare("SELECT DISTINCT m.title, m.start_time 
+                                        $stmt = $pdo->prepare("SELECT DISTINCT m.title, m.meeting_time 
                                                               FROM meetings m 
                                                               JOIN users u ON m.created_by = u.id 
                                                               LEFT JOIN meeting_participants mp ON m.id = mp.meeting_id
-                                                              WHERE m.meeting_date = ? AND m.start_time >= ? 
+                                                              WHERE m.meeting_date = ? AND m.meeting_time >= ? 
                                                               AND (
                                                                   (m.is_rsl_employee = 0 AND NOT (u.role = 'sub_admin' AND ? = 'employee'))
                                                                   OR m.created_by = ? 
                                                                   OR mp.user_id = ?
                                                               )
-                                                              ORDER BY m.start_time ASC");
+                                                              ORDER BY m.meeting_time ASC");
                                         $stmt->execute([$today, $currentTime, $curRole, $curUserId, $curUserId]);
                                         $meetingsList = $stmt->fetchAll();
                                         
                                         foreach ($meetingsList as $mtg) {
-                                            $timeStr = date('h:i A', strtotime($mtg['start_time']));
+                                            $timeStr = date('h:i A', strtotime($mtg['meeting_time']));
                                             $notifications[] = [
                                                 'icon' => '🕒',
                                                 'title' => htmlspecialchars($mtg['title']),

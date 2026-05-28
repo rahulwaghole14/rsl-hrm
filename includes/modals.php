@@ -1,5 +1,5 @@
 <!-- Employee Apply Leave Modal -->
-<div id="leaveModal" class="modal">
+<div id="leaveModal" class="modal-overlay">
     <div class="modal-content">
         <span class="close" onclick="closeModal('leaveModal')">&times;</span>
         <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">Apply for Leave</h2>
@@ -45,7 +45,7 @@
 </div>
 
 <!-- Admin View Leave Modal -->
-<div id="adminLeaveModal" class="modal">
+<div id="adminLeaveModal" class="modal-overlay">
     <div class="modal-content">
         <span class="close" onclick="closeModal('adminLeaveModal')">&times;</span>
         <h2 style="margin-bottom: 0.5rem; color: var(--primary-color);">Leave Request Details</h2>
@@ -90,42 +90,6 @@
 </div>
 
 <style>
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(8px);
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-    }
-
-    .modal-content {
-        background-color: var(--card-bg, white);
-        color: var(--text-main, #333);
-        margin: 0;
-        padding: 2rem;
-        border-radius: 1.5rem;
-        width: 100%;
-        max-width: 600px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        position: relative;
-        border: 1px solid var(--border-color, #eee);
-        max-height: 90vh;
-        overflow-y: auto;
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-
-    .modal-content::-webkit-scrollbar {
-        display: none;
-    }
-
     .close {
         position: absolute;
         right: 1.5rem;
@@ -190,7 +154,7 @@
         
         handleFromDateChange();
         
-        document.getElementById('leaveModal').style.display = 'flex';
+        document.getElementById('leaveModal').classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
@@ -268,18 +232,18 @@
         }
 
         document.getElementById('adminActions').style.display = (data.status === 'pending') ? 'flex' : 'none';
-        document.getElementById('adminLeaveModal').style.display = 'flex';
+        document.getElementById('adminLeaveModal').classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
     function closeModal(id) {
-        document.getElementById(id).style.display = 'none';
+        document.getElementById(id).classList.remove('active');
         document.body.style.overflow = 'auto';
     }
 
     window.onclick = function (event) {
-        if (event.target.className === 'modal') {
-            event.target.style.display = "none";
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
             document.body.style.overflow = 'auto';
         }
     }
