@@ -1,27 +1,24 @@
 <?php
 // cron_meeting_reminders.php
-// Run this script every minute via cron or Windows Task Scheduler
+// Run this script every minute or every 5 minutes via cron or Windows Task Scheduler
 
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/whatsapp_helper.php';
 
-// We want to find meetings that are exactly 5 minutes from now.
-$now = new DateTime();
-$now->modify('+5 minutes');
-$targetDate = $now->format('Y-m-d');
-$targetTime = $now->format('H:i');
-
-// Only internal meetings send reminders to both organizer and participants
+// Find meetings starting within the next 5 minutes that haven't been reminded yet.
+// Using NOW() from MySQL which relies on the database's time timezone.
 $stmt = $pdo->prepare("
     SELECT m.id, m.title, m.meeting_date, m.meeting_time, m.meeting_link, m.description, 
            u.name as organizer_name, u.mob_no as organizer_mob
     FROM meetings m
     JOIN users u ON m.created_by = u.id
-    WHERE m.meeting_date = ? AND m.meeting_time LIKE ? AND m.is_rsl_employee = 1
+    WHERE CONCAT(m.meeting_date, ' ', m.meeting_time) > NOW()
+      AND CONCAT(m.meeting_date, ' ', m.meeting_time) <= DATE_ADD(NOW(), INTERVAL 5 MINUTE)
+      AND m.is_rsl_employee = 1
+      AND m.reminder_sent = 0
 ");
 
-// Matches HH:MM:00
-$stmt->execute([$targetDate, $targetTime . '%']);
+$stmt->execute();
 $meetings = $stmt->fetchAll();
 
 foreach ($meetings as $m) {
@@ -30,7 +27,7 @@ foreach ($meetings as $m) {
     $waMessage .= "*Title:* " . $m['title'] . "\n";
     $waMessage .= "*Time:* " . date('h:i A', strtotime($m['meeting_time'])) . "\n";
     $waMessage .= "*Assigned By:* " . $m['organizer_name'] . "\n";
-    if ($m['meeting_link']) {
+    if (!empty($m['meeting_link'])) {
         $waMessage .= "*Link:* " . $m['meeting_link'] . "\n";
     }
 
@@ -54,6 +51,10 @@ foreach ($meetings as $m) {
             sendWhatsAppMessage($p['mob_no'], "Hello *" . $p['name'] . "*,\n\n" . $waMessage);
         }
     }
+
+    // Mark as reminder sent to prevent duplicate reminders
+    $updateStmt = $pdo->prepare("UPDATE meetings SET reminder_sent = 1 WHERE id = ?");
+    $updateStmt->execute([$m['id']]);
 }
 
-echo "Reminder check complete at " . date('Y-m-d H:i:s') . "\n";
+echo "Reminder check complete at " . date('Y-m-d H:i:s') . ". Processed " . count($meetings) . " meetings.\n";
