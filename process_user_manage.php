@@ -7,7 +7,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = (int)$_POST['id'];
+    $id = (int) $_POST['id'];
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $mob_no = trim($_POST['mob_no']);
@@ -49,6 +49,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $password = password_hash($raw_password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO users (name, email, mob_no, dob, role, status, password, emp_id, department) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$name, $email, $mob_no, $dob, $role, $status, $password, $emp_id, $department]);
+
+            // Send Welcome WhatsApp Message
+            require_once 'includes/whatsapp_helper.php';
+
+            $waMessage = "🎉 *Welcome to RSL Solution Pvt Ltd!* 🎉\n\n";
+            $waMessage .= "Hello *" . $name . "*,\n\n";
+            $waMessage .= "Your account has been successfully created. Below are your login credentials and important links to get started:\n\n";
+            $waMessage .= "🔐 *Your Account Details:*\n";
+            $waMessage .= "Email: " . $email . "\n";
+            $waMessage .= "Role: " . ucfirst($role) . "\n";
+            if (!empty($emp_id)) {
+                $waMessage .= "Employee ID: " . $emp_id . "\n";
+            }
+            $waMessage .= "Password: " . $raw_password . "\n\n";
+
+            $waMessage .= "🌐 *HRM Portal Login:*\n";
+            $waMessage .= "https://hrm.rslsolution.com/\n";
+            $waMessage .= "(Please log in and change your password for security.)\n\n";
+
+            $waMessage .= "💬 *Internal Communication (Slack):*\n";
+            $waMessage .= "https://join.slack.com/t/rslsolution/shared_invite/zt-403mvpn2s-Vw_blOermF7Jgh60p6QK6Q\n\n";
+
+            $waMessage .= "We are thrilled to have you on board! Let us know if you need any assistance.";
+
+            sendWhatsAppMessage($mob_no, $waMessage);
+
             header("Location: manage_users.php?success=User created successfully.");
         }
     } catch (PDOException $e) {
