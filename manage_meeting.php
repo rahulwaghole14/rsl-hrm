@@ -73,7 +73,7 @@ foreach ($allDbMeetings as &$m) {
     // - External (is_rsl_employee=0) visible to all, UNLESS it's a sub_admin's external meeting which is hidden from employees.
     // - Internal (is_rsl_employee=1) only details to involved users.
 
-    $isSubAdminExternal = ($m['is_rsl_employee'] == 0 && $m['creator_role'] == 'sub_admin');
+    $isExternal = ($m['is_rsl_employee'] == 0);
     $isEmployee = ($_SESSION['role'] === 'employee');
 
     if ($m['is_rsl_employee'] == 1 && !$m['is_involved']) {
@@ -82,8 +82,8 @@ foreach ($allDbMeetings as &$m) {
         $m['description'] = '';
         $m['meeting_link'] = '';
         $m['participants_hidden'] = true;
-    } elseif ($isSubAdminExternal && $isEmployee && !$m['is_involved']) {
-        // Sub-admin external meeting: completely hide from employees
+    } elseif ($isExternal && $isEmployee && !$m['is_involved']) {
+        // External meeting: completely hide from employees
         // We still need this meeting in $allDbMeetings for conflict check, 
         // so we just don't add it to $dayMeetings (which is for display).
     } else {
@@ -120,9 +120,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $duration = 30; // Constant 30 min as requested
     $is_rsl_employee = (int) $_POST['is_rsl_employee'];
     $rsl_employee_ids = ($is_rsl_employee && isset($_POST['rsl_employee_ids'])) ? $_POST['rsl_employee_ids'] : [];
+    
+    $ext_mobs_post = isset($_POST['external_mob_no']) ? $_POST['external_mob_no'] : [];
+    $ext_emails_post = isset($_POST['external_email']) ? $_POST['external_email'] : [];
+    
+    $valid_mobs = [];
+    $valid_emails = [];
+    $hasExternal = false;
+    
+    if (is_array($ext_mobs_post) && is_array($ext_emails_post)) {
+        $count = max(count($ext_mobs_post), count($ext_emails_post));
+        for ($i = 0; $i < $count; $i++) {
+            $mob = trim($ext_mobs_post[$i] ?? '');
+            $email = trim($ext_emails_post[$i] ?? '');
+            if (!empty($mob) || !empty($email)) {
+                $hasExternal = true;
+                $valid_mobs[] = $mob;
+                $valid_emails[] = $email;
+            }
+        }
+    }
+    
+    $external_mob_no = implode(',', $valid_mobs);
+    $external_email = implode(',', $valid_emails);
+
     $meeting_link = $_POST['meeting_link'];
     $description = $_POST['description'];
     $user_id = $_SESSION['user_id'];
+
+    if (!$is_rsl_employee && !$hasExternal) {
+        die("Error: For external meetings, at least one participant (mobile or email) is required.");
+    }
 
     // CONFLICT CHECK (Backend Validation)
     if ($pdo && $is_rsl_employee && !empty($rsl_employee_ids)) {
@@ -160,15 +188,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 die("Error: You are not authorized to edit this meeting.");
             }
 
-            $stmt = $pdo->prepare("UPDATE meetings SET title = ?, meeting_date = ?, meeting_time = ?, duration = ?, is_rsl_employee = ?, meeting_link = ?, description = ? WHERE id = ?");
-            $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $id]);
+            $stmt = $pdo->prepare("UPDATE meetings SET title = ?, meeting_date = ?, meeting_time = ?, duration = ?, is_rsl_employee = ?, meeting_link = ?, description = ?, external_email = ?, external_mob_no = ? WHERE id = ?");
+            $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $external_email, $external_mob_no, $id]);
             $meetingId = $id;
 
             // Clear existing participants
             $pdo->prepare("DELETE FROM meeting_participants WHERE meeting_id = ?")->execute([$meetingId]);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO meetings (title, meeting_date, meeting_time, duration, is_rsl_employee, meeting_link, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $user_id]);
+            $stmt = $pdo->prepare("INSERT INTO meetings (title, meeting_date, meeting_time, duration, is_rsl_employee, meeting_link, description, created_by, external_email, external_mob_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$title, $date, $time, $duration, $is_rsl_employee, $meeting_link, $description, $user_id, $external_email, $external_mob_no]);
             $meetingId = $pdo->lastInsertId();
         }
 
@@ -252,18 +280,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } else if (!$is_rsl_employee) {
-        // External meeting logic for subadmin
-        $stmt = $pdo->prepare("SELECT name, role, mob_no FROM users WHERE id = ?");
+        // External meeting logic for subadmin/admin
+        $stmt = $pdo->prepare("SELECT name, role, mob_no, email FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $organizer = $stmt->fetch();
 
-        if ($organizer && $organizer['role'] === 'sub_admin') {
-            // Fetch all admins
-            $adminStmt = $pdo->query("SELECT name, mob_no FROM users WHERE role = 'admin'");
-            $admins = $adminStmt->fetchAll();
-
+        if ($organizer && in_array($organizer['role'], ['admin', 'sub_admin'])) {
             $waMessageBase = "🌐 *External Meeting Scheduled* 🌐\n\n";
-            $waMessageBase .= "An external meeting has been scheduled by a Sub-Admin.\n\n";
+            $waMessageBase .= "An external meeting has been scheduled by " . ($organizer['role'] === 'admin' ? "an Admin" : "a Sub-Admin") . ".\n\n";
             $waMessageBase .= "*Title:* " . $title . "\n";
             $waMessageBase .= "*Date:* " . date('d M Y', strtotime($date)) . "\n";
             $waMessageBase .= "*Time:* " . date('h:i A', strtotime($time)) . "\n";
@@ -275,15 +299,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $waMessageBase .= "*Description:* " . $description . "\n";
             }
 
-            // Send to Organizer (Sub-Admin)
+            // Send to Organizer
             if (!empty($organizer['mob_no'])) {
                 sendWhatsAppMessage($organizer['mob_no'], "Hello *" . $organizer['name'] . "*,\n\n" . $waMessageBase);
             }
 
-            // Send to Admins
-            foreach ($admins as $admin) {
-                if (!empty($admin['mob_no'])) {
-                    sendWhatsAppMessage($admin['mob_no'], "Hello *" . $admin['name'] . "*,\n\n" . $waMessageBase);
+            // Send to Admins if scheduled by sub_admin
+            if ($organizer['role'] === 'sub_admin') {
+                $adminStmt = $pdo->query("SELECT name, mob_no FROM users WHERE role = 'admin'");
+                $admins = $adminStmt->fetchAll();
+                foreach ($admins as $admin) {
+                    if (!empty($admin['mob_no'])) {
+                        sendWhatsAppMessage($admin['mob_no'], "Hello *" . $admin['name'] . "*,\n\n" . $waMessageBase);
+                    }
+                }
+            }
+
+            // Send to External Participant
+            if ($hasExternal) {
+                $extWaMessage = "🔔 *Meeting Invitation* 🔔\n\n";
+                $extWaMessage .= "Hello,\n\n";
+                $extWaMessage .= "You have been invited to a meeting by *" . $organizer['name'] . "* from RSL.\n\n";
+                $extWaMessage .= "*Title:* " . $title . "\n";
+                $extWaMessage .= "*Date:* " . date('d M Y', strtotime($date)) . "\n";
+                $extWaMessage .= "*Time:* " . date('h:i A', strtotime($time)) . "\n";
+                if ($meeting_link) {
+                    $extWaMessage .= "*Link:* " . $meeting_link . "\n";
+                }
+                if ($description) {
+                    $extWaMessage .= "*Description:* " . $description . "\n";
+                }
+                $extWaMessage .= "\nWe look forward to meeting you.";
+
+                for ($i = 0; $i < count($valid_mobs); $i++) {
+                    $mob = $valid_mobs[$i];
+                    $email = $valid_emails[$i];
+
+                    if (!empty($mob)) {
+                        sendWhatsAppMessage($mob, $extWaMessage);
+                    }
+                    
+                    if (!empty($email)) {
+                        require_once 'includes/mail_helper.php';
+                        sendMeetingEmail(
+                            $organizer['name'],
+                            $email,
+                            'Guest', // Guest name
+                            $title,
+                            $date,
+                            $time,
+                            $meeting_link,
+                            $description,
+                            $organizer['email'] ?? 'no-reply@domain.com',
+                            'External Meeting Invitation'
+                        );
+                    }
                 }
             }
         }
@@ -442,6 +512,24 @@ include 'includes/header.php';
                 </div>
             </div>
 
+            <div class="form-grid" id="external_field" style="display: none; margin-bottom: 1rem;">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>External Participants</label>
+                    <div id="external_participants_container">
+                        <div class="external-participant-row" style="display: flex; gap: 1rem; margin-bottom: 0.5rem; align-items: center;">
+                            <input type="text" name="external_mob_no[]" placeholder="Mobile No (e.g. +91 9876543210)" style="flex: 1;">
+                            <input type="email" name="external_email[]" placeholder="Email (e.g. example@domain.com)" style="flex: 1;">
+                            <button type="button" class="btn" style="padding: 0.5rem; border-color: #ef4444; color: #ef4444; visibility: hidden;" onclick="removeExternalRow(this)">X</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn" style="margin-top: 0.5rem; font-size: 0.8rem;" onclick="addExternalRow()">+ Add More</button>
+                </div>
+                <div class="form-group" style="grid-column: span 2; color: var(--text-muted); font-size: 0.8rem; margin-top: -0.5rem;">
+                    * At least one of Mobile No or Email is required for each external participant.
+                </div>
+            </div>
+
+
             <div class="form-grid">
                 <div class="form-group">
                     <label>Time</label>
@@ -512,9 +600,11 @@ include 'includes/header.php';
                 document.querySelectorAll('.participant-checkbox').forEach(cb => {
                     cb.checked = pIds.includes(parseInt(cb.value));
                 });
+                resetExternalRows();
             } else {
                 if (document.getElementById('rsl_no')) document.getElementById('rsl_no').checked = true;
                 toggleEmployeeField(false);
+                populateExternalRows(meeting.external_mob_no || '', meeting.external_email || '');
             }
 
             document.getElementById('meeting_link').value = meeting.meeting_link;
@@ -573,14 +663,17 @@ include 'includes/header.php';
     function toggleEmployeeField(show) {
         const userRole = '<?php echo $_SESSION['role']; ?>';
         const field = document.getElementById('employee_field');
+        const extField = document.getElementById('external_field');
 
         // Employees always see the checkboxes
         if (userRole === 'employee') {
             field.style.display = 'block';
+            if (extField) extField.style.display = 'none';
             return;
         }
 
         field.style.display = show ? 'block' : 'none';
+        if (extField) extField.style.display = show ? 'none' : 'grid';
     }
 
     const busyMap = <?php echo json_encode($busyMap); ?>;
@@ -637,6 +730,57 @@ include 'includes/header.php';
         const date = document.getElementById('meeting_date').value;
         if (id > 0 && confirm('Are you sure you want to cancel this meeting?')) {
             window.location.href = `delete_meeting.php?id=${id}&date=${date}`;
+        }
+    }
+
+    function addExternalRow(mob = '', email = '') {
+        const container = document.getElementById('external_participants_container');
+        const rows = container.getElementsByClassName('external-participant-row');
+        const isFirst = rows.length === 0;
+
+        const row = document.createElement('div');
+        row.className = 'external-participant-row';
+        row.style = 'display: flex; gap: 1rem; margin-bottom: 0.5rem; align-items: center;';
+        
+        row.innerHTML = `
+            <input type="text" name="external_mob_no[]" placeholder="Mobile No (e.g. +91 9876543210)" style="flex: 1;" value="${mob}">
+            <input type="email" name="external_email[]" placeholder="Email (e.g. example@domain.com)" style="flex: 1;" value="${email}">
+            <button type="button" class="btn" style="padding: 0.5rem; border-color: #ef4444; color: #ef4444; ${isFirst ? 'visibility: hidden;' : ''}" onclick="removeExternalRow(this)">X</button>
+        `;
+        
+        container.appendChild(row);
+
+        // Make sure the first row's close button is hidden, others are visible
+        const updatedRows = container.getElementsByClassName('external-participant-row');
+        for (let i = 0; i < updatedRows.length; i++) {
+            updatedRows[i].querySelector('button').style.visibility = (i === 0) ? 'hidden' : 'visible';
+        }
+    }
+
+    function removeExternalRow(btn) {
+        const row = btn.closest('.external-participant-row');
+        const container = document.getElementById('external_participants_container');
+        if (container.getElementsByClassName('external-participant-row').length > 1) {
+            row.remove();
+        }
+    }
+
+    function resetExternalRows() {
+        const container = document.getElementById('external_participants_container');
+        container.innerHTML = '';
+        addExternalRow();
+    }
+
+    function populateExternalRows(mobsStr, emailsStr) {
+        const container = document.getElementById('external_participants_container');
+        container.innerHTML = '';
+        
+        const mobs = mobsStr ? mobsStr.split(',') : [];
+        const emails = emailsStr ? emailsStr.split(',') : [];
+        const count = Math.max(mobs.length, emails.length, 1);
+        
+        for (let i = 0; i < count; i++) {
+            addExternalRow(mobs[i] || '', emails[i] || '');
         }
     }
 
