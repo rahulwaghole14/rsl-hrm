@@ -39,23 +39,61 @@ function sendMeetingEmail($organizerName, $participantEmail, $participantName, $
         $formattedTime = date('h:i A', strtotime($meetingTime));
 
         $mail->Body = "
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 1rem; overflow: hidden;'>
-            <div style='background: #6366f1; padding: 2rem; text-align: center; color: white;'>
-                <h1 style='margin: 0; font-size: 1.5rem;'>Meeting Invitation</h1>
-            </div>
-            <div style='padding: 2rem; background: #ffffff;'>
-                <p>Hi <strong>$participantName</strong>,</p>
-                <p><strong>$organizerName</strong> has scheduled a meeting with you.</p>
-                
-                <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0; border: 1px solid #e2e8f0;'>
-                    <h3 style='margin-top: 0; color: #6366f1;'>$meetingTitle</h3>
-                    <p><strong>Date:</strong> $formattedDate</p>
-                    <p><strong>Time:</strong> $formattedTime</p>
-                    " . ($description ? "<p><strong>Notes:</strong> $description</p>" : "") . "
-                </div>
-
-                " . ($meetingLink ? "<div style='text-align: center;'><a href='$meetingLink' style='background: #6366f1; color: white; padding: 1rem 2rem; border-radius: 0.5rem; text-decoration: none; font-weight: bold;'>Join Meeting</a></div>" : "") . "
-            </div>
+        <div style=\"margin: 0; padding: 40px 20px; background-color: #f4f6f9; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-font-smoothing: antialiased;\">
+            <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" align=\"center\" width=\"100%\" style=\"max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); margin: 0 auto;\">
+                <tr>
+                    <td style=\"background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); padding: 40px 30px; text-align: center;\">
+                        <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;\">Meeting Invitation</h1>
+                        <p style=\"margin: 10px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 16px;\">You have a new meeting scheduled</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style=\"padding: 40px 30px;\">
+                        <p style=\"margin: 0 0 20px; font-size: 16px; color: #334155; line-height: 1.6;\">
+                            Hi <strong style=\"color: #0f172a;\">$participantName</strong>,
+                        </p>
+                        <p style=\"margin: 0 0 30px; font-size: 16px; color: #334155; line-height: 1.6;\">
+                            <strong style=\"color: #6366f1;\">$organizerName</strong> has invited you to join a meeting. Please find the details below.
+                        </p>
+                        <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 30px;\">
+                            <tr>
+                                <td style=\"padding: 24px;\">
+                                    <h3 style=\"margin: 0 0 16px; color: #1e293b; font-size: 20px; font-weight: 600;\">$meetingTitle</h3>
+                                    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">
+                                        <tr>
+                                            <td width=\"24\" style=\"padding-bottom: 12px; vertical-align: top;\"><span style=\"font-size: 16px;\">📅</span></td>
+                                            <td style=\"padding-bottom: 12px; font-size: 15px; color: #475569;\"><strong style=\"color: #334155;\">Date:</strong> $formattedDate</td>
+                                        </tr>
+                                        <tr>
+                                            <td width=\"24\" style=\"padding-bottom: 12px; vertical-align: top;\"><span style=\"font-size: 16px;\">⏰</span></td>
+                                            <td style=\"padding-bottom: 12px; font-size: 15px; color: #475569;\"><strong style=\"color: #334155;\">Time:</strong> $formattedTime</td>
+                                        </tr>
+                                        " . ($description ? "
+                                        <tr>
+                                            <td width=\"24\" style=\"vertical-align: top;\"><span style=\"font-size: 16px;\">📝</span></td>
+                                            <td style=\"font-size: 15px; color: #475569; line-height: 1.5;\"><strong style=\"color: #334155;\">Notes:</strong> $description</td>
+                                        </tr>" : "") . "
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        " . ($meetingLink ? "
+                        <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" align=\"center\" style=\"margin: 0 auto;\">
+                            <tr>
+                                <td style=\"border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); text-align: center;\">
+                                    <a href=\"$meetingLink\" target=\"_blank\" style=\"display: block; padding: 14px 32px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px;\">Join Meeting</a>
+                                </td>
+                            </tr>
+                        </table>" : "") . "
+                    </td>
+                </tr>
+                <tr>
+                    <td style=\"background-color: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e2e8f0;\">
+                        <p style=\"margin: 0 0 10px; font-size: 13px; color: #64748b;\">If you have any questions, please reply to this email.</p>
+                        <p style=\"margin: 0; font-size: 12px; color: #94a3b8;\">&copy; " . date('Y') . " RSL. All rights reserved.</p>
+                    </td>
+                </tr>
+            </table>
         </div>";
 
         $mail->send();

@@ -1125,37 +1125,54 @@ body {
     .sidebar {
         width: 100%;
         flex-direction: row;
-        padding: 1rem;
-        gap: 1rem;
+        padding: 0.75rem 1rem;
+        gap: 0.75rem;
         align-items: center;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-    .sidebar h1 {
-        margin-bottom: 0;
-        white-space: nowrap;
+    /* Hide scrollbar for a cleaner mobile sidebar */
+    .sidebar::-webkit-scrollbar {
+        display: none;
+    }
+    .sidebar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .logo-container {
+        margin: 0;
+        width: 80px;
+        height: 40px;
+        flex-shrink: 0;
     }
 
     .nav-links {
         flex-direction: row;
-        gap: 0.25rem;
+        gap: 0.5rem;
+        flex: 1;
     }
 
     .nav-btn {
         padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         white-space: nowrap;
+        border-radius: 10px;
+        gap: 0.5rem;
     }
 
     .btn-logout {
         margin-top: 0;
+        flex-shrink: 0;
     }
 
     .static-header {
         height: auto;
-        padding: 1rem;
+        padding: 0.75rem 1rem;
         flex-wrap: wrap;
         gap: 0.75rem;
+        justify-content: space-between;
     }
 
     .header-center {
@@ -1178,7 +1195,7 @@ body {
 @media (max-width: 768px) {
     .container {
         margin: 1rem auto;
-        padding: 0 0.75rem;
+        padding: 0 0.5rem;
     }
 
     .day-cell {
@@ -1200,6 +1217,14 @@ body {
     .modal-content {
         width: 95%;
         padding: 1.25rem;
+    }
+    
+    /* Disable sticky columns on small screens to allow horizontal scrolling */
+    .sticky-col-1, .sticky-col-2 {
+        position: static !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        z-index: auto !important;
     }
 }
 

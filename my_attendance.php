@@ -11,8 +11,10 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'employee' && $_SESSI
 $userId = $_SESSION['user_id'];
 $requestedMode = isset($_GET['mode']) ? $_GET['mode'] : 'WFO';
 // Helper function to format seconds into "X Hr Y Min"
-function formatDuration($seconds) {
-    if ($seconds < 0) $seconds = 0;
+function formatDuration($seconds)
+{
+    if ($seconds < 0)
+        $seconds = 0;
     $h = floor($seconds / 3600);
     $m = floor(($seconds % 3600) / 60);
     return sprintf("%d Hr %02d Min", $h, $m);
@@ -51,10 +53,10 @@ include 'includes/header.php';
     <?php if (isset($_SESSION['msg'])): ?>
         <div
             style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; border: 1px solid #22c55e;">
-            <?php 
-                $displayMsg = $_SESSION['msg'];
-                echo $displayMsg;
-                unset($_SESSION['msg']); 
+            <?php
+            $displayMsg = $_SESSION['msg'];
+            echo $displayMsg;
+            unset($_SESSION['msg']);
             ?>
         </div>
         <script>
@@ -62,13 +64,14 @@ include 'includes/header.php';
         </script>
     <?php endif; ?>
 
-    <div class="attendance-dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="attendance-dashboard-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
         <!-- Attendance Control -->
         <div class="card attendance-control-card"
             style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.5rem; margin: 0;">
             <h3 style="color: var(--text-muted); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em;">
                 Daily Check-In</h3>
-            
+
             <?php /* ... rest of the control content ... */ ?>
             <?php if (!$todayAttendance): ?>
                 <?php if (time() >= strtotime($today . ' 07:00:00')): ?>
@@ -76,7 +79,9 @@ include 'includes/header.php';
                         <input type="hidden" name="action" value="check_in">
                         <input type="hidden" name="work_mode" value="<?php echo htmlspecialchars($requestedMode); ?>">
                         <div style="margin-bottom: 1rem; font-weight: 600; color: var(--text-main);">
-                            <label style="display:block; margin-bottom:0.5rem; color:var(--text-muted); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Work Mode</label>
+                            <label
+                                style="display:block; margin-bottom:0.5rem; color:var(--text-muted); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Work
+                                Mode</label>
                             <select onchange="window.location.href='my_attendance.php?mode='+this.value"
                                 style="padding: 0.6rem 1rem; border-radius: 0.65rem; border: 2px solid var(--primary-color); background: var(--card-bg); color: var(--primary-color); font-weight: 700; font-size: 1rem; cursor: pointer; outline: none; width: 160px;">
                                 <option value="WFO" <?php echo $requestedMode === 'WFO' ? 'selected' : ''; ?>>🏢 WFO</option>
@@ -149,13 +154,12 @@ include 'includes/header.php';
                     <p style="font-size: 1.2rem; font-weight: 700; color: #16a34a; margin-bottom: 0.5rem;">Completed
                     </p>
                     <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
-                        Working: <strong
-                            style="color: var(--text-main);">
-                            <?php 
-                                $check_in_ts = strtotime($todayAttendance['date'] . ' ' . $todayAttendance['check_in_time']);
-                                $check_out_ts = strtotime($todayAttendance['date'] . ' ' . $todayAttendance['check_out_time']);
-                                $working_sec = ($check_out_ts - $check_in_ts) - (int)$todayAttendance['total_break_seconds'];
-                                echo formatDuration($working_sec); 
+                        Working: <strong style="color: var(--text-main);">
+                            <?php
+                            $check_in_ts = strtotime($todayAttendance['date'] . ' ' . $todayAttendance['check_in_time']);
+                            $check_out_ts = strtotime($todayAttendance['date'] . ' ' . $todayAttendance['check_out_time']);
+                            $working_sec = ($check_out_ts - $check_in_ts) - (int) $todayAttendance['total_break_seconds'];
+                            echo formatDuration($working_sec);
                             ?>
                         </strong>
                     </p>
@@ -164,8 +168,7 @@ include 'includes/header.php';
         </div>
 
         <!-- Attendance Graph -->
-        <div class="card attendance-graph-card"
-            style="margin: 0;">
+        <div class="card attendance-graph-card" style="margin: 0;">
             <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-main);">Last 7 Days</h3>
             <div style="height: 250px;">
                 <canvas id="attendanceChart"></canvas>
@@ -175,8 +178,26 @@ include 'includes/header.php';
 
     <!-- Attendance Table -->
     <div class="attendance-table-container">
-        <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.3);">
+        <div
+            style="padding: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.3); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <h3 style="font-size: 1.1rem;">Recent History</h3>
+
+            <form action="" method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
+                <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Filter:</label>
+                <select name="filter" onchange="this.form.submit()"
+                    style="padding: 0.4rem 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); font-weight: 500; font-size: 0.9rem; cursor: pointer; outline: none;">
+                    <?php $currentFilter = isset($_GET['filter']) ? $_GET['filter'] : 'all'; ?>
+                    <option value="all" <?php echo $currentFilter === 'all' ? 'selected' : ''; ?>>Recent (Last 7)</option>
+                    <option value="this_week" <?php echo $currentFilter === 'this_week' ? 'selected' : ''; ?>>This Week
+                    </option>
+                    <option value="last_week" <?php echo $currentFilter === 'last_week' ? 'selected' : ''; ?>>Last Week
+                    </option>
+                    <option value="this_month" <?php echo $currentFilter === 'this_month' ? 'selected' : ''; ?>>This Month
+                    </option>
+                    <option value="last_month" <?php echo $currentFilter === 'last_month' ? 'selected' : ''; ?>>Last Month
+                    </option>
+                </select>
+            </form>
         </div>
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
@@ -192,9 +213,28 @@ include 'includes/header.php';
             </thead>
             <tbody>
                 <?php
-                // Fetch recent records for table
-                $stmt = $pdo->prepare("SELECT * FROM attendance WHERE user_id = ? ORDER BY date DESC LIMIT 10");
-                $stmt->execute([$userId]);
+                $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+
+                $sql = "SELECT * FROM attendance WHERE user_id = ?";
+                $params = [$userId];
+
+                if ($filter === 'this_week') {
+                    $sql .= " AND YEARWEEK(date, 1) = YEARWEEK(CURDATE(), 1)";
+                } elseif ($filter === 'last_week') {
+                    $sql .= " AND YEARWEEK(date, 1) = YEARWEEK(CURDATE() - INTERVAL 1 WEEK, 1)";
+                } elseif ($filter === 'this_month') {
+                    $sql .= " AND MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE())";
+                } elseif ($filter === 'last_month') {
+                    $sql .= " AND MONTH(date) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(date) = YEAR(CURDATE() - INTERVAL 1 MONTH)";
+                }
+
+                $sql .= " ORDER BY date DESC";
+                if ($filter === 'all') {
+                    $sql .= " LIMIT 7"; // Default to 7 if all
+                }
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
                 $recentRecords = $stmt->fetchAll();
 
                 if (empty($recentRecords)): ?>
@@ -212,12 +252,13 @@ include 'includes/header.php';
                                 <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
                             </td>
                             <td style="padding: 1rem;">
-                                <span style="font-size: 0.75rem; font-weight: 800; color: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? '#8b5cf6' : '#10b981'; ?>; background: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)'; ?>; padding: 0.2rem 0.5rem; border-radius: 0.25rem;">
+                                <span
+                                    style="font-size: 0.75rem; font-weight: 800; color: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? '#8b5cf6' : '#10b981'; ?>; background: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)'; ?>; padding: 0.2rem 0.5rem; border-radius: 0.25rem;">
                                     <?php echo htmlspecialchars($row['work_mode'] ?? 'WFO'); ?>
                                 </span>
                             </td>
                             <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                                <?php 
+                                <?php
                                 if ($row['check_out_time']) {
                                     $check_in_ts = strtotime($row['date'] . ' ' . $row['check_in_time']);
                                     $check_out_ts = strtotime($row['date'] . ' ' . $row['check_out_time']);
@@ -235,18 +276,18 @@ include 'includes/header.php';
                                 <?php if ($row['status'] === 'checked_out'): ?>
                                     <span
                                         style="background: #dcfce7; color: #16a34a; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
-                                        <?php 
-                                            $check_in_ts = strtotime($row['date'] . ' ' . $row['check_in_time']);
-                                            $check_out_ts = strtotime($row['date'] . ' ' . $row['check_out_time']);
-                                            $working_sec = ($check_out_ts - $check_in_ts) - (int)$row['total_break_seconds'];
-                                            echo formatDuration($working_sec); 
+                                        <?php
+                                        $check_in_ts = strtotime($row['date'] . ' ' . $row['check_in_time']);
+                                        $check_out_ts = strtotime($row['date'] . ' ' . $row['check_out_time']);
+                                        $working_sec = ($check_out_ts - $check_in_ts) - (int) $row['total_break_seconds'];
+                                        echo formatDuration($working_sec);
                                         ?>
                                     </span>
                                     <script>
                                         var rowData = {
                                             check_in: <?php echo json_encode($row['check_in_time']); ?>,
                                             check_out: <?php echo json_encode($row['check_out_time']); ?>,
-                                            break_mins: <?php echo (int)round($row['total_break_seconds'] / 60, 0); ?>,
+                                            break_mins: <?php echo (int) round($row['total_break_seconds'] / 60, 0); ?>,
                                             working_hours: <?php echo json_encode($row['total_hours']); ?>
                                         };
                                         console.log("HISTORY [<?php echo $row['date']; ?>]:", JSON.stringify(rowData));

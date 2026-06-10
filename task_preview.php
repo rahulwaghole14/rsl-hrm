@@ -48,6 +48,110 @@ try {
 include 'includes/header.php';
 ?>
 
+<style>
+.spreadsheet-table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
+.spreadsheet-table th { 
+    background: #f8f9fa; border: 1px solid #dadce0; padding: 0.5rem; 
+    font-size: 0.7rem; font-weight: 500; color: #5f6368; text-align: center;
+    position: sticky; top: 0; z-index: 10;
+}
+.spreadsheet-table td { 
+    border: 1px solid #e0e0e0; padding: 0.4rem 0.6rem; font-size: 0.8rem; 
+    color: #3c4043; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    height: 35px;
+}
+.spreadsheet-table tr:hover td { background: #f1f3f4; }
+.row-num { 
+    width: 40px; background: #f8f9fa; color: #5f6368; text-align: center; 
+    font-size: 0.7rem; border: 1px solid #dadce0 !important; 
+    position: sticky; left: 0; z-index: 5;
+}
+
+.sheet-tab:hover { background: #e8eaed; }
+.sheet-tab.active { 
+    background: white !important; color: #1a73e8 !important; 
+    border-bottom: 3px solid #1a73e8; font-weight: 600;
+}
+
+.btn-grid-edit {
+    background: none; border: none; cursor: pointer; font-size: 1rem;
+    padding: 2px 5px; border-radius: 4px; transition: background 0.2s;
+}
+.btn-grid-edit:hover { background: #dadce0; }
+
+.emp-btn-save {
+    background: #1a73e8; color: white; border: none; padding: 0.8rem;
+    border-radius: 6px; font-weight: 600; cursor: pointer;
+}
+.emp-btn-save:hover { background: #1765cc; }
+
+.emp-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);
+}
+.emp-overlay.active { display: flex; }
+.emp-modal-card {
+    background: white; border-radius: 8px; padding: 2rem; width: 90%; max-width: 800px;
+    max-height: 90vh; overflow-y: auto; position: relative;
+}
+.emp-close-x {
+    position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; border: none; background: none; cursor: pointer;
+}
+
+.badge-priority { font-size: 0.6rem; font-weight: 700; padding: 2px 4px; border-radius: 4px; text-transform: uppercase; }
+.badge-priority.low { background: #e8f0fe; color: #1a73e8; }
+.badge-priority.medium { background: #fff4e5; color: #e67c73; }
+.badge-priority.high { background: #feefe3; color: #d93025; }
+.badge-priority.urgent { background: #fce8e6; color: #d93025; border: 1px solid #d93025; }
+
+.badge-status { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 12px; }
+.badge-status.completed { background: #e6f4ea; color: #1e8e3e; }
+.badge-status.in-progress { background: #fef7e0; color: #f29900; }
+.badge-status.pending { background: #f1f3f4; color: #5f6368; }
+.badge-status.bloked { background: #fce8e6; color: #d93025; }
+
+#tabBar::-webkit-scrollbar { display: none; }
+</style>
+
+<script>
+function showSheet(id, btn) {
+    document.querySelectorAll('.sheet-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.sheet-tab').forEach(el => el.classList.remove('active'));
+    const content = document.getElementById(id);
+    if (content) {
+        content.style.display = 'block';
+        btn.classList.add('active');
+    }
+}
+
+function openTaskModal(data) {
+    if (!data) return;
+    document.getElementById('taskId').value = data.id;
+    document.getElementById('taskDate').value = data.task_date;
+    document.getElementById('taskProject').value = data.project;
+    document.getElementById('taskModule').value = data.module;
+    document.getElementById('taskTitle').value = data.task_title;
+    document.getElementById('taskDescription').value = data.task_description;
+    document.getElementById('taskPriority').value = data.priority;
+    document.getElementById('taskAssignedBy').value = data.assigned_by;
+    document.getElementById('taskStartTime').value = data.start_time;
+    document.getElementById('taskDueDate').value = data.due_date;
+    document.getElementById('taskEndTime').value = data.end_time;
+    document.getElementById('taskEstHours').value = data.estimated_hours;
+    document.getElementById('taskActHours').value = data.actual_hours;
+    document.getElementById('taskStatus').value = data.status;
+    document.getElementById('taskModal').classList.add('active');
+}
+
+function closeEmpModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function handleOverlayClick(e, id) {
+    if (e.target.id === id) closeEmpModal(id);
+}
+</script>
+
 <div class="container-fluid" style="padding: 0; display: flex; flex-direction: column; height: calc(100vh - 70px); background: #f1f3f4; overflow: hidden;">
     <!-- Spreadsheet Header Area -->
     <div style="background: white; padding: 0.75rem 1.5rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
@@ -149,7 +253,13 @@ include 'includes/header.php';
                             <?php endforeach; 
                         endif; ?>
                         <!-- Filler rows for spreadsheet feel -->
-                        <?php for($i=0; $i<25; $i++): ?>
+                        <?php 
+                        $existingCount = count($tasks);
+                        $fillerCount = 1000 - $existingCount;
+                        if ($fillerCount < 50) {
+                            $fillerCount = 50; // Always have at least 50 empty rows at the bottom
+                        }
+                        for($i=0; $i<$fillerCount; $i++): ?>
                             <tr><td class="row-num"><?php echo $rowNum++; ?></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                         <?php endfor; ?>
                     </tbody>
@@ -290,109 +400,5 @@ include 'includes/header.php';
         </form>
     </div>
 </div>
-
-<style>
-.spreadsheet-table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
-.spreadsheet-table th { 
-    background: #f8f9fa; border: 1px solid #dadce0; padding: 0.5rem; 
-    font-size: 0.7rem; font-weight: 500; color: #5f6368; text-align: center;
-    position: sticky; top: 0; z-index: 10;
-}
-.spreadsheet-table td { 
-    border: 1px solid #e0e0e0; padding: 0.4rem 0.6rem; font-size: 0.8rem; 
-    color: #3c4043; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-    height: 35px;
-}
-.spreadsheet-table tr:hover td { background: #f1f3f4; }
-.row-num { 
-    width: 40px; background: #f8f9fa; color: #5f6368; text-align: center; 
-    font-size: 0.7rem; border: 1px solid #dadce0 !important; 
-    position: sticky; left: 0; z-index: 5;
-}
-
-.sheet-tab:hover { background: #e8eaed; }
-.sheet-tab.active { 
-    background: white !important; color: #1a73e8 !important; 
-    border-bottom: 3px solid #1a73e8; font-weight: 600;
-}
-
-.btn-grid-edit {
-    background: none; border: none; cursor: pointer; font-size: 1rem;
-    padding: 2px 5px; border-radius: 4px; transition: background 0.2s;
-}
-.btn-grid-edit:hover { background: #dadce0; }
-
-.emp-btn-save {
-    background: #1a73e8; color: white; border: none; padding: 0.8rem;
-    border-radius: 6px; font-weight: 600; cursor: pointer;
-}
-.emp-btn-save:hover { background: #1765cc; }
-
-.emp-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);
-}
-.emp-overlay.active { display: flex; }
-.emp-modal-card {
-    background: white; border-radius: 8px; padding: 2rem; width: 90%; max-width: 800px;
-    max-height: 90vh; overflow-y: auto; position: relative;
-}
-.emp-close-x {
-    position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; border: none; background: none; cursor: pointer;
-}
-
-.badge-priority { font-size: 0.6rem; font-weight: 700; padding: 2px 4px; border-radius: 4px; text-transform: uppercase; }
-.badge-priority.low { background: #e8f0fe; color: #1a73e8; }
-.badge-priority.medium { background: #fff4e5; color: #e67c73; }
-.badge-priority.high { background: #feefe3; color: #d93025; }
-.badge-priority.urgent { background: #fce8e6; color: #d93025; border: 1px solid #d93025; }
-
-.badge-status { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 12px; }
-.badge-status.completed { background: #e6f4ea; color: #1e8e3e; }
-.badge-status.in-progress { background: #fef7e0; color: #f29900; }
-.badge-status.pending { background: #f1f3f4; color: #5f6368; }
-.badge-status.bloked { background: #fce8e6; color: #d93025; }
-
-#tabBar::-webkit-scrollbar { display: none; }
-</style>
-
-<script>
-function showSheet(id, btn) {
-    document.querySelectorAll('.sheet-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.sheet-tab').forEach(el => el.classList.remove('active'));
-    const content = document.getElementById(id);
-    if (content) {
-        content.style.display = 'block';
-        btn.classList.add('active');
-    }
-}
-
-function openTaskModal(data) {
-    if (!data) return;
-    document.getElementById('taskId').value = data.id;
-    document.getElementById('taskDate').value = data.task_date;
-    document.getElementById('taskProject').value = data.project;
-    document.getElementById('taskModule').value = data.module;
-    document.getElementById('taskTitle').value = data.task_title;
-    document.getElementById('taskDescription').value = data.task_description;
-    document.getElementById('taskPriority').value = data.priority;
-    document.getElementById('taskAssignedBy').value = data.assigned_by;
-    document.getElementById('taskStartTime').value = data.start_time;
-    document.getElementById('taskDueDate').value = data.due_date;
-    document.getElementById('taskEndTime').value = data.end_time;
-    document.getElementById('taskEstHours').value = data.estimated_hours;
-    document.getElementById('taskActHours').value = data.actual_hours;
-    document.getElementById('taskStatus').value = data.status;
-    document.getElementById('taskModal').classList.add('active');
-}
-
-function closeEmpModal(id) {
-    document.getElementById(id).classList.remove('active');
-}
-
-function handleOverlayClick(e, id) {
-    if (e.target.id === id) closeEmpModal(id);
-}
-</script>
 
 <?php include 'includes/footer.php'; ?>
