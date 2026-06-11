@@ -28,7 +28,11 @@ foreach ($meetings as $m) {
     $waMessage .= "*Time:* " . date('h:i A', strtotime($m['meeting_time'])) . "\n";
     $waMessage .= "*Assigned By:* " . $m['organizer_name'] . "\n";
     if (!empty($m['meeting_link'])) {
-        $waMessage .= "*Link:* " . $m['meeting_link'] . "\n";
+        $link = trim($m['meeting_link']);
+        if (!preg_match("~^(?:f|ht)tps?://~i", $link)) {
+            $link = "https://" . $link;
+        }
+        $waMessage .= "*Link:* " . $link . "\n";
     }
 
     // Send to organizer

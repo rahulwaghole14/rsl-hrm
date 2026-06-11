@@ -67,7 +67,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Recipients
             $mail->Sender = SMTP_USER;
             $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
-            $mail->addAddress(ADMIN_EMAIL);
+            
+            // Fetch all admins and send to all of them
+            $adminStmt = $pdo->query("SELECT email, name FROM users WHERE role = 'admin'");
+            $admins = $adminStmt->fetchAll();
+            $hasAdmins = false;
+            foreach ($admins as $admin) {
+                if (!empty($admin['email'])) {
+                    $mail->addAddress($admin['email'], $admin['name']);
+                    $hasAdmins = true;
+                }
+            }
+            
+            // Fallback to config admin email if no admins found in DB
+            if (!$hasAdmins) {
+                $mail->addAddress(ADMIN_EMAIL);
+            }
+
             $mail->addReplyTo($emp_email, $emp_name);
 
             // Attachment

@@ -144,7 +144,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $external_mob_no = implode(',', $valid_mobs);
     $external_email = implode(',', $valid_emails);
 
-    $meeting_link = $_POST['meeting_link'];
+    $meeting_link = trim($_POST['meeting_link']);
+    if (!empty($meeting_link) && !preg_match("~^(?:f|ht)tps?://~i", $meeting_link)) {
+        $meeting_link = "https://" . $meeting_link;
+    }
+    
     $description = $_POST['description'];
     $user_id = $_SESSION['user_id'];
 

@@ -14,8 +14,9 @@ if ($id > 0) {
         // We might want to keep attendance records or delete them too? 
         // For now, let's just delete the user. Database constraints (ON DELETE CASCADE) 
         // should handle related records if they are set up that way.
-        $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND role != 'admin'"); // Prevent deleting self or other admins
-        $stmt->execute([$id]);
+        // Prevent deleting self
+        $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND id != ?");
+        $stmt->execute([$id, $_SESSION['user_id']]);
     } catch (PDOException $e) {
         die("Error deleting user: " . $e->getMessage());
     }
