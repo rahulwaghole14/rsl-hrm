@@ -2,7 +2,7 @@
 <div id="leaveModal" class="modal-overlay">
     <div class="modal-content">
         <span class="close" onclick="closeModal('leaveModal')">&times;</span>
-        <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">Apply for Leave</h2>
+        <h2 style="margin-bottom: 1rem; color: var(--primary-color);">Apply for Leave</h2>
         <form action="apply_leave.php" method="POST" enctype="multipart/form-data">
             <!-- Hidden context fields for redirect -->
             <input type="hidden" name="nav_month" value="<?php echo $navMonth; ?>">
@@ -30,7 +30,7 @@
             <div class="form-group">
                 <label>Description <span style="color:red">*</span></label>
                 <textarea name="description" required
-                    style="width:100%; min-height:100px; padding:0.75rem; border:1px solid var(--border-color); border-radius:0.5rem;"
+                    style="width:100%; min-height:80px; padding:0.75rem; border:1px solid var(--border-color); border-radius:0.5rem;"
                     placeholder="Reason for leave..."></textarea>
             </div>
 
@@ -39,7 +39,7 @@
                 <input type="file" name="attachment">
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width:100%; padding:1rem;">Send Request</button>
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:0.8rem;">Send Request</button>
         </form>
     </div>
 </div>

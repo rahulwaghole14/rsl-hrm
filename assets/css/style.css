@@ -691,9 +691,8 @@ body {
     border-radius: 8px;
     font-size: 0.75rem;
     font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-wrap: break-word;
     margin-bottom: 4px;
     position: relative;
     z-index: 1;
@@ -777,7 +776,8 @@ body {
     font-weight: 600;
     border-left: 2px solid #a855f7;
     cursor: default;
-    white-space: nowrap;
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .meeting-count-badge {
@@ -800,9 +800,8 @@ body {
     border-radius: 4px;
     border-left: 3px solid #8b5cf6;
     margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-wrap: break-word;
     font-weight: 500;
 }
 
@@ -986,9 +985,15 @@ body {
     border-radius: 1.5rem;
     max-height: 95vh;
     overflow-y: auto;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
     transform: translateY(20px);
     transition: transform 0.3s ease;
+}
+
+.modal-content::-webkit-scrollbar {
+    display: none;
 }
 
 [data-theme="dark"] .modal-content {
