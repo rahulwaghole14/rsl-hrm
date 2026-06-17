@@ -92,8 +92,9 @@ function renderMeetingCalendar($year, $month)
         echo '<div class="day-cell ' . implode(' ', $classes) . '" ' . $clickAttr . '>';
         echo '<div class="day-number">' . $day . '</div>';
 
-        echo '<div class="event-list" style="display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.5rem;">';
-        $maxVisible = 3;
+        echo '<div class="event-list meeting-scroll-list" style="display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.5rem; max-height: 90px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;">';
+        echo '<style>.meeting-scroll-list::-webkit-scrollbar { display: none; }</style>';
+        $maxVisible = 10;
         $count = 0;
         $totalMeetings = count($dayMeetings);
 
@@ -111,7 +112,7 @@ function renderMeetingCalendar($year, $month)
 
             echo '<div class="calendar-meeting-item" title="' . htmlspecialchars($m['title'] . ' (by ' . $organizerName . ')') . '" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.4rem; background: rgba(139, 92, 241, 0.08); border-radius: 0.4rem; border: 1px solid rgba(139, 92, 241, 0.1);">';
             echo '<div style="width: 16px; height: 16px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-weight: 700; flex-shrink: 0;">' . $initials . '</div>';
-            echo '<span style="font-size: 0.7rem; font-weight: 700; color: var(--primary-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' . $time . '</span>';
+            echo '<span style="font-size: 0.65rem; font-weight: 700; color: var(--primary-color);">' . $time . '</span>';
             echo '</div>';
             $count++;
         }
