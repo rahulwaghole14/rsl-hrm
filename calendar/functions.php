@@ -145,18 +145,20 @@ function renderCalendar($year, $month)
         if ($isWorking)
             $classes[] = 'working-day';
 
-        // Check for Approved Leaves to highlight the whole box red
         $dayLeaves = isset($leaves[$currentDate]) ? $leaves[$currentDate] : [];
         $hasApprovedLeave = false;
+        $hasUserActiveLeave = false;
         $currentUserId = $_SESSION['user_id'] ?? null;
         $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
 
         foreach ($dayLeaves as $leave) {
+            if (!$isAdmin && $currentUserId && $leave['user_id'] == $currentUserId) {
+                $hasUserActiveLeave = true;
+            }
             if ($leave['status'] === 'approved' || $leave['status'] === 'partially_approved') {
                 // ONLY show red background for the Employee who has the leave
                 if (!$isAdmin && $currentUserId && $leave['user_id'] == $currentUserId) {
                     $hasApprovedLeave = true;
-                    break;
                 }
             }
         }
@@ -172,10 +174,14 @@ function renderCalendar($year, $month)
             $clickAttr = 'onclick="location.href=\'manage_event.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
         } elseif ($isLoggedIn) {
             $isPast = (strtotime($currentDate) < strtotime(date('Y-m-d')));
-            if (!$isPast) {
-                $clickAttr = 'onclick="openLeaveModal(\'' . $currentDate . '\')" style="cursor: pointer;"';
-            } else {
+            if ($isPast) {
                 $clickAttr = 'style="cursor: default; opacity: 0.6;" title="Past dates are disabled"';
+            } elseif ($isWeekend || $isHoliday) {
+                $clickAttr = 'style="cursor: default;" title="Cannot apply for leave on weekends or national holidays"';
+            } elseif ($hasUserActiveLeave) {
+                $clickAttr = 'style="cursor: default;" title="You have already applied for leave on this date"';
+            } else {
+                $clickAttr = 'onclick="openLeaveModal(\'' . $currentDate . '\')" style="cursor: pointer;"';
             }
         }
 
@@ -343,9 +349,13 @@ function renderWeekView($year, $month)
         // Leaves
         $dayLeaves = isset($leaves[$currentDate]) ? $leaves[$currentDate] : [];
         $hasApprovedLeave = false;
+        $hasUserActiveLeave = false;
         foreach ($dayLeaves as $leave) {
+            if (!$isAdmin && $currentUserId && $leave['user_id'] == $currentUserId) {
+                $hasUserActiveLeave = true;
+            }
             if (($leave['status'] === 'approved' || $leave['status'] === 'partially_approved') && !$isAdmin && $currentUserId && $leave['user_id'] == $currentUserId) {
-                $hasApprovedLeave = true; break;
+                $hasApprovedLeave = true;
             }
         }
         if ($hasApprovedLeave) $classes[] = 'leave-approved';
@@ -356,10 +366,14 @@ function renderWeekView($year, $month)
             $clickAttr = 'onclick="location.href=\'manage_event.php?date=' . $currentDate . '\'" style="cursor: pointer;"';
         } elseif ($isLoggedIn) {
             $isPast = (strtotime($currentDate) < strtotime(date('Y-m-d')));
-            if (!$isPast) {
-                $clickAttr = 'onclick="openLeaveModal(\'' . $currentDate . '\')" style="cursor: pointer;"';
-            } else {
+            if ($isPast) {
                 $clickAttr = 'style="cursor: default; opacity: 0.6;" title="Past dates are disabled"';
+            } elseif ($isWeekend || $isHoliday) {
+                $clickAttr = 'style="cursor: default;" title="Cannot apply for leave on weekends or national holidays"';
+            } elseif ($hasUserActiveLeave) {
+                $clickAttr = 'style="cursor: default;" title="You have already applied for leave on this date"';
+            } else {
+                $clickAttr = 'onclick="openLeaveModal(\'' . $currentDate . '\')" style="cursor: pointer;"';
             }
         }
 

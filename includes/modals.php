@@ -1,9 +1,26 @@
+<?php
+// Fetch all holidays of 2026
+$holidayDates = [];
+if (isset($pdo)) {
+    try {
+        $stmt = $pdo->prepare("SELECT event_date FROM events WHERE type = 'holiday' AND YEAR(event_date) = 2026");
+        $stmt->execute();
+        $holidayDates = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+        // Silent fail
+    }
+}
+?>
+<script>
+const nationalHolidays = <?php echo json_encode($holidayDates); ?>;
+</script>
+
 <!-- Employee Apply Leave Modal -->
 <div id="leaveModal" class="modal-overlay">
     <div class="modal-content">
         <span class="close" onclick="closeModal('leaveModal')">&times;</span>
         <h2 style="margin-bottom: 1rem; color: var(--primary-color);">Apply for Leave</h2>
-        <form action="apply_leave.php" method="POST" enctype="multipart/form-data">
+        <form action="apply_leave.php" method="POST" enctype="multipart/form-data" onsubmit="return validateLeaveForm()">
             <!-- Hidden context fields for redirect -->
             <input type="hidden" name="nav_month" value="<?php echo $navMonth; ?>">
             <input type="hidden" name="nav_year" value="<?php echo $navYear; ?>">
@@ -127,6 +144,56 @@
 </style>
 
 <script>
+    function isHolidayOrWeekendJS(dateStr) {
+        const dateObj = new Date(dateStr);
+        const day = dateObj.getDay(); // 0=Sun, 6=Sat
+        if (day === 0 || day === 6) {
+            return true;
+        }
+        return nationalHolidays.includes(dateStr);
+    }
+
+    function validateLeaveForm() {
+        const from = document.getElementById('modalFromDate').value;
+        const to = document.getElementById('modalToDate').value;
+        
+        if (!from || !to) return false;
+        
+        if (isHolidayOrWeekendJS(from)) {
+            alert("Error: Cannot start leave on a weekend or national holiday.");
+            return false;
+        }
+        if (isHolidayOrWeekendJS(to)) {
+            alert("Error: Cannot end leave on a weekend or national holiday.");
+            return false;
+        }
+        
+        // Count total valid working days in the range
+        let start = new Date(from);
+        let end = new Date(to);
+        let validDays = 0;
+        let cur = new Date(start);
+        while (cur <= end) {
+            let y = cur.getFullYear();
+            let m = String(cur.getMonth() + 1).padStart(2, '0');
+            let d = String(cur.getDate()).padStart(2, '0');
+            let dateStr = `${y}-${m}-${d}`;
+            
+            let day = cur.getDay();
+            if (day !== 0 && day !== 6 && !nationalHolidays.includes(dateStr)) {
+                validDays++;
+            }
+            cur.setDate(cur.getDate() + 1);
+        }
+        
+        if (validDays === 0) {
+            alert("Error: Your selected range contains only weekends or national holidays.");
+            return false;
+        }
+        
+        return true;
+    }
+
     function handleFromDateChange() {
         const fromDateInput = document.getElementById('modalFromDate');
         const toDateInput = document.getElementById('modalToDate');
@@ -167,8 +234,13 @@
             let count = 0;
             let cur = new Date(start);
             while (cur <= end) {
+                let y = cur.getFullYear();
+                let m = String(cur.getMonth() + 1).padStart(2, '0');
+                let d = String(cur.getDate()).padStart(2, '0');
+                let dateStr = `${y}-${m}-${d}`;
+                
                 let day = cur.getDay(); // 0=Sun, 6=Sat
-                if (day !== 0 && day !== 6) {
+                if (day !== 0 && day !== 6 && !nationalHolidays.includes(dateStr)) {
                     count++;
                 }
                 cur.setDate(cur.getDate() + 1);
