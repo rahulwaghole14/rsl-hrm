@@ -29,13 +29,13 @@ try {
          LIMIT 20"
     );
     $stmt->execute([$year, $searchTerm]);
-    
+
     while ($row = $stmt->fetch()) {
         $results[] = [
             'type' => $row['type'],
             'title' => $row['title'],
             'date' => $row['event_date'],
-            'date_display' => date('d M Y (D)', strtotime($row['event_date'])),
+            'date_display' => date('d M (D)', strtotime($row['event_date'])),
             'month' => (int) date('m', strtotime($row['event_date'])),
             'id' => $row['id']
         ];
@@ -53,14 +53,14 @@ try {
             'type' => 'birthday',
             'title' => '🎂 ' . $row['name'],
             'date' => $bdayDate,
-            'date_display' => date('d M Y (D)', strtotime($bdayDate)),
+            'date_display' => date('d M (D)', strtotime($bdayDate)),
             'month' => (int) date('m', strtotime($bdayDate)),
             'id' => null
         ];
     }
 
     // Sort all results by date
-    usort($results, function($a, $b) {
+    usort($results, function ($a, $b) {
         return strcmp($a['date'], $b['date']);
     });
 
