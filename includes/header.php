@@ -1,5 +1,13 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.gc_maxlifetime', 5400);
+    session_set_cookie_params([
+        'lifetime' => 5400,
+        'path' => '/',
+        'secure' => false,      // Set to true if you are using HTTPS
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
@@ -8,9 +16,9 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
-// Session Expiry Logic (1 Hour Inactivity)
+// Session Expiry Logic (1 Hour 30 Minutes Inactivity)
 if (isset($_SESSION['user_id'])) {
-    $expiry_time = 3600; // 1 hour in seconds
+    $expiry_time = 5400; // 1 hour 30 minutes in seconds
     if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > $expiry_time)) {
         session_unset();
         session_destroy();

@@ -120,14 +120,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $duration = 30; // Constant 30 min as requested
     $is_rsl_employee = (int) $_POST['is_rsl_employee'];
     $rsl_employee_ids = ($is_rsl_employee && isset($_POST['rsl_employee_ids'])) ? $_POST['rsl_employee_ids'] : [];
-    
+
     $ext_mobs_post = isset($_POST['external_mob_no']) ? $_POST['external_mob_no'] : [];
     $ext_emails_post = isset($_POST['external_email']) ? $_POST['external_email'] : [];
-    
+
     $valid_mobs = [];
     $valid_emails = [];
     $hasExternal = false;
-    
+
     if (is_array($ext_mobs_post) && is_array($ext_emails_post)) {
         $count = max(count($ext_mobs_post), count($ext_emails_post));
         for ($i = 0; $i < $count; $i++) {
@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    
+
     $external_mob_no = implode(',', $valid_mobs);
     $external_email = implode(',', $valid_emails);
 
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($meeting_link) && !preg_match("~^(?:f|ht)tps?://~i", $meeting_link)) {
         $meeting_link = "https://" . $meeting_link;
     }
-    
+
     $description = $_POST['description'];
     $user_id = $_SESSION['user_id'];
 
@@ -187,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $authStmt = $pdo->prepare("SELECT created_by FROM meetings WHERE id = ?");
             $authStmt->execute([$id]);
             $creatorId = $authStmt->fetchColumn();
-            
+
             if ($_SESSION['role'] !== 'admin' && $creatorId != $user_id) {
                 die("Error: You are not authorized to edit this meeting.");
             }
@@ -225,9 +225,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$user_id]);
         $organizer = $stmt->fetch();
 
-        // Fetch all participants
+        // Fetch all participants (only active ones)
         $placeholders = implode(',', array_fill(0, count($rsl_employee_ids), '?'));
-        $stmt = $pdo->prepare("SELECT name, email, mob_no FROM users WHERE id IN ($placeholders)");
+        $stmt = $pdo->prepare("SELECT name, email, mob_no FROM users WHERE id IN ($placeholders) AND status = 'active'");
         $stmt->execute($rsl_employee_ids);
         $participants = $stmt->fetchAll();
 
@@ -310,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Send to Admins if scheduled by sub_admin
             if ($organizer['role'] === 'sub_admin') {
-                $adminStmt = $pdo->query("SELECT name, mob_no FROM users WHERE role = 'admin'");
+                $adminStmt = $pdo->query("SELECT name, mob_no FROM users WHERE role = 'admin' AND status = 'active'");
                 $admins = $adminStmt->fetchAll();
                 foreach ($admins as $admin) {
                     if (!empty($admin['mob_no'])) {
@@ -342,13 +342,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!empty($mob)) {
                         sendWhatsAppMessage($mob, $extWaMessage);
                     }
-                    
+
                     if (!empty($email)) {
                         require_once 'includes/mail_helper.php';
                         sendMeetingEmail(
                             $organizer['name'],
                             $email,
-                            'Guest', // Guest name
+                            'Sir/Mam', // Guest name
                             $title,
                             $date,
                             $time,
@@ -435,7 +435,7 @@ include 'includes/header.php';
             <div class="slot-actions">
                 <?php if ($isBooked): ?>
                     <?php if ($meeting['is_involved'] || $_SESSION['role'] === 'admin'): ?>
-                        <?php 
+                        <?php
                         $showEdit = $meeting['can_edit'] && !$isSlotPast;
                         ?>
                         <button class="btn" style="width: 100%; border-color: #8b5cf6; color: #8b5cf6;"
@@ -520,15 +520,22 @@ include 'includes/header.php';
                 <div class="form-group" style="grid-column: span 2;">
                     <label>External Participants</label>
                     <div id="external_participants_container">
-                        <div class="external-participant-row" style="display: flex; gap: 1rem; margin-bottom: 0.5rem; align-items: center;">
-                            <input type="text" name="external_mob_no[]" placeholder="Mobile No (e.g. +91 9876543210)" style="flex: 1;">
-                            <input type="email" name="external_email[]" placeholder="Email (e.g. example@domain.com)" style="flex: 1;">
-                            <button type="button" class="btn" style="padding: 0.5rem; border-color: #ef4444; color: #ef4444; visibility: hidden;" onclick="removeExternalRow(this)">X</button>
+                        <div class="external-participant-row"
+                            style="display: flex; gap: 1rem; margin-bottom: 0.5rem; align-items: center;">
+                            <input type="text" name="external_mob_no[]" placeholder="Mobile No (e.g. +91 9876543210)"
+                                style="flex: 1;">
+                            <input type="email" name="external_email[]" placeholder="Email (e.g. example@domain.com)"
+                                style="flex: 1;">
+                            <button type="button" class="btn"
+                                style="padding: 0.5rem; border-color: #ef4444; color: #ef4444; visibility: hidden;"
+                                onclick="removeExternalRow(this)">X</button>
                         </div>
                     </div>
-                    <button type="button" class="btn" style="margin-top: 0.5rem; font-size: 0.8rem;" onclick="addExternalRow()">+ Add More</button>
+                    <button type="button" class="btn" style="margin-top: 0.5rem; font-size: 0.8rem;"
+                        onclick="addExternalRow()">+ Add More</button>
                 </div>
-                <div class="form-group" style="grid-column: span 2; color: var(--text-muted); font-size: 0.8rem; margin-top: -0.5rem;">
+                <div class="form-group"
+                    style="grid-column: span 2; color: var(--text-muted); font-size: 0.8rem; margin-top: -0.5rem;">
                     * At least one of Mobile No or Email is required for each external participant.
                 </div>
             </div>
@@ -643,7 +650,7 @@ include 'includes/header.php';
         const currentTime = '<?php echo $currentTime; ?>';
         const userRole = '<?php echo $_SESSION['role']; ?>';
         const currentUserId = '<?php echo $_SESSION['user_id']; ?>';
-        
+
         const isSlotPast = isPastDate || (isToday && (meeting ? meeting.meeting_time < currentTime : time < currentTime));
         const canEdit = !meeting || (meeting.created_by == currentUserId || userRole === 'admin');
 
@@ -745,13 +752,13 @@ include 'includes/header.php';
         const row = document.createElement('div');
         row.className = 'external-participant-row';
         row.style = 'display: flex; gap: 1rem; margin-bottom: 0.5rem; align-items: center;';
-        
+
         row.innerHTML = `
             <input type="text" name="external_mob_no[]" placeholder="Mobile No (e.g. +91 9876543210)" style="flex: 1;" value="${mob}">
             <input type="email" name="external_email[]" placeholder="Email (e.g. example@domain.com)" style="flex: 1;" value="${email}">
             <button type="button" class="btn" style="padding: 0.5rem; border-color: #ef4444; color: #ef4444; ${isFirst ? 'visibility: hidden;' : ''}" onclick="removeExternalRow(this)">X</button>
         `;
-        
+
         container.appendChild(row);
 
         // Make sure the first row's close button is hidden, others are visible
@@ -778,11 +785,11 @@ include 'includes/header.php';
     function populateExternalRows(mobsStr, emailsStr) {
         const container = document.getElementById('external_participants_container');
         container.innerHTML = '';
-        
+
         const mobs = mobsStr ? mobsStr.split(',') : [];
         const emails = emailsStr ? emailsStr.split(',') : [];
         const count = Math.max(mobs.length, emails.length, 1);
-        
+
         for (let i = 0; i < count; i++) {
             addExternalRow(mobs[i] || '', emails[i] || '');
         }

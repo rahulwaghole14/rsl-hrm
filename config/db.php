@@ -1,6 +1,18 @@
 <?php
 date_default_timezone_set('Asia/Kolkata');
 
+// Set session lifetime to 1 hour 30 minutes (5,400 seconds) if session is not already started
+if (session_status() === PHP_SESSION_NONE) {
+     ini_set('session.gc_maxlifetime', 5400);
+     session_set_cookie_params([
+          'lifetime' => 5400,
+          'path' => '/',
+          'secure' => false,      // Set to true if you are using HTTPS
+          'httponly' => true,
+          'samesite' => 'Lax'
+     ]);
+}
+
 // Database Configuration
 $host = '127.0.0.1';
 $port = '3306';

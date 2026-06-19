@@ -10,7 +10,7 @@ require_once __DIR__ . '/includes/whatsapp_helper.php';
 $stmt = $pdo->prepare("
     SELECT m.id, m.title, m.meeting_date, m.meeting_time, m.meeting_link, m.description, 
            m.is_rsl_employee, m.external_mob_no, m.external_email,
-           u.name as organizer_name, u.mob_no as organizer_mob
+           u.name as organizer_name, u.mob_no as organizer_mob, u.status as organizer_status
     FROM meetings m
     JOIN users u ON m.created_by = u.id
     WHERE CONCAT(m.meeting_date, ' ', m.meeting_time) > NOW()
@@ -35,18 +35,18 @@ foreach ($meetings as $m) {
         $waMessage .= "*Link:* " . $link . "\n";
     }
 
-    // Send to organizer
-    if (!empty($m['organizer_mob'])) {
+    // Send to organizer (only if active)
+    if (!empty($m['organizer_mob']) && $m['organizer_status'] === 'active') {
         sendWhatsAppMessage($m['organizer_mob'], "Hello *" . $m['organizer_name'] . "*,\n\n" . $waMessage);
     }
 
     if ($m['is_rsl_employee'] == 1) {
-        // Fetch participants
+        // Fetch participants (only active ones)
         $pStmt = $pdo->prepare("
             SELECT u.name, u.mob_no 
             FROM meeting_participants mp
             JOIN users u ON mp.user_id = u.id
-            WHERE mp.meeting_id = ?
+            WHERE mp.meeting_id = ? AND u.status = 'active'
         ");
         $pStmt->execute([$m['id']]);
         $participants = $pStmt->fetchAll();
@@ -69,13 +69,13 @@ foreach ($meetings as $m) {
             if (!empty($mob)) {
                 sendWhatsAppMessage($mob, "Hello,\n\n" . $waMessage);
             }
-            
+
             if (!empty($email)) {
                 require_once __DIR__ . '/includes/mail_helper.php';
                 sendMeetingEmail(
                     $m['organizer_name'],
                     $email,
-                    'Guest',
+                    'Sir/Mam',
                     $m['title'],
                     $m['meeting_date'],
                     $m['meeting_time'],
