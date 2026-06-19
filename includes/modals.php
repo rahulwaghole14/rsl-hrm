@@ -24,7 +24,7 @@ const nationalHolidays = <?php echo json_encode($holidayDates); ?>;
             <!-- Hidden context fields for redirect -->
             <input type="hidden" name="nav_month" value="<?php echo $navMonth; ?>">
             <input type="hidden" name="nav_year" value="<?php echo $navYear; ?>">
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-grid" style="margin-bottom: 1rem;">
                 <div class="form-group">
                     <label>From Date <span style="color:red">*</span></label>
                     <input type="date" name="from_date" id="modalFromDate" required onchange="handleFromDateChange()">

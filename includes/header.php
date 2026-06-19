@@ -99,10 +99,22 @@ $isLoginPage = ($currentPage == 'login.php');
         setTimeout(() => {
             fetch('cron_meeting_reminders.php').catch(e => {});
         }, 3000);
+
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar && overlay) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            }
+        }
     </script>
 </head>
 
 <body class="<?php echo $isLoginPage ? 'login-page-body' : ''; ?>">
+    <!-- Sidebar Overlay Backdrop for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
     <div class="app-layout <?php echo $isLoginPage ? 'auth-layout' : ''; ?>">
 
         <?php if (!$isLoginPage): ?>
@@ -223,7 +235,13 @@ $isLoginPage = ($currentPage == 'login.php');
             <?php if (!$isLoginPage): ?>
                 <!-- STATIC TOP HEADER -->
                 <header class="static-header">
-                    <div class="header-left">
+                    <div class="header-left" style="display: flex; align-items: center;">
+                        <!-- Hamburger Menu Button (visible on mobile) -->
+                        <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" style="display: none; background: none; border: none; color: var(--text-main); cursor: pointer; padding: 0.5rem; margin-right: 0.75rem; align-items: center; justify-content: center;">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
                         <?php if ($currentPage == 'index.php'): ?>
                             <div style="display: flex; align-items: center; gap: 1rem;">
                                 <a href="?month=<?php echo $navMonth - 1; ?>&year=<?php echo $navYear; ?>"
@@ -935,5 +953,5 @@ $isLoginPage = ($currentPage == 'login.php');
             </script>
 
             <!-- SCROLLABLE CONTENT -->
-            <div class="scrollable-content <?php echo $isLoginPage ? 'auth-content' : ''; ?>">
-                <main>
+            <div class="scrollable-content <?php echo $isLoginPage ? 'auth-content' : ''; ?> <?php echo ($currentPage == 'task_preview.php') ? 'spreadsheet-page-content' : ''; ?>">
+                <main style="<?php echo ($currentPage == 'task_preview.php') ? 'height: 100%; display: flex; flex-direction: column;' : ''; ?>">

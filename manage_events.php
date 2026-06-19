@@ -141,7 +141,7 @@ include 'includes/header.php';
                 <input type="text" name="title" id="eventTitle" required placeholder="e.g. Annual Meeting or Public Holiday">
             </div>
 
-            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-grid">
                 <div class="form-group">
                     <label>Date</label>
                     <input type="date" name="event_date" id="eventDate" required>

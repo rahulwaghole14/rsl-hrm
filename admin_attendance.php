@@ -1,14 +1,22 @@
 <?php
-function formatHours($decimal) {
-    if (!$decimal) return "00h 00m 00s";
+function formatHours($decimal)
+{
+    if (!$decimal)
+        return "00h 00m 00s";
     $hours = floor($decimal);
     $minutes = floor(($decimal - $hours) * 60);
     $seconds = round((($decimal - $hours) * 60 - $minutes) * 60);
-    
+
     // Handle rounding overflow
-    if ($seconds >= 60) { $seconds = 0; $minutes++; }
-    if ($minutes >= 60) { $minutes = 0; $hours++; }
-    
+    if ($seconds >= 60) {
+        $seconds = 0;
+        $minutes++;
+    }
+    if ($minutes >= 60) {
+        $minutes = 0;
+        $hours++;
+    }
+
     return sprintf("%02dh %02dm %02ds", $hours, $minutes, $seconds);
 }
 
@@ -75,7 +83,8 @@ include 'includes/header.php';
 <div class="container" style="margin-top: 1rem;">
     <div class="attendance-header-section"
         style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; gap: 1rem;">
-        <h2 style="font-size: 1.8rem; text-align: center; width: 100%; color: var(--text-main);">Employee Attendance</h2>
+        <h2 style="font-size: 1.8rem; text-align: center; width: 100%; color: var(--text-main);">Employee Attendance
+        </h2>
         <div class="filter-card"
             style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
@@ -109,7 +118,7 @@ include 'includes/header.php';
                         style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
                         📥 Export
                     </a>
-                    <button type="button" class="btn btn-primary" onclick="openAddAttendanceOverlay()" 
+                    <button type="button" class="btn btn-primary" onclick="openAddAttendanceOverlay()"
                         style="background: var(--primary-color); border-color: var(--primary-color); padding: 0.65rem 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
                         ➕ Add Attendance
                     </button>
@@ -119,13 +128,15 @@ include 'includes/header.php';
     </div>
 
     <?php if (isset($_GET['success'])): ?>
-        <div style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
+        <div
+            style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
             ✅ Attendance recorded successfully!
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['error']) || isset($error)): ?>
-        <div style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border: 1px solid #fecaca;">
+        <div
+            style="background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border: 1px solid #fecaca;">
             <?php echo isset($_GET['error']) ? htmlspecialchars($_GET['error']) : $error; ?>
         </div>
     <?php endif; ?>
@@ -139,7 +150,7 @@ include 'includes/header.php';
             border: 1px solid rgba(255, 255, 255, 0.6);
             overflow: auto;
             max-height: 75vh;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
             position: relative;
         }
 
@@ -178,7 +189,8 @@ include 'includes/header.php';
 
         .sticky-col-2 {
             position: sticky;
-            left: 120px; /* Adjust based on Date col width */
+            left: 120px;
+            /* Adjust based on Date col width */
             z-index: 10;
             background: rgba(255, 255, 255, 0.6) !important;
             backdrop-filter: blur(8px);
@@ -228,15 +240,17 @@ include 'includes/header.php';
                 <?php else: ?>
                     <?php foreach ($records as $row): ?>
                         <tr>
-                            <td class="sticky-col-1" style="font-weight: 600;"><?php echo date('d M Y', strtotime($row['date'])); ?></td>
+                            <td class="sticky-col-1" style="font-weight: 600;">
+                                <?php echo date('d M Y', strtotime($row['date'])); ?></td>
                             <td class="sticky-col-2">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" 
-                                     onclick='showEmployeeDetails(<?php echo json_encode(["id" => $row["user_id"], "name" => $row["name"], "email" => $row["email"], "role" => $row["role"], "emp_id" => $row["emp_id"]]); ?>)'>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                                    onclick='showEmployeeDetails(<?php echo json_encode(["id" => $row["user_id"], "name" => $row["name"], "email" => $row["email"], "role" => $row["role"], "emp_id" => $row["emp_id"]]); ?>)'>
                                     <div
                                         style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
                                         <?php echo strtoupper(substr($row['name'], 0, 1)); ?>
                                     </div>
-                                    <strong style="color: var(--primary-color);"><?php echo htmlspecialchars($row['name']); ?></strong>
+                                    <strong
+                                        style="color: var(--primary-color);"><?php echo htmlspecialchars($row['name']); ?></strong>
                                 </div>
                             </td>
                             <td style="color: var(--text-muted); font-family: monospace;">
@@ -302,7 +316,8 @@ include 'includes/header.php';
         <div class="emp-modal-actions">
             <button class="emp-btn-edit" onclick="openEditOverlay()">Edit Profile</button>
             <a id="deleteUserBtn" href="#" class="emp-btn-delete"
-               onclick="return confirm('Are you sure you want to delete this user? This cannot be undone.')">Delete User</a>
+                onclick="return confirm('Are you sure you want to delete this user? This cannot be undone.')">Delete
+                User</a>
         </div>
     </div>
 </div>
@@ -336,12 +351,14 @@ include 'includes/header.php';
                 </select>
             </div>
             <div class="form-group">
-                <label>New Password <span style="color:var(--text-muted); font-weight:400;">(leave blank to keep current)</span></label>
+                <label>New Password <span style="color:var(--text-muted); font-weight:400;">(leave blank to keep
+                        current)</span></label>
                 <input type="password" name="password" placeholder="••••••••">
             </div>
             <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
                 <button type="submit" class="emp-btn-edit" style="flex:2;">Save Changes</button>
-                <button type="button" onclick="closeEmpModal('editUserOverlay')" class="btn" style="flex:1;">Cancel</button>
+                <button type="button" onclick="closeEmpModal('editUserOverlay')" class="btn"
+                    style="flex:1;">Cancel</button>
             </div>
         </form>
     </div>
@@ -356,14 +373,16 @@ include 'includes/header.php';
         <form action="process_manual_attendance.php" method="POST">
             <div class="form-group">
                 <label>Select Employee</label>
-                <select name="user_id" required style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
+                <select name="user_id" required
+                    style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
                     <option value="">-- Choose Employee --</option>
                     <?php foreach ($users as $u): ?>
-                        <option value="<?php echo $u['id']; ?>"><?php echo htmlspecialchars($u['name']); ?> (<?php echo htmlspecialchars($u['emp_id']); ?>)</option>
+                        <option value="<?php echo $u['id']; ?>"><?php echo htmlspecialchars($u['name']); ?>
+                            (<?php echo htmlspecialchars($u['emp_id']); ?>)</option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            
+
             <div style="display: flex; gap: 1rem;">
                 <div class="form-group" style="flex: 1;">
                     <label>Date</label>
@@ -371,7 +390,8 @@ include 'includes/header.php';
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label>Work Mode</label>
-                    <select name="work_mode" required style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
+                    <select name="work_mode" required
+                        style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
                         <option value="WFO">WFO (Office)</option>
                         <option value="WFH">WFH (Home)</option>
                     </select>
@@ -391,159 +411,246 @@ include 'includes/header.php';
 
             <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
                 <button type="submit" class="emp-btn-edit" style="flex:2;">Save Attendance</button>
-                <button type="button" onclick="closeEmpModal('addAttendanceOverlay')" class="btn" style="flex:1;">Cancel</button>
+                <button type="button" onclick="closeEmpModal('addAttendanceOverlay')" class="btn"
+                    style="flex:1;">Cancel</button>
             </div>
         </form>
     </div>
 </div>
 
 <style>
-/* ── Overlay backdrop ── */
-.emp-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-}
-.emp-overlay.active { display: flex; }
+    /* ── Overlay backdrop ── */
+    .emp-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(4px);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
 
-/* ── Popup card ── */
-.emp-modal-card {
-    background: var(--card-bg);
-    border-radius: 1.5rem;
-    padding: 2.5rem 2rem 2rem;
-    width: 90%;
-    max-width: 420px;
-    position: relative;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    animation: empSlideUp 0.25s ease;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-@keyframes empSlideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-}
+    .emp-overlay.active {
+        display: flex;
+    }
 
-/* ── X button ── */
-.emp-close-x {
-    position: absolute;
-    top: 1rem; right: 1.2rem;
-    font-size: 1.6rem;
-    cursor: pointer;
-    color: var(--text-muted);
-    background: none;
-    border: none;
-    line-height: 1;
-    transition: color 0.2s;
-}
-.emp-close-x:hover { color: var(--text-main); }
+    /* ── Popup card ── */
+    .emp-modal-card {
+        background: var(--card-bg);
+        border-radius: 1.5rem;
+        padding: 2.5rem 2rem 2rem;
+        width: 90%;
+        max-width: 420px;
+        position: relative;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        animation: empSlideUp 0.25s ease;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
 
-/* ── Avatar ── */
-.emp-modal-avatar {
-    width: 80px; height: 80px;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2.2rem; font-weight: 700;
-    margin: 0 auto 1rem;
-    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
-}
-.emp-modal-name { font-size: 1.4rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.25rem; }
-.emp-modal-role { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1.5rem; }
+    @keyframes empSlideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
 
-/* ── Info box ── */
-.emp-info-box {
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.2rem 1.5rem;
-    text-align: left;
-    margin-bottom: 1.5rem;
-}
-.emp-info-box p { margin-bottom: 0.6rem; font-size: 0.9rem; color: var(--text-main); }
-.emp-info-box p:last-child { margin-bottom: 0; }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
 
-/* ── Action buttons ── */
-.emp-modal-actions { display: flex; gap: 0.75rem; }
-.emp-btn-edit {
-    flex: 1; padding: 0.85rem;
-    background: var(--primary-color); color: white;
-    border: none; border-radius: 0.65rem;
-    font-weight: 700; cursor: pointer; font-size: 0.95rem;
-    transition: background 0.2s; text-decoration: none;
-    display: flex; align-items: center; justify-content: center;
-}
-.emp-btn-edit:hover { background: var(--primary-hover); }
-.emp-btn-delete {
-    flex: 1; padding: 0.85rem;
-    background: var(--holiday-red); color: white;
-    border: none; border-radius: 0.65rem;
-    font-weight: 700; cursor: pointer; font-size: 0.95rem;
-    transition: background 0.2s; text-decoration: none;
-    display: flex; align-items: center; justify-content: center;
-}
-.emp-btn-delete:hover { background: #dc2626; }
+    /* ── X button ── */
+    .emp-close-x {
+        position: absolute;
+        top: 1rem;
+        right: 1.2rem;
+        font-size: 1.6rem;
+        cursor: pointer;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        line-height: 1;
+        transition: color 0.2s;
+    }
 
-/* ── Pulse animation ── */
-@keyframes pulse {
-    0%, 100% { transform: scale(1);   opacity: 1; }
-    50%       { transform: scale(1.5); opacity: 0.5; }
-}
+    .emp-close-x:hover {
+        color: var(--text-main);
+    }
+
+    /* ── Avatar ── */
+    .emp-modal-avatar {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0 auto 1rem;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .emp-modal-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .emp-modal-role {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 1.5rem;
+    }
+
+    /* ── Info box ── */
+    .emp-info-box {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+        padding: 1.2rem 1.5rem;
+        text-align: left;
+        margin-bottom: 1.5rem;
+    }
+
+    .emp-info-box p {
+        margin-bottom: 0.6rem;
+        font-size: 0.9rem;
+        color: var(--text-main);
+    }
+
+    .emp-info-box p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* ── Action buttons ── */
+    .emp-modal-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .emp-btn-edit {
+        flex: 1;
+        padding: 0.85rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 0.65rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background 0.2s;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .emp-btn-edit:hover {
+        background: var(--primary-hover);
+    }
+
+    .emp-btn-delete {
+        flex: 1;
+        padding: 0.85rem;
+        background: var(--holiday-red);
+        color: white;
+        border: none;
+        border-radius: 0.65rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background 0.2s;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .emp-btn-delete:hover {
+        background: #dc2626;
+    }
+
+    /* ── Pulse animation ── */
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: 0.5;
+        }
+    }
 </style>
 
 <script>
-let currentUserData = null;
+    let currentUserData = null;
 
-function showEmployeeDetails(data) {
-    currentUserData = data;
+    function showEmployeeDetails(data) {
+        currentUserData = data;
 
-    document.getElementById('empAvatar').innerText = data.name.charAt(0).toUpperCase();
-    document.getElementById('detName').innerText   = data.name;
-    document.getElementById('detRole').innerText   = data.role.replace('_', ' ').toUpperCase();
-    document.getElementById('detEmail').innerText  = data.email;
-    document.getElementById('detEmpId').innerText  = data.emp_id;
-    document.getElementById('deleteUserBtn').href  = 'delete_user.php?id=' + data.id;
+        document.getElementById('empAvatar').innerText = data.name.charAt(0).toUpperCase();
+        document.getElementById('detName').innerText = data.name;
+        document.getElementById('detRole').innerText = data.role.replace('_', ' ').toUpperCase();
+        document.getElementById('detEmail').innerText = data.email;
+        document.getElementById('detEmpId').innerText = data.emp_id;
+        document.getElementById('deleteUserBtn').href = 'delete_user.php?id=' + data.id;
 
-    document.getElementById('empDetailsOverlay').classList.add('active');
-}
+        document.getElementById('empDetailsOverlay').classList.add('active');
+    }
 
-function openEditOverlay() {
-    closeEmpModal('empDetailsOverlay');
+    function openEditOverlay() {
+        closeEmpModal('empDetailsOverlay');
 
-    document.getElementById('editUserId').value   = currentUserData.id;
-    document.getElementById('editUserName').value  = currentUserData.name;
-    document.getElementById('editUserEmail').value = currentUserData.email;
-    document.getElementById('editUserEmpId').value = currentUserData.emp_id;
-    document.getElementById('editUserRole').value  = currentUserData.role;
+        document.getElementById('editUserId').value = currentUserData.id;
+        document.getElementById('editUserName').value = currentUserData.name;
+        document.getElementById('editUserEmail').value = currentUserData.email;
+        document.getElementById('editUserEmpId').value = currentUserData.emp_id;
+        document.getElementById('editUserRole').value = currentUserData.role;
 
-    document.getElementById('editUserOverlay').classList.add('active');
-}
+        document.getElementById('editUserOverlay').classList.add('active');
+    }
 
-function closeEmpModal(id) {
-    document.getElementById(id).classList.remove('active');
-}
+    function closeEmpModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
 
-function openAddAttendanceOverlay() {
-    document.getElementById('addAttendanceOverlay').classList.add('active');
-}
+    function openAddAttendanceOverlay() {
+        document.getElementById('addAttendanceOverlay').classList.add('active');
+    }
 
-function handleOverlayClick(e, id) {
-    if (e.target === document.getElementById(id)) closeEmpModal(id);
-}
+    function handleOverlayClick(e, id) {
+        if (e.target === document.getElementById(id)) closeEmpModal(id);
+    }
 </script>
 
 <style>
-@keyframes pulse {
-    0%, 100% { transform: scale(1);   opacity: 1; }
-    50%       { transform: scale(1.5); opacity: 0.5; }
-}
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: 0.5;
+        }
+    }
 </style>
 
 <?php include 'includes/footer.php'; ?>

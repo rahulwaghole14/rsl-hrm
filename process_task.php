@@ -100,7 +100,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
         }
 
-        header("Location: task_tracker.php?success=1");
+        // Auto-sync to Google Sheet if Web App URL is configured
+        require_once 'includes/google_sheet_helper.php';
+        $sync_month = date('Y-m', strtotime($task_date));
+        syncTasksToGoogleSheet($pdo, $sync_month);
+
+        $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : 'task_tracker.php?success=1';
+        header("Location: " . $redirect);
         exit;
     } catch (PDOException $e) {
         die("Error: " . $e->getMessage());

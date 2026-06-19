@@ -112,7 +112,7 @@ include 'includes/header.php';
             border: 1px solid rgba(255, 255, 255, 0.6);
             overflow: auto;
             max-height: 75vh;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
             position: relative;
         }
 
@@ -282,7 +282,7 @@ include 'includes/header.php';
         <form action="process_task.php" method="POST">
             <input type="hidden" name="task_id" id="taskId">
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="modal-grid-responsive" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label>Date *</label>
                     <input type="date" name="task_date" id="taskDate" required value="<?php echo date('Y-m-d'); ?>"
@@ -371,7 +371,8 @@ include 'includes/header.php';
                     <div
                         style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">
                         Optional Details (Delay Info)</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="modal-grid-responsive"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
                             <label style="font-size: 0.75rem;">Delay Flag</label>
                             <select name="delay_flag" id="taskDelayFlag"

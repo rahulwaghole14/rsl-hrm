@@ -166,7 +166,7 @@ include 'includes/header.php';
         <form id="userForm" action="process_user_manage.php" method="POST">
             <input type="hidden" name="id" id="userId" value="0">
             
-            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-grid">
                 <div class="form-group">
                     <label>Full Name</label>
                     <input type="text" name="name" id="userName" required placeholder="John Doe">
@@ -177,7 +177,7 @@ include 'includes/header.php';
                 </div>
             </div>
 
-            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+            <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group">
                     <label>Mobile Number</label>
                     <input type="text" name="mob_no" id="userMob" required placeholder="10-digit number">
@@ -188,7 +188,7 @@ include 'includes/header.php';
                 </div>
             </div>
 
-            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+            <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group">
                     <label>Role</label>
                     <select name="role" id="userRole" onchange="toggleEmpId(this.value)" required>
@@ -203,7 +203,7 @@ include 'includes/header.php';
                 </div>
             </div>
 
-            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+            <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group">
                     <label id="passwordLabel">Password</label>
                     <input type="password" name="password" id="userPassword" placeholder="Minimum 6 characters">
