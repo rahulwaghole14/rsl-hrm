@@ -429,21 +429,58 @@ $isLoginPage = ($currentPage == 'login.php');
                             if (isset($pdo) && $pdo !== null) {
                                 if ($currentPage === 'index.php') {
                                     $today = date('Y-m-d');
-                                    $nextMonth = date('Y-m-d', strtotime('+1 month'));
+                                    $endRange = date('Y-m-d', strtotime('+7 days'));
 
                                     try {
+                                        // 1. Fetch Events
                                         $stmt = $pdo->prepare("SELECT title, event_date, type FROM events WHERE event_date >= ? AND event_date <= ? AND title != 'Weekend' ORDER BY event_date ASC");
-                                        $stmt->execute([$today, $nextMonth]);
-                                        $events = $stmt->fetchAll();
+                                        $stmt->execute([$today, $endRange]);
+                                        $eventsList = $stmt->fetchAll();
 
-                                        foreach ($events as $ev) {
+                                        foreach ($eventsList as $ev) {
                                             $dateStr = date('d M', strtotime($ev['event_date']));
                                             $notifications[] = [
                                                 'icon' => $ev['type'] === 'holiday' ? '🎉' : '📅',
                                                 'title' => htmlspecialchars($ev['title']),
-                                                'subtitle' => ucfirst($ev['type']) . ' on ' . $dateStr
+                                                'subtitle' => ucfirst($ev['type']) . ' on ' . $dateStr,
+                                                'date' => $ev['event_date']
                                             ];
                                         }
+
+                                        // 2. Fetch Birthdays
+                                        $birthday_dates = [];
+                                        $birthday_date_map = [];
+                                        for ($i = 0; $i <= 7; $i++) {
+                                            $d = strtotime("+$i days");
+                                            $md = date('m-d', $d);
+                                            $birthday_dates[] = $md;
+                                            $birthday_date_map[$md] = date('Y-m-d', $d);
+                                        }
+
+                                        if (count($birthday_dates) > 0) {
+                                            $placeholders = implode(',', array_fill(0, count($birthday_dates), '?'));
+                                            $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE dob IS NOT NULL AND DATE_FORMAT(dob, '%m-%d') IN ($placeholders)");
+                                            $stmt->execute($birthday_dates);
+                                            $birthdaysList = $stmt->fetchAll();
+
+                                            foreach ($birthdaysList as $b) {
+                                                $md = date('m-d', strtotime($b['dob']));
+                                                $upcomingDate = $birthday_date_map[$md] ?? date('Y-m-d');
+                                                $dateStr = date('d M', strtotime($upcomingDate));
+                                                $notifications[] = [
+                                                    'icon' => '🎂',
+                                                    'title' => htmlspecialchars($b['name']) . "'s Birthday",
+                                                    'subtitle' => 'Birthday on ' . $dateStr,
+                                                    'date' => $upcomingDate
+                                                ];
+                                            }
+                                        }
+
+                                        // 3. Sort notifications chronologically
+                                        usort($notifications, function ($a, $b) {
+                                            return strcmp($a['date'], $b['date']);
+                                        });
+
                                     } catch (Exception $e) {
                                     }
                                 } elseif ($currentPage === 'meetings.php') {

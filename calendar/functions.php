@@ -46,7 +46,7 @@ function getEventsForMonth($year, $month)
                 }
                 
                 $shouldShow = false;
-                if ($row['status'] === 'pending') {
+                if ($row['status'] === 'pending' || $row['status'] === 'rejected') {
                     $shouldShow = true;
                 } elseif ($row['status'] === 'approved' || $row['status'] === 'partially_approved') {
                     if (in_array($dateStr, $approved_list)) {
