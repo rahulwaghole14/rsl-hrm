@@ -9,26 +9,31 @@ if (!isset($_SESSION['user_id'])) {
 
 $current_user_id = $_SESSION['user_id'];
 $user_role = $_SESSION['role'];
-$is_admin = ($user_role === 'admin'); // Only primary admin sees everyone
+$can_view_all = ($user_role === 'admin' || $user_role === 'sub_admin');
 
 $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
+$filter_role = isset($_GET['filter_role']) ? $_GET['filter_role'] : '';
 $search_user = isset($_GET['search_user']) ? $_GET['search_user'] : '';
 
 $tasks = [];
 try {
-    $sql = "SELECT t.*, u.name as user_name 
+    $sql = "SELECT t.*, u.name as user_name, u.role as user_role 
             FROM tasks t 
             JOIN users u ON t.user_id = u.id ";
     $params = [];
     $where = [];
 
-    if (!$is_admin) {
+    if (!$can_view_all) {
         $where[] = "t.user_id = ?";
         $params[] = $current_user_id;
     } else {
         if (!empty($search_user)) {
             $where[] = "u.name LIKE ?";
             $params[] = "%$search_user%";
+        }
+        if (!empty($filter_role)) {
+            $where[] = "u.role = ?";
+            $params[] = $filter_role;
         }
     }
 
@@ -59,7 +64,7 @@ include 'includes/header.php';
         <div class="filter-card"
             style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
-                <?php if ($is_admin): ?>
+                <?php if ($can_view_all): ?>
                     <div style="flex: 1; min-width: 200px;">
                         <label
                             style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Employee
@@ -67,6 +72,18 @@ include 'includes/header.php';
                         <input type="text" name="search_user" placeholder="Search employee..."
                             value="<?php echo htmlspecialchars($search_user); ?>"
                             style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%; background: var(--bg-color); color: var(--text-main);">
+                    </div>
+
+                    <div style="flex: 1; min-width: 150px;">
+                        <label
+                            style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">User Role</label>
+                        <select name="filter_role"
+                            style="padding: 0.65rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%; background: var(--bg-color); color: var(--text-main);">
+                            <option value="">All Roles</option>
+                            <option value="admin" <?php echo $filter_role === 'admin' ? 'selected' : ''; ?>>Admin</option>
+                            <option value="sub_admin" <?php echo $filter_role === 'sub_admin' ? 'selected' : ''; ?>>Sub Admin</option>
+                            <option value="employee" <?php echo $filter_role === 'employee' ? 'selected' : ''; ?>>Employee</option>
+                        </select>
                     </div>
                 <?php endif; ?>
 
@@ -144,24 +161,18 @@ include 'includes/header.php';
             position: sticky;
             left: 0;
             z-index: 10;
-            background: rgba(255, 255, 255, 0.6) !important;
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.65) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-right: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        .sticky-col-2 {
-            position: sticky;
-            left: 100px;
-            /* Adjust based on col 1 width */
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.6) !important;
-            backdrop-filter: blur(8px);
-            border-right: 2px solid rgba(255, 255, 255, 0.4);
+        [data-theme="dark"] .sticky-col-1 {
+            background: rgba(30, 41, 59, 0.65) !important;
         }
 
         /* Header z-index needs to be higher than sticky cols */
-        .dense-table thead th.sticky-col-1,
-        .dense-table thead th.sticky-col-2 {
+        .dense-table thead th.sticky-col-1 {
             z-index: 30;
         }
 
@@ -198,7 +209,7 @@ include 'includes/header.php';
             <thead>
                 <tr>
                     <th class="sticky-col-1" style="width: 100px;">Date</th>
-                    <th class="sticky-col-2" style="width: 180px;">Project/Module</th>
+                    <th style="width: 180px;">Project/Module</th>
                     <th>Task Title</th>
                     <th>Priority</th>
                     <th>Hours (Est/Act)</th>
@@ -218,13 +229,13 @@ include 'includes/header.php';
                         <tr>
                             <td class="sticky-col-1">
                                 <strong><?php echo date('d M', strtotime($task['task_date'])); ?></strong>
-                                <?php if ($is_admin): ?>
+                                <?php if ($can_view_all): ?>
                                     <div style="font-size: 0.7rem; color: var(--text-muted);">
                                         <?php echo htmlspecialchars($task['user_name']); ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td class="sticky-col-2">
+                            <td>
                                 <div style="font-weight: 600;"><?php echo htmlspecialchars($task['project']); ?></div>
                                 <div style="font-size: 0.7rem; color: var(--text-muted); opacity: 0.8;">
                                     <?php echo htmlspecialchars($task['module']); ?>

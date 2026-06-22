@@ -11,6 +11,8 @@ $user_role = $_SESSION['role'];
 $is_admin = ($user_role === 'admin' || $user_role === 'sub_admin');
 
 $filter_month = isset($_GET['filter_month']) ? $_GET['filter_month'] : '';
+$filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
+$filter_role = isset($_GET['filter_role']) ? $_GET['filter_role'] : '';
 $search_user = isset($_GET['search_user']) ? $_GET['search_user'] : '';
 
 try {
@@ -30,11 +32,20 @@ try {
             $where[] = "u.name LIKE ?";
             $params[] = "%$search_user%";
         }
+        if (!empty($filter_role)) {
+            $where[] = "u.role = ?";
+            $params[] = $filter_role;
+        }
     }
 
     if (!empty($filter_month)) {
         $where[] = "DATE_FORMAT(t.task_date, '%Y-%m') = ?";
         $params[] = $filter_month;
+    }
+
+    if (!empty($filter_date)) {
+        $where[] = "t.task_date = ?";
+        $params[] = $filter_date;
     }
 
     if (!empty($where)) {
