@@ -11,6 +11,13 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $users = [];
 
 try {
+    // Ensure date_of_joining column exists in the users table
+    try {
+        $pdo->query("SELECT date_of_joining FROM users LIMIT 1");
+    } catch (Exception $e) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN date_of_joining DATE NULL");
+    }
+
     $where = ["1=1"];
     $params = [];
 
@@ -22,7 +29,7 @@ try {
         $params[] = $searchParam;
     }
 
-    $sql = "SELECT id, name, email, mob_no, dob, role, emp_id, department, status 
+    $sql = "SELECT id, name, email, mob_no, dob, role, emp_id, department, status, date_of_joining 
             FROM users 
             WHERE " . implode(" AND ", $where) . " 
             ORDER BY name ASC";
@@ -88,13 +95,14 @@ include 'includes/header.php';
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Role</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Status</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Mobile</th>
+                    <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">Joined Date</th>
                     <th style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; text-align: center;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($users)): ?>
                     <tr>
-                        <td colspan="6" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                        <td colspan="7" style="padding: 3rem; text-align: center; color: var(--text-muted);">
                             <div style="font-size: 2rem; margin-bottom: 1rem;">👤</div>
                             No users found.
                         </td>
@@ -142,6 +150,9 @@ include 'includes/header.php';
                             </td>
                             <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
                                 <?php echo htmlspecialchars($u['mob_no']); ?>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                                <?php echo !empty($u['date_of_joining']) ? date('d M Y', strtotime($u['date_of_joining'])) : '-'; ?>
                             </td>
                             <td style="padding: 1rem; text-align: center;">
                                 <div style="display: flex; gap: 0.5rem; justify-content: center;">
@@ -205,9 +216,8 @@ include 'includes/header.php';
 
             <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group">
-                    <label id="passwordLabel">Password</label>
-                    <input type="password" name="password" id="userPassword" placeholder="Minimum 6 characters">
-                    <small id="passwordHelp" style="color: var(--text-muted); display: none;">Leave blank to keep current password.</small>
+                    <label>Date of Joining</label>
+                    <input type="date" name="date_of_joining" id="userDoj">
                 </div>
                 <div class="form-group">
                     <label>Status</label>
@@ -216,6 +226,12 @@ include 'includes/header.php';
                         <option value="inactive">Inactive</option>
                     </select>
                 </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 0.5rem;">
+                <label id="passwordLabel">Password</label>
+                <input type="password" name="password" id="userPassword" placeholder="Minimum 6 characters">
+                <small id="passwordHelp" style="color: var(--text-muted); display: none;">Leave blank to keep current password.</small>
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
@@ -235,6 +251,7 @@ include 'includes/header.php';
         document.getElementById('passwordHelp').style.display = 'none';
         document.getElementById('passwordLabel').innerText = 'Password';
         document.getElementById('userStatus').value = 'active';
+        document.getElementById('userDoj').value = '';
         
         toggleEmpId('employee');
         document.getElementById('userModal').classList.add('active');
@@ -247,6 +264,7 @@ include 'includes/header.php';
         document.getElementById('userEmail').value = user.email;
         document.getElementById('userMob').value = user.mob_no;
         document.getElementById('userDob').value = user.dob;
+        document.getElementById('userDoj').value = user.date_of_joining || '';
         document.getElementById('userRole').value = user.role;
         document.getElementById('userEmpId').value = user.emp_id || '';
         document.getElementById('userPassword').required = false;
