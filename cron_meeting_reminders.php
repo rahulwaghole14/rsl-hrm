@@ -93,4 +93,51 @@ foreach ($meetings as $m) {
     $updateStmt->execute([$m['id']]);
 }
 
+// === UPCOMING EVENT REMINDERS AT 11:45 PM PREVIOUS DAY ===
+try {
+    // 1. Dynamic DB schema migration check for events table
+    try {
+        $pdo->query("SELECT reminder_sent FROM events LIMIT 1");
+    } catch (Exception $e) {
+        $pdo->exec("ALTER TABLE events ADD COLUMN reminder_sent TINYINT(1) DEFAULT 0");
+    }
+
+    // 2. Fetch events scheduled for tomorrow whose reminders haven't been sent yet and it's past 11:45 PM of previous day
+    $stmt = $pdo->prepare("
+        SELECT id, title, event_date, type 
+        FROM events
+        WHERE reminder_sent = 0
+          AND NOW() >= CONCAT(DATE_SUB(event_date, INTERVAL 1 DAY), ' 23:45:00')
+          AND NOW() < CONCAT(event_date, ' 23:59:59')
+    ");
+    $stmt->execute();
+    $eventsForReminder = $stmt->fetchAll();
+
+    foreach ($eventsForReminder as $ev) {
+        $formattedDate = date('l, d M Y', strtotime($ev['event_date']));
+        $displayType = 'Event';
+        if ($ev['type'] === 'holiday') $displayType = 'Official Holiday';
+        elseif ($ev['type'] === 'half_day') $displayType = 'Half Day';
+        elseif ($ev['type'] === 'working') $displayType = 'Working Day';
+        elseif ($ev['type'] === 'event') $displayType = 'Company Event';
+
+        $waMsg = "⏰ *Upcoming Event Reminder* ⏰\n\n";
+        $waMsg .= "This is a reminder that we have an event scheduled for tomorrow:\n\n";
+        $waMsg .= "*Event:* " . $ev['title'] . "\n";
+        $waMsg .= "*Date:* " . $formattedDate . "\n";
+        $waMsg .= "*Type:* " . $displayType . "\n\n";
+        $waMsg .= "Please plan accordingly.\n\n";
+        $waMsg .= "Best regards,\n";
+        $waMsg .= "RSL WorkSync";
+
+        broadcastWhatsAppMessageToAllUsers($waMsg);
+
+        // Mark as sent
+        $updateStmt = $pdo->prepare("UPDATE events SET reminder_sent = 1 WHERE id = ?");
+        $updateStmt->execute([$ev['id']]);
+    }
+} catch (Exception $e) {
+    error_log("Cron Event Reminder Error: " . $e->getMessage());
+}
+
 echo "Reminder check complete at " . date('Y-m-d H:i:s') . ". Processed " . count($meetings) . " meetings.\n";

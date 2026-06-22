@@ -33,6 +33,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt = $pdo->prepare("INSERT INTO events (title, event_date, type) VALUES (?, ?, ?)");
         $stmt->execute([$title, $date, $type]);
+
+        // Send WhatsApp broadcast immediately
+        $formattedDate = date('l, d M Y', strtotime($date));
+        $displayType = 'Event';
+        if ($type === 'holiday') $displayType = 'Official Holiday';
+        elseif ($type === 'half_day') $displayType = 'Half Day';
+        elseif ($type === 'working') $displayType = 'Working Day';
+        elseif ($type === 'event') $displayType = 'Company Event';
+
+        $waMsg = "📢 *New Event Added* 📢\n\n";
+        $waMsg .= "A new event has been added to the calendar:\n\n";
+        $waMsg .= "*Title:* " . $title . "\n";
+        $waMsg .= "*Date:* " . $formattedDate . "\n";
+        $waMsg .= "*Type:* " . $displayType . "\n\n";
+        $waMsg .= "Please check the company calendar for details.\n\n";
+        $waMsg .= "Best regards,\n";
+        $waMsg .= "RSL WorkSync";
+
+        require_once 'includes/whatsapp_helper.php';
+        broadcastWhatsAppMessageToAllUsers($waMsg);
     }
     header("Location: index.php?month=" . date('m', strtotime($date)));
     exit;

@@ -39,3 +39,34 @@ function sendWhatsAppMessage($phone, $message)
     }
     return json_decode($response, true);
 }
+
+function broadcastWhatsAppMessageToAllUsers($message)
+{
+    global $pdo;
+    if (!isset($pdo) || $pdo === null) {
+        try {
+            require_once __DIR__ . '/../config/db.php';
+        } catch (Exception $e) {
+            return;
+        }
+    }
+    if (!isset($pdo) || $pdo === null) {
+        return;
+    }
+
+    try {
+        try {
+            // Check if status column exists
+            $pdo->query("SELECT status FROM users LIMIT 1");
+            $stmt = $pdo->query("SELECT name, mob_no FROM users WHERE status = 'active' AND mob_no IS NOT NULL AND mob_no != ''");
+        } catch (Exception $e) {
+            $stmt = $pdo->query("SELECT name, mob_no FROM users WHERE mob_no IS NOT NULL AND mob_no != ''");
+        }
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($users as $user) {
+            sendWhatsAppMessage($user['mob_no'], "Hello *" . $user['name'] . "*,\n\n" . $message);
+        }
+    } catch (Exception $e) {
+        error_log("Broadcast WhatsApp Error: " . $e->getMessage());
+    }
+}
