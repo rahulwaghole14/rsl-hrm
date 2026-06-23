@@ -8,7 +8,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 }
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$statusFilter = isset($_GET['status']) ? $_GET['status'] : 'active';
 $users = [];
+$activeCount = $inactiveCount = $allCount = 0;
 
 try {
     // Ensure date_of_joining column exists in the users table
@@ -27,6 +29,28 @@ try {
         $params[] = $searchParam;
         $params[] = $searchParam;
         $params[] = $searchParam;
+    }
+
+    // Get counts before applying status filter
+    $countSql = "SELECT 
+        SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive_count,
+        SUM(CASE WHEN status != 'inactive' OR status IS NULL THEN 1 ELSE 0 END) as active_count,
+        COUNT(*) as total_count
+        FROM users 
+        WHERE " . implode(" AND ", $where);
+    
+    $countStmt = $pdo->prepare($countSql);
+    $countStmt->execute($params);
+    $counts = $countStmt->fetch(PDO::FETCH_ASSOC);
+    $activeCount = $counts['active_count'] ?? 0;
+    $inactiveCount = $counts['inactive_count'] ?? 0;
+    $allCount = $counts['total_count'] ?? 0;
+
+    // Apply status filter
+    if ($statusFilter === 'active') {
+        $where[] = "(status != 'inactive' OR status IS NULL)";
+    } elseif ($statusFilter === 'inactive') {
+        $where[] = "status = 'inactive'";
     }
 
     $sql = "SELECT id, name, email, mob_no, dob, role, emp_id, department, status, date_of_joining 
@@ -67,8 +91,13 @@ include 'includes/header.php';
                     value="<?php echo htmlspecialchars($search); ?>"
                     style="padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--border-color); border-radius: 0.75rem; width: 100%; background: var(--bg-color); color: var(--text-main);">
             </div>
+            <select name="status" style="padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 0.75rem; background: var(--bg-color); color: var(--text-main); font-weight: 600; min-width: 150px; cursor: pointer;" onchange="this.form.submit()">
+                <option value="active" <?php echo $statusFilter === 'active' ? 'selected' : ''; ?>>Active (<?php echo $activeCount; ?>)</option>
+                <option value="inactive" <?php echo $statusFilter === 'inactive' ? 'selected' : ''; ?>>Inactive (<?php echo $inactiveCount; ?>)</option>
+                <option value="all" <?php echo $statusFilter === 'all' ? 'selected' : ''; ?>>All (<?php echo $allCount; ?>)</option>
+            </select>
             <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">Search</button>
-            <?php if ($search): ?>
+            <?php if ($search || $statusFilter !== 'active'): ?>
                 <a href="manage_users.php" class="btn" style="padding: 0.75rem 1.5rem; text-decoration: none;">Clear</a>
             <?php endif; ?>
         </form>

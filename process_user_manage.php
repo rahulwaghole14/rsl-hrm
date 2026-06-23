@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $waMessage .= "🌐 *HRM Portal Login:*\n";
             $waMessage .= "https://hrm.rslsolution.com/\n";
-            $waMessage .= "(Please log in and change your password for security.)\n\n";
+            $waMessage .= "(Please login )\n\n";
 
             $waMessage .= "💬 *Internal Communication (Slack):*\n";
             $waMessage .= "https://join.slack.com/t/rslsolution/shared_invite/zt-403mvpn2s-Vw_blOermF7Jgh60p6QK6Q\n\n";
