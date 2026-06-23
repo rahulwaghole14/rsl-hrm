@@ -288,8 +288,13 @@ include 'includes/header.php';
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <a href="edit_attendance.php?id=<?php echo $row['id']; ?>" class="btn"
-                                    style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--primary-color); color: var(--primary-color); text-decoration: none;">Edit</a>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <a href="edit_attendance.php?id=<?php echo $row['id']; ?>" class="btn"
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--primary-color); color: var(--primary-color); text-decoration: none;">Edit</a>
+                                    <a href="delete_attendance.php?id=<?php echo $row['id']; ?>" class="btn"
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: #ef4444; color: #ef4444; text-decoration: none;"
+                                        onclick="return confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')">Delete</a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
