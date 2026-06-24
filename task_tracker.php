@@ -415,6 +415,7 @@ include 'includes/header.php';
 
             <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
                 <button type="submit" class="emp-btn-edit" style="flex:2;">Save Task Entry</button>
+                <a href="#" id="deleteTaskBtnTracker" onclick="return confirm('Are you sure you want to delete this task?');" class="btn" style="flex:1; background: #ea4335; color: white; border: none; text-align: center; text-decoration: none; padding: 0.8rem; border-radius: 6px; font-weight: 600; display: none;">Delete</a>
                 <button type="button" onclick="closeEmpModal('taskModal')" class="btn" style="flex:1;">Cancel</button>
             </div>
         </form>
@@ -552,6 +553,12 @@ include 'includes/header.php';
             document.getElementById('taskDelayReason').value = data.delay_reason || '';
             document.getElementById('taskRemarks').value = data.remarks || '';
             document.getElementById('taskDelayFlag').value = data.delay_flag || 'No';
+            
+            const deleteBtn = document.getElementById('deleteTaskBtnTracker');
+            if (deleteBtn) {
+                deleteBtn.href = 'delete_task.php?id=' + data.id + '&redirect=task_tracker.php';
+                deleteBtn.style.display = 'block';
+            }
 
             // If NOT admin, restrict specific fields during Edit
             if (!isAdmin) {
@@ -578,6 +585,11 @@ include 'includes/header.php';
             document.getElementById('modalTitle').innerText = 'Add New Task Entry';
             form.reset();
             document.getElementById('taskId').value = '';
+            
+            const deleteBtn = document.getElementById('deleteTaskBtnTracker');
+            if (deleteBtn) {
+                deleteBtn.style.display = 'none';
+            }
 
             // Clear restrictions for New Task
             const allFields = [
