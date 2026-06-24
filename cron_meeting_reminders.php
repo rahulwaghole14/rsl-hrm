@@ -6,19 +6,22 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/whatsapp_helper.php';
 
 // Find meetings starting within the next 5 minutes that haven't been reminded yet.
-// Using NOW() from MySQL which relies on the database's time timezone.
+// Using PHP's time to ensure we avoid any MySQL timezone offsets.
+$now = date('Y-m-d H:i:s');
+$fiveMinsLater = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+
 $stmt = $pdo->prepare("
     SELECT m.id, m.title, m.meeting_date, m.meeting_time, m.meeting_link, m.description, 
            m.is_rsl_employee, m.external_mob_no, m.external_email,
            u.name as organizer_name, u.mob_no as organizer_mob, u.status as organizer_status
     FROM meetings m
     JOIN users u ON m.created_by = u.id
-    WHERE CONCAT(m.meeting_date, ' ', m.meeting_time) > NOW()
-      AND CONCAT(m.meeting_date, ' ', m.meeting_time) <= DATE_ADD(NOW(), INTERVAL 5 MINUTE)
+    WHERE CONCAT(m.meeting_date, ' ', m.meeting_time) > ?
+      AND CONCAT(m.meeting_date, ' ', m.meeting_time) <= ?
       AND m.reminder_sent = 0
 ");
 
-$stmt->execute();
+$stmt->execute([$now, $fiveMinsLater]);
 $meetings = $stmt->fetchAll();
 
 foreach ($meetings as $m) {
@@ -103,14 +106,15 @@ try {
     }
 
     // 2. Fetch events scheduled for tomorrow whose reminders haven't been sent yet and it's past 11:45 PM of previous day
+    $now = date('Y-m-d H:i:s');
     $stmt = $pdo->prepare("
         SELECT id, title, event_date, type 
         FROM events
         WHERE reminder_sent = 0
-          AND NOW() >= CONCAT(DATE_SUB(event_date, INTERVAL 1 DAY), ' 23:45:00')
-          AND NOW() < CONCAT(event_date, ' 23:59:59')
+          AND ? >= CONCAT(DATE_SUB(event_date, INTERVAL 1 DAY), ' 23:45:00')
+          AND ? < CONCAT(event_date, ' 23:59:59')
     ");
-    $stmt->execute();
+    $stmt->execute([$now, $now]);
     $eventsForReminder = $stmt->fetchAll();
 
     foreach ($eventsForReminder as $ev) {

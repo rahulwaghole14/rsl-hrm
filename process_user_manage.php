@@ -34,6 +34,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if ($id > 0) {
+            // Fetch old user details for comparison
+            $oldStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+            $oldStmt->execute([$id]);
+            $oldUser = $oldStmt->fetch();
+
+            $updatedFields = [];
+            if ($oldUser['name'] !== $name)
+                $updatedFields[] = "Name";
+            if ($oldUser['email'] !== $email)
+                $updatedFields[] = "Email";
+            if ($oldUser['mob_no'] !== $mob_no)
+                $updatedFields[] = "Mobile Number";
+            if ($oldUser['dob'] !== $dob)
+                $updatedFields[] = "Date of Birth";
+            if ($oldUser['role'] !== $role)
+                $updatedFields[] = "Role";
+            if ($oldUser['status'] !== $status)
+                $updatedFields[] = "Status";
+            if ($oldUser['emp_id'] !== $emp_id)
+                $updatedFields[] = "Employee ID";
+            if ($oldUser['date_of_joining'] !== $date_of_joining)
+                $updatedFields[] = "Date of Joining";
+            if (!empty($raw_password))
+                $updatedFields[] = "Password";
+
             // UPDATE
             if (!empty($raw_password)) {
                 if (strlen($raw_password) < 6) {
@@ -47,6 +72,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, mob_no = ?, dob = ?, role = ?, status = ?, emp_id = ?, date_of_joining = ? WHERE id = ?");
                 $stmt->execute([$name, $email, $mob_no, $dob, $role, $status, $emp_id, $date_of_joining, $id]);
             }
+
+            // Send WhatsApp Message for Update
+            require_once 'includes/whatsapp_helper.php';
+            $waMessage = "🔔 *Profile Update Notice* 🔔\n\n";
+            $waMessage .= "Hello *" . $name . "*,\n\n";
+            $waMessage .= "Your profile information has been updated by the Admin.\n\n";
+
+            if (!empty($updatedFields)) {
+                $waMessage .= "🔄 *Updated Fields:* " . implode(", ", $updatedFields) . "\n\n";
+            }
+
+            $waMessage .= "📋 *All Current Account Details:*\n";
+            $waMessage .= "Name: " . $name . "\n";
+            $waMessage .= "Email: " . $email . "\n";
+            $waMessage .= "Mobile: " . $mob_no . "\n";
+            $waMessage .= "Role: " . ucfirst($role) . "\n";
+            $waMessage .= "Status: " . ucfirst($status) . "\n";
+            if (!empty($dob)) {
+                $waMessage .= "DOB: " . date('d M Y', strtotime($dob)) . "\n";
+            }
+            if (!empty($date_of_joining)) {
+                $waMessage .= "Date of Joining: " . date('d M Y', strtotime($date_of_joining)) . "\n";
+            }
+            if (!empty($emp_id)) {
+                $waMessage .= "Employee ID: " . $emp_id . "\n";
+            }
+            if (!empty($raw_password)) {
+                $waMessage .= "New Password: " . $raw_password . "\n";
+            }
+            $waMessage .= "\nIf you have any questions, please contact the Admin.";
+
+            sendWhatsAppMessage($mob_no, $waMessage);
+
             header("Location: manage_users.php?success=User updated successfully.");
         } else {
             // INSERT
