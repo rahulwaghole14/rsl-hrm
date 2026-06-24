@@ -28,25 +28,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $check_in = $_POST['check_in_time'];
     $check_out = $_POST['check_out_time'] !== '' ? $_POST['check_out_time'] : null;
     $work_mode = isset($_POST['work_mode']) ? $_POST['work_mode'] : 'WFO';
+    $break_time_str = isset($_POST['break_time']) ? $_POST['break_time'] : '00:00';
+    $break_parts = explode(':', $break_time_str);
+    $bh = isset($break_parts[0]) ? (int)$break_parts[0] : 0;
+    $bm = isset($break_parts[1]) ? (int)$break_parts[1] : 0;
+    $total_break_seconds = ($bh * 3600) + ($bm * 60);
     $date = $record['date'];
-    
-    // Recalculate total hours
     $totalHours = null;
     if ($check_in && $check_out) {
         $start = strtotime($date . ' ' . $check_in);
         $end = strtotime($date . ' ' . $check_out);
         $diffSeconds = $end - $start;
         // If end time is before start time, assume it's the next day or invalid, 
-        // but for this simple system, we just take the absolute difference or round it.
+        $diffSeconds = $end - $start;
         $totalHours = round($diffSeconds / 3600, 2);
         
-        // Prevent negative hours
-        if ($totalHours < 0) $totalHours = 0;
+        // Deduct break time
+        $break_hours_decimal = $total_break_seconds / 3600;
+        $totalHours = max(0, $totalHours - $break_hours_decimal);
+        
+        $totalHours = round($totalHours, 2);
     }
 
     try {
-        $update = $pdo->prepare("UPDATE attendance SET check_in_time = ?, check_out_time = ?, total_hours = ?, work_mode = ? WHERE id = ?");
-        $update->execute([$check_in, $check_out, $totalHours, $work_mode, $id]);
+        $update = $pdo->prepare("UPDATE attendance SET check_in_time = ?, check_out_time = ?, total_hours = ?, work_mode = ?, total_break_seconds = ? WHERE id = ?");
+        $update->execute([$check_in, $check_out, $totalHours, $work_mode, $total_break_seconds, $id]);
         
         $_SESSION['msg'] = "Attendance record for " . htmlspecialchars($record['name']) . " updated successfully.";
         header("Location: admin_attendance.php");
@@ -91,6 +97,18 @@ include 'includes/header.php';
                 <input type="time" name="check_out_time" value="<?php echo $record['check_out_time']; ?>" 
                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.75rem; font-size: 1rem; background: var(--bg-color); color: var(--text-main);">
                 <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">Leave blank if employee is still working.</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Break Time (HH:MM)</label>
+                <?php 
+                    $break_secs = $record['total_break_seconds'] ?? 0;
+                    $bh = floor($break_secs / 3600);
+                    $bm = floor(($break_secs % 3600) / 60);
+                    $break_formatted = sprintf("%02d:%02d", $bh, $bm); 
+                ?>
+                <input type="text" name="break_time" value="<?php echo $break_formatted; ?>" placeholder="HH:MM" pattern="^([0-9]+):([0-5][0-9])$"
+                       style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.75rem; font-size: 1rem; background: var(--bg-color); color: var(--text-main);">
             </div>
 
             <div class="form-group" style="margin-bottom: 2rem;">

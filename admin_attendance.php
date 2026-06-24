@@ -231,9 +231,9 @@ include 'includes/header.php';
                 <tr>
                     <th class="sticky-col-1" style="width: 120px; min-width: 120px;">Date</th>
                     <th class="sticky-col-2" style="width: 250px; min-width: 250px;">Employee</th>
-                    <th>Emp ID</th>
                     <th>Check In</th>
                     <th>Check Out</th>
+                    <th>Break Time</th>
                     <th>Mode</th>
                     <th>Status / Total</th>
                     <th>Actions</th>
@@ -263,9 +263,6 @@ include 'includes/header.php';
                                         style="color: var(--primary-color);"><?php echo htmlspecialchars($row['name']); ?></strong>
                                 </div>
                             </td>
-                            <td style="color: var(--text-muted); font-family: monospace;">
-                                <?php echo htmlspecialchars($row['emp_id']); ?>
-                            </td>
                             <td>
                                 <span style="color: var(--primary-color); font-weight: 600;">
                                     <?php echo $row['check_in_time'] ? date('h:i A', strtotime($row['check_in_time'])) : '-'; ?>
@@ -274,6 +271,16 @@ include 'includes/header.php';
                             <td>
                                 <span style="color: #ef4444; font-weight: 600;">
                                     <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
+                                </span>
+                            </td>
+                            <td>
+                                <span style="font-weight: 600; color: #f59e0b;">
+                                    <?php 
+                                        $break_secs = $row['total_break_seconds'] ?? 0;
+                                        $bh = floor($break_secs / 3600);
+                                        $bm = floor(($break_secs % 3600) / 60);
+                                        echo sprintf("%02d:%02d Hrs", $bh, $bm); 
+                                    ?>
                                 </span>
                             </td>
                             <td>
@@ -421,6 +428,11 @@ include 'includes/header.php';
                 <div class="form-group" style="flex: 1;">
                     <label>Check-Out Time</label>
                     <input type="time" name="check_out_time" required value="18:30">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Break (HH:MM)</label>
+                    <input type="text" name="break_time" placeholder="HH:MM" pattern="^([0-9]+):([0-5][0-9])$" value="01:00"
+                        style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
                 </div>
             </div>
 

@@ -14,11 +14,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $check_out = $_POST['check_out_time'];
     $work_mode = $_POST['work_mode'];
 
+    $break_time_str = isset($_POST['break_time']) ? $_POST['break_time'] : '00:00';
+    $break_parts = explode(':', $break_time_str);
+    $bh = isset($break_parts[0]) ? (int)$break_parts[0] : 0;
+    $bm = isset($break_parts[1]) ? (int)$break_parts[1] : 0;
+    $total_break_seconds = ($bh * 3600) + ($bm * 60);
+
     // Calculate total hours
     $start = new DateTime($date . ' ' . $check_in);
     $end = new DateTime($date . ' ' . $check_out);
     $interval = $start->diff($end);
     $total_hours = $interval->h + ($interval->i / 60);
+    
+    // Deduct break time from total hours
+    $break_hours_decimal = $total_break_seconds / 3600;
+    $total_hours = max(0, $total_hours - $break_hours_decimal);
+    
     $total_hours_formatted = number_format($total_hours, 2);
 
     try {
@@ -29,12 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($existing) {
             // Update existing
-            $stmt = $pdo->prepare("UPDATE attendance SET check_in_time = ?, check_out_time = ?, total_hours = ?, work_mode = ? WHERE id = ?");
-            $stmt->execute([$check_in, $check_out, $total_hours_formatted, $work_mode, $existing['id']]);
+            $stmt = $pdo->prepare("UPDATE attendance SET check_in_time = ?, check_out_time = ?, total_hours = ?, work_mode = ?, total_break_seconds = ? WHERE id = ?");
+            $stmt->execute([$check_in, $check_out, $total_hours_formatted, $work_mode, $total_break_seconds, $existing['id']]);
         } else {
             // Insert new
-            $stmt = $pdo->prepare("INSERT INTO attendance (user_id, date, check_in_time, check_out_time, total_hours, work_mode) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$user_id, $date, $check_in, $check_out, $total_hours_formatted, $work_mode]);
+            $stmt = $pdo->prepare("INSERT INTO attendance (user_id, date, check_in_time, check_out_time, total_hours, work_mode, total_break_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$user_id, $date, $check_in, $check_out, $total_hours_formatted, $work_mode, $total_break_seconds]);
         }
 
         header("Location: admin_attendance.php?success=1");
