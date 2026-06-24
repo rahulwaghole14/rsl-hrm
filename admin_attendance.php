@@ -33,8 +33,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
 $filter_month = isset($_GET['filter_month']) ? $_GET['filter_month'] : '';
+
+// Default to today if no filters are applied
+if (!isset($_GET['search']) && !isset($_GET['filter_date']) && !isset($_GET['filter_month'])) {
+    $filter_date = date('Y-m-d');
+} else {
+    $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
+}
 $records = [];
 $users = [];
 
@@ -83,7 +89,11 @@ include 'includes/header.php';
 <div class="container" style="margin-top: 1rem;">
     <div class="attendance-header-section"
         style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; gap: 1rem;">
-        <h2 style="font-size: 1.8rem; text-align: center; width: 100%; color: var(--text-main);">Employee Attendance
+        <h2 style="font-size: 1.8rem; text-align: center; width: 100%; color: var(--text-main);">
+            Employee Attendance
+            <span style="font-size: 1rem; background: var(--primary-color); color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; vertical-align: middle; margin-left: 0.5rem; display: inline-flex; align-items: center; justify-content: center;" title="Total Records Shown">
+                <?php echo count($records); ?>
+            </span>
         </h2>
         <div class="filter-card"
             style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);">

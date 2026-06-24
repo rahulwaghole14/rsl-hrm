@@ -378,7 +378,8 @@ include 'includes/header.php';
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
             </svg>
         </a>
-        <h2 style="font-size: 1.5rem; margin: 0;">Manage Meeting - <?php echo date('d M Y', strtotime($preset_date)); ?></h2>
+        <h2 style="font-size: 1.5rem; margin: 0;">Manage Meeting - <?php echo date('d M Y', strtotime($preset_date)); ?>
+        </h2>
     </div>
     <a href="meetings.php" class="btn">Back to Calendar</a>
 </div>
