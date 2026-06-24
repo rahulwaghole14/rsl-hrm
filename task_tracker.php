@@ -290,7 +290,7 @@ include 'includes/header.php';
         <button class="emp-close-x" onclick="closeEmpModal('taskModal')">&times;</button>
         <h2 id="modalTitle" style="color:var(--primary-color); margin-bottom:1.5rem;">Add New Task</h2>
 
-        <form action="process_task.php" method="POST">
+        <form action="process_task.php" method="POST" onsubmit="showLoader()">
             <input type="hidden" name="task_id" id="taskId">
 
             <div class="modal-grid-responsive" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">

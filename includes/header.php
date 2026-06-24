@@ -112,6 +112,69 @@ $isLoginPage = ($currentPage == 'login.php');
 </head>
 
 <body class="<?php echo $isLoginPage ? 'login-page-body' : ''; ?>">
+    <!-- Global Loading Overlay -->
+    <style>
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+        }
+        [data-theme="dark"] .loader-overlay {
+            background: rgba(15, 23, 42, 0.7);
+        }
+        .loader-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+        .loader-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            letter-spacing: 0.5px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+    <div class="loader-overlay hidden" id="globalLoader">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+    <script>
+        function showLoader() {
+            const loader = document.getElementById('globalLoader');
+            if (loader) loader.classList.remove('hidden');
+        }
+        function hideLoader() {
+            const loader = document.getElementById('globalLoader');
+            if (loader) loader.classList.add('hidden');
+        }
+    </script>
+
     <!-- Sidebar Overlay Backdrop for Mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
 

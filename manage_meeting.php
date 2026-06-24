@@ -458,7 +458,7 @@ include 'includes/header.php';
 <div class="modal-overlay" id="meetingModal">
     <div class="modal-content">
         <h3 id="modalTitle" style="margin-bottom: 1.5rem; color: #8b5cf6;">Schedule Meeting</h3>
-        <form method="POST" id="meetingForm">
+        <form method="POST" id="meetingForm" onsubmit="showLoader()">
             <input type="hidden" name="id" id="meetingId" value="0">
 
             <div class="form-grid">
@@ -740,6 +740,7 @@ include 'includes/header.php';
         const id = document.getElementById('meetingId').value;
         const date = document.getElementById('meeting_date').value;
         if (id > 0 && confirm('Are you sure you want to cancel this meeting?')) {
+            showLoader();
             window.location.href = `delete_meeting.php?id=${id}&date=${date}`;
         }
     }
