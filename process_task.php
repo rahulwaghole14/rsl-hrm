@@ -22,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $start_time = $_POST['start_time'];
     $due_date = $_POST['due_date'];
     $end_time = $_POST['end_time'];
-    $estimated_hours = (float) $_POST['estimated_hours'];
-    $actual_hours = (float) $_POST['actual_hours'];
+    $estimated_hours = $_POST['estimated_hours'];
+    $actual_hours = $_POST['actual_hours'];
     $status = $_POST['status'];
 
     // Optional Fields

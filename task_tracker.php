@@ -373,13 +373,13 @@ include 'includes/header.php';
                 </div>
 
                 <div class="form-group">
-                    <label>Estimated Hours *</label>
-                    <input type="number" step="0.25" name="estimated_hours" id="taskEstHours" required value="1.00"
+                    <label>Estimated Hours (HH:MM) *</label>
+                    <input type="text" name="estimated_hours" id="taskEstHours" required value="01:00" placeholder="HH:MM" pattern="^([0-9]+):([0-5][0-9])$" title="Format: HH:MM (e.g. 01:30)"
                         style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
                 </div>
                 <div class="form-group">
-                    <label>Actual Hours *</label>
-                    <input type="number" step="0.25" name="actual_hours" id="taskActHours" required value="1.00"
+                    <label>Actual Hours (HH:MM) *</label>
+                    <input type="text" name="actual_hours" id="taskActHours" required value="01:00" placeholder="HH:MM" pattern="^([0-9]+):([0-5][0-9])$" title="Format: HH:MM (e.g. 01:30)"
                         style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
                 </div>
 
@@ -636,10 +636,12 @@ include 'includes/header.php';
             }
 
             const diffMs = endDate - startDate;
-            const diffHrs = diffMs / (1000 * 60 * 60);
+            const diffMins = Math.floor(diffMs / 60000);
+            const hrs = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
 
-            if (!isNaN(diffHrs)) {
-                hoursInput.value = diffHrs.toFixed(2);
+            if (!isNaN(hrs) && !isNaN(mins)) {
+                hoursInput.value = String(hrs).padStart(2, '0') + ':' + String(mins).padStart(2, '0');
             }
         } catch (e) {
             console.error("Calculation error:", e);
