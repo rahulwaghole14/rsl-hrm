@@ -371,8 +371,14 @@ include 'includes/header.php';
 
 <div
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <h2 style="font-size: 1.5rem;">Book Meeting Slots - <?php echo date('d M Y', strtotime($preset_date)); ?></h2>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="meetings.php" class="btn" title="Back to Meetings"
+            style="padding: 0; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h2 style="font-size: 1.5rem; margin: 0;">Manage Meeting - <?php echo date('d M Y', strtotime($preset_date)); ?></h2>
     </div>
     <a href="meetings.php" class="btn">Back to Calendar</a>
 </div>
