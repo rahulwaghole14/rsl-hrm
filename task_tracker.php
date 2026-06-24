@@ -11,9 +11,15 @@ $current_user_id = $_SESSION['user_id'];
 $user_role = $_SESSION['role'];
 $can_view_all = ($user_role === 'admin' || $user_role === 'sub_admin');
 
-$filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
+$search_user = isset($_GET['search_user']) ? trim($_GET['search_user']) : '';
 $filter_role = isset($_GET['filter_role']) ? $_GET['filter_role'] : '';
-$search_user = isset($_GET['search_user']) ? $_GET['search_user'] : '';
+
+// Default to today for employees and sub_admins if no filters are applied
+if (($user_role === 'employee' || $user_role === 'sub_admin') && !isset($_GET['filter_date']) && !isset($_GET['search_user']) && !isset($_GET['filter_role'])) {
+    $filter_date = date('Y-m-d');
+} else {
+    $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
+}
 
 $tasks = [];
 try {
