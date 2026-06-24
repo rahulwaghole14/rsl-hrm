@@ -1189,7 +1189,7 @@ body {
     }
 
     .btn-logout {
-        margin-top: auto !important;
+        margin-top: 1.5rem !important;
         flex-shrink: 0;
     }
 

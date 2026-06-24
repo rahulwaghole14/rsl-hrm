@@ -738,7 +738,10 @@ $isLoginPage = ($currentPage == 'login.php');
                         </div>
                     </div>
 
-                    <button onclick="closeProfileModal()" class="pmodal-close-btn">Close Profile</button>
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button onclick="closeProfileModal()" class="pmodal-close-btn" style="margin-top: 0; flex: 1;">Close</button>
+                        <a href="logout.php" class="pmodal-close-btn" style="margin-top: 0; flex: 1; background: #ef4444; text-decoration: none; display: flex; align-items: center; justify-content: center;">Logout</a>
+                    </div>
                 </div>
             </div>
 
