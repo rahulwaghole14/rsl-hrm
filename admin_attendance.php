@@ -89,12 +89,26 @@ include 'includes/header.php';
 <div class="container" style="margin-top: 1rem;">
     <div class="attendance-header-section"
         style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; gap: 1rem;">
-        <h2 style="font-size: 1.8rem; text-align: center; width: 100%; color: var(--text-main);">
-            Employee Attendance
-            <span style="font-size: 1rem; background: var(--primary-color); color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; vertical-align: middle; margin-left: 0.5rem; display: inline-flex; align-items: center; justify-content: center;" title="Total Records Shown">
-                <?php echo count($records); ?>
-            </span>
-        </h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="font-size: 1.8rem; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+                Employee Attendance
+                <span style="font-size: 1rem; background: var(--primary-color); color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; display: inline-flex; align-items: center; justify-content: center;" title="Total Records Shown">
+                    <?php echo count($records); ?>
+                </span>
+            </h2>
+            
+            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                <form method="POST" action="process_admin_status.php" style="display: flex; gap: 0.5rem; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 0.5rem; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <label style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-right: 0.25rem;">Broadcast Status:</label>
+                    <select name="admin_status" required style="padding: 0.4rem; border-radius: 0.4rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); outline: none;">
+                        <option value="">Select...</option>
+                        <option value="WFH">WFH</option>
+                        <option value="Leave">Leave</option>
+                    </select>
+                    <button type="submit" class="btn" style="padding: 0.4rem 1rem; background: #3b82f6; color: white; border: none;">Send WhatsApp</button>
+                </form>
+            <?php endif; ?>
+        </div>
         <div class="filter-card"
             style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
@@ -141,6 +155,12 @@ include 'includes/header.php';
         <div
             style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
             ✅ Attendance recorded successfully!
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_GET['broadcast']) && $_GET['broadcast'] === 'success'): ?>
+        <div
+            style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
+            ✅ Status broadcasted to all users via WhatsApp!
         </div>
     <?php endif; ?>
 

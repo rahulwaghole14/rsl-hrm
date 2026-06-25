@@ -127,14 +127,14 @@ include 'includes/header.php';
                             <form action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
                                 <input type="hidden" name="action" value="break_in">
                                 <button type="submit" class="btn"
-                                    style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #f59e0b; color: #d97706; background: #fff;">☕
+                                    style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #f59e0b; color: #d97706; background: #fff;">
                                     Break</button>
                             </form>
                         <?php else: ?>
                             <form action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
                                 <input type="hidden" name="action" value="break_out">
                                 <button type="submit" class="btn"
-                                    style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #10b981; color: #059669; background: #fff;">🏃
+                                    style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #10b981; color: #059669; background: #fff;">
                                     Resume</button>
                             </form>
                         <?php endif; ?>

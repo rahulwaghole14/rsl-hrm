@@ -539,7 +539,24 @@ $isLoginPage = ($currentPage == 'login.php');
                                             }
                                         }
 
-                                        // 3. Sort notifications chronologically
+                                        // 3. Fetch Admin Status
+                                        try {
+                                            $stmt = $pdo->prepare("SELECT status, admin_name FROM admin_daily_status WHERE status_date = ?");
+                                            $stmt->execute([date('Y-m-d')]);
+                                            $adminStatusData = $stmt->fetch();
+                                            if ($adminStatusData) {
+                                                $aName = $adminStatusData['admin_name'] ? $adminStatusData['admin_name'] : 'Admin';
+                                                $statusWord = $adminStatusData['status'] === 'WFH' ? 'Working From Home (WFH)' : 'on Leave';
+                                                $notifications[] = [
+                                                    'icon' => '📢',
+                                                    'title' => htmlspecialchars($aName) . ' Status',
+                                                    'subtitle' => htmlspecialchars($aName) . " is $statusWord today.",
+                                                    'date' => date('Y-m-d')
+                                                ];
+                                            }
+                                        } catch (Exception $e) {}
+
+                                        // 4. Sort notifications chronologically
                                         usort($notifications, function ($a, $b) {
                                             return strcmp($a['date'], $b['date']);
                                         });

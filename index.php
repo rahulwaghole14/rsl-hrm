@@ -23,7 +23,6 @@ if ($month > 12)
 $monthName = date('F', mktime(0, 0, 0, $month, 1, $year));
 
 include 'includes/header.php';
-
 if (isset($_GET['error'])) {
     echo '<div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 600;">
             ⚠️ ' . htmlspecialchars($_GET['error']) . '
@@ -35,6 +34,8 @@ if (isset($_GET['leave']) && $_GET['leave'] === 'success') {
           </div>';
 }
 ?>
+
+
 
 <?php
 if (!$pdo) {
