@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Display Mockups</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            height: 100vh;
+            background: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mockup-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mockup-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* The Calendar Cell Base */
+        .calendar-cell {
+            width: 160px;
+            height: 130px;
+            background: #e0e7ff; /* Match the screenshot purple tint */
+            border: 2px solid #a5b4fc;
+            border-radius: 12px;
+            padding: 12px;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date-number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #312e81;
+        }
+
+        /* Color Classes for Avatars */
+        .c1 { background: #dcfce7; color: #16a34a; border-color: #86efac !important; }
+        .c2 { background: #dbeafe; color: #2563eb; border-color: #93c5fd !important; }
+        .c3 { background: #fef9c3; color: #ca8a04; border-color: #fde047 !important; }
+        .c4 { background: #fef3c7; color: #d97706; border-color: #fcd34d !important; }
+        .c5 { background: #f3e8ff; color: #9333ea; border-color: #d8b4fe !important; }
+        .c6 { background: #fee2e2; color: #dc2626; border-color: #fca5a5 !important; }
+        .c7 { background: #ffedd5; color: #ea580c; border-color: #fdba74 !important; }
+        .cmore { background: #f1f5f9; color: #475569; border-color: #cbd5e1 !important; }
+
+        /* =========================================
+           OPTION 1: HORIZONTAL OVERLAP (Recommended) 
+           ========================================= */
+        .overlap-group {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            margin-top: auto; /* Push to bottom */
+            align-items: center;
+        }
+        .overlap-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            border: 2px solid #e0e7ff; /* Match cell background to create cut-out effect */
+            margin-left: -10px; /* This creates the overlap */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .overlap-avatar:hover {
+            transform: translateY(-5px);
+            z-index: 10;
+        }
+        .overlap-avatar:first-child {
+            margin-left: 0;
+        }
+
+        /* =========================================
+           OPTION 2: WRAPPING GRID (Shows all 7) 
+           ========================================= */
+        .grid-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: flex-end;
+            margin-top: auto; /* Push to bottom */
+        }
+        .grid-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 700;
+            border: 1px solid;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <!-- OPTION 1 -->
+    <div class="mockup-container">
+        <div class="mockup-title">Option 1: Overlapping (Max 4 + Count)</div>
+        <div class="calendar-cell">
+            <div class="date-number">26</div>
+            <div class="overlap-group">
+                <!-- Shows first 4, then +3 for the rest -->
+                <div class="overlap-avatar c1" title="John Tyler">JT</div>
+                <div class="overlap-avatar c2" title="Sarah Barnes">SB</div>
+                <div class="overlap-avatar c3" title="Alex Patel">AP</div>
+                <div class="overlap-avatar c4" title="Adam Davis">AD</div>
+                <div class="overlap-avatar cmore" title="3 more on leave">+3</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OPTION 2 -->
+    <div class="mockup-container">
+        <div class="mockup-title">Option 2: Wrapping Grid (Shows all 7)</div>
+        <div class="calendar-cell">
+            <div class="date-number">26</div>
+            <div class="grid-group">
+                <!-- Shows all 7 as smaller pills wrapping to next line -->
+                <div class="grid-avatar c1" title="John Tyler">JT</div>
+                <div class="grid-avatar c2" title="Sarah Barnes">SB</div>
+                <div class="grid-avatar c3" title="Alex Patel">AP</div>
+                <div class="grid-avatar c4" title="Adam Davis">AD</div>
+                <div class="grid-avatar c5" title="Mike Smith">MS</div>
+                <div class="grid-avatar c6" title="Emma Wilson">EW</div>
+                <div class="grid-avatar c7" title="Chris Lee">CL</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -70,7 +70,7 @@ $isLoginPage = ($currentPage == 'login.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSL Calendar 2026</title>
+    <title>RSL TeamHub</title>
     <link rel="icon" type="image/png" href="assets/img/rsl-logo.png">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
@@ -97,7 +97,7 @@ $isLoginPage = ($currentPage == 'login.php');
         }, 60000);
         // Run once on load as well
         setTimeout(() => {
-            fetch('cron_meeting_reminders.php').catch(e => {});
+            fetch('cron_meeting_reminders.php').catch(e => { });
         }, 3000);
 
         function toggleMobileSidebar() {
@@ -127,13 +127,16 @@ $isLoginPage = ($currentPage == 'login.php');
             z-index: 9999;
             transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
         }
+
         [data-theme="dark"] .loader-overlay {
             background: rgba(15, 23, 42, 0.7);
         }
+
         .loader-overlay.hidden {
             opacity: 0;
             visibility: hidden;
         }
+
         .spinner {
             width: 50px;
             height: 50px;
@@ -144,6 +147,7 @@ $isLoginPage = ($currentPage == 'login.php');
             margin-bottom: 1rem;
             box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
         }
+
         .loader-text {
             font-size: 1.1rem;
             font-weight: 600;
@@ -151,13 +155,27 @@ $isLoginPage = ($currentPage == 'login.php');
             letter-spacing: 0.5px;
             animation: pulse 1.5s infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
     </style>
     <div class="loader-overlay hidden" id="globalLoader">
@@ -300,9 +318,11 @@ $isLoginPage = ($currentPage == 'login.php');
                 <header class="static-header">
                     <div class="header-left" style="display: flex; align-items: center;">
                         <!-- Hamburger Menu Button (visible on mobile) -->
-                        <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" style="display: none; background: none; border: none; color: var(--text-main); cursor: pointer; padding: 0.5rem; margin-right: 0.75rem; align-items: center; justify-content: center;">
+                        <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()"
+                            style="display: none; background: none; border: none; color: var(--text-main); cursor: pointer; padding: 0.5rem; margin-right: 0.75rem; align-items: center; justify-content: center;">
                             <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
                         </button>
                         <?php if ($currentPage == 'index.php'): ?>
@@ -554,7 +574,8 @@ $isLoginPage = ($currentPage == 'login.php');
                                                     'date' => date('Y-m-d')
                                                 ];
                                             }
-                                        } catch (Exception $e) {}
+                                        } catch (Exception $e) {
+                                        }
 
                                         // 4. Sort notifications chronologically
                                         usort($notifications, function ($a, $b) {
@@ -625,9 +646,11 @@ $isLoginPage = ($currentPage == 'login.php');
                                                         <div style="font-size: 1.2rem;"><?php echo $n['icon']; ?></div>
                                                         <div>
                                                             <div style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">
-                                                                <?php echo $n['title']; ?></div>
+                                                                <?php echo $n['title']; ?>
+                                                            </div>
                                                             <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem;">
-                                                                <?php echo $n['subtitle']; ?></div>
+                                                                <?php echo $n['subtitle']; ?>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 <?php endforeach; ?>
@@ -756,8 +779,10 @@ $isLoginPage = ($currentPage == 'login.php');
                     </div>
 
                     <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                        <button onclick="closeProfileModal()" class="pmodal-close-btn" style="margin-top: 0; flex: 1;">Close</button>
-                        <a href="logout.php" class="pmodal-close-btn" style="margin-top: 0; flex: 1; background: #ef4444; text-decoration: none; display: flex; align-items: center; justify-content: center;">Logout</a>
+                        <button onclick="closeProfileModal()" class="pmodal-close-btn"
+                            style="margin-top: 0; flex: 1;">Close</button>
+                        <a href="logout.php" class="pmodal-close-btn"
+                            style="margin-top: 0; flex: 1; background: #ef4444; text-decoration: none; display: flex; align-items: center; justify-content: center;">Logout</a>
                     </div>
                 </div>
             </div>
@@ -1073,5 +1098,7 @@ $isLoginPage = ($currentPage == 'login.php');
             </script>
 
             <!-- SCROLLABLE CONTENT -->
-            <div class="scrollable-content <?php echo $isLoginPage ? 'auth-content' : ''; ?> <?php echo ($currentPage == 'task_preview.php') ? 'spreadsheet-page-content' : ''; ?>">
-                <main style="<?php echo ($currentPage == 'task_preview.php') ? 'height: 100%; display: flex; flex-direction: column;' : ''; ?>">
+            <div
+                class="scrollable-content <?php echo $isLoginPage ? 'auth-content' : ''; ?> <?php echo ($currentPage == 'task_preview.php') ? 'spreadsheet-page-content' : ''; ?>">
+                <main
+                    style="<?php echo ($currentPage == 'task_preview.php') ? 'height: 100%; display: flex; flex-direction: column;' : ''; ?>">

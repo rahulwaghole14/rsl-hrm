@@ -89,23 +89,33 @@ include 'includes/header.php';
 <div class="container" style="margin-top: 1rem;">
     <div class="attendance-header-section"
         style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; gap: 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 1rem;">
-            <h2 style="font-size: 1.8rem; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 1rem;">
+            <h2
+                style="font-size: 1.8rem; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
                 Employee Attendance
-                <span style="font-size: 1rem; background: var(--primary-color); color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; display: inline-flex; align-items: center; justify-content: center;" title="Total Records Shown">
+                <span
+                    style="font-size: 1rem; background: var(--primary-color); color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; display: inline-flex; align-items: center; justify-content: center;"
+                    title="Total Records Shown">
                     <?php echo count($records); ?>
                 </span>
             </h2>
-            
+
             <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                <form method="POST" action="process_admin_status.php" style="display: flex; gap: 0.5rem; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 0.5rem; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                    <label style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-right: 0.25rem;">Broadcast Status:</label>
-                    <select name="admin_status" required style="padding: 0.4rem; border-radius: 0.4rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); outline: none;">
+                <form method="POST" action="process_admin_status.php"
+                    style="display: flex; gap: 0.5rem; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 0.5rem; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <label
+                        style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-right: 0.25rem;">Broadcast
+                        Status:</label>
+                    <select name="admin_status" required
+                        style="padding: 0.4rem; border-radius: 0.4rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); outline: none;">
                         <option value="">Select...</option>
                         <option value="WFH">WFH</option>
                         <option value="Leave">Leave</option>
                     </select>
-                    <button type="submit" class="btn" style="padding: 0.4rem 1rem; background: #3b82f6; color: white; border: none;">Send WhatsApp</button>
+                    <button type="submit" class="btn"
+                        style="padding: 0.4rem 1rem; background: #3b82f6; color: white; border: none;">Send
+                        WhatsApp</button>
                 </form>
             <?php endif; ?>
         </div>
@@ -243,6 +253,115 @@ include 'includes/header.php';
             background: transparent;
             white-space: nowrap;
         }
+
+        /* ── Three-dot Kebab Menu ── */
+        .kebab-menu {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .kebab-trigger {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .kebab-trigger:hover {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary-color);
+        }
+
+        .kebab-trigger.active {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--primary-color);
+        }
+
+        .kebab-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+            min-width: 150px;
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 0.6rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+            z-index: 100;
+            overflow: hidden;
+            animation: kebabFadeIn 0.15s ease;
+        }
+
+        .kebab-dropdown.show {
+            display: block;
+        }
+
+        @keyframes kebabFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .kebab-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-main, #333);
+            text-decoration: none;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+
+        .kebab-dropdown a:hover {
+            background: rgba(99, 102, 241, 0.06);
+        }
+
+        .kebab-dropdown a .kebab-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .kebab-dropdown a.kebab-edit {
+            color: var(--primary-color, #6366f1);
+        }
+
+        .kebab-dropdown a.kebab-delete {
+            color: #ef4444;
+        }
+
+        .kebab-dropdown a.kebab-delete:hover {
+            background: rgba(239, 68, 68, 0.06);
+        }
+
+        .kebab-dropdown .kebab-divider {
+            height: 1px;
+            background: rgba(0, 0, 0, 0.06);
+            margin: 0;
+        }
     </style>
 
     <div class="dense-terminal-container">
@@ -271,7 +390,8 @@ include 'includes/header.php';
                     <?php foreach ($records as $row): ?>
                         <tr>
                             <td class="sticky-col-1" style="font-weight: 600;">
-                                <?php echo date('d M Y', strtotime($row['date'])); ?></td>
+                                <?php echo date('d M Y', strtotime($row['date'])); ?>
+                            </td>
                             <td class="sticky-col-2">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
                                     onclick='showEmployeeDetails(<?php echo json_encode(["id" => $row["user_id"], "name" => $row["name"], "email" => $row["email"], "role" => $row["role"], "emp_id" => $row["emp_id"]]); ?>)'>
@@ -295,11 +415,11 @@ include 'includes/header.php';
                             </td>
                             <td>
                                 <span style="font-weight: 600; color: #f59e0b;">
-                                    <?php 
-                                        $break_secs = $row['total_break_seconds'] ?? 0;
-                                        $bh = floor($break_secs / 3600);
-                                        $bm = floor(($break_secs % 3600) / 60);
-                                        echo sprintf("%02d:%02d Hrs", $bh, $bm); 
+                                    <?php
+                                    $break_secs = $row['total_break_seconds'] ?? 0;
+                                    $bh = floor($break_secs / 3600);
+                                    $bm = floor(($break_secs % 3600) / 60);
+                                    echo sprintf("%02d:%02d Hrs", $bh, $bm);
                                     ?>
                                 </span>
                             </td>
@@ -325,12 +445,36 @@ include 'includes/header.php';
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <a href="edit_attendance.php?id=<?php echo $row['id']; ?>" class="btn"
-                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--primary-color); color: var(--primary-color); text-decoration: none;">Edit</a>
-                                    <a href="delete_attendance.php?id=<?php echo $row['id']; ?>" class="btn"
-                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: #ef4444; color: #ef4444; text-decoration: none;"
-                                        onclick="return confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')">Delete</a>
+                                <div class="kebab-menu">
+                                    <button class="kebab-trigger" onclick="toggleKebab(event, this)" title="Actions">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                            <circle cx="3" cy="8" r="1.5"/>
+                                            <circle cx="8" cy="8" r="1.5"/>
+                                            <circle cx="13" cy="8" r="1.5"/>
+                                        </svg>
+                                    </button>
+                                    <div class="kebab-dropdown">
+                                        <a href="edit_attendance.php?id=<?php echo $row['id']; ?>" class="kebab-edit">
+                                            <span class="kebab-icon">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                </svg>
+                                            </span>
+                                            Edit
+                                        </a>
+                                        <div class="kebab-divider"></div>
+                                        <a href="delete_attendance.php?id=<?php echo $row['id']; ?>" class="kebab-delete"
+                                            onclick="return confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')">
+                                            <span class="kebab-icon">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"/>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                </svg>
+                                            </span>
+                                            Delete
+                                        </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -451,7 +595,8 @@ include 'includes/header.php';
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label>Break (HH:MM)</label>
-                    <input type="text" name="break_time" placeholder="HH:MM" pattern="^([0-9]+):([0-5][0-9])$" value="01:00"
+                    <input type="text" name="break_time" placeholder="HH:MM" pattern="^([0-9]+):([0-5][0-9])$"
+                        value="01:00"
                         style="width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);">
                 </div>
             </div>
@@ -682,6 +827,30 @@ include 'includes/header.php';
     function handleOverlayClick(e, id) {
         if (e.target === document.getElementById(id)) closeEmpModal(id);
     }
+
+    // ── Kebab menu toggle & close on outside click ──
+    function toggleKebab(e, btn) {
+        e.stopPropagation();
+        const dropdown = btn.nextElementSibling;
+        const isOpen = dropdown.classList.contains('show');
+
+        // Close all open dropdowns first
+        closeAllKebabs();
+
+        if (!isOpen) {
+            dropdown.classList.add('show');
+            btn.classList.add('active');
+        }
+    }
+
+    function closeAllKebabs() {
+        document.querySelectorAll('.kebab-dropdown.show').forEach(d => d.classList.remove('show'));
+        document.querySelectorAll('.kebab-trigger.active').forEach(b => b.classList.remove('active'));
+    }
+
+    document.addEventListener('click', function () {
+        closeAllKebabs();
+    });
 </script>
 
 <style>

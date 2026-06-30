@@ -664,10 +664,10 @@ body {
 
 .day-tags-top {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px;
     flex: 1;
-    overflow: hidden;
 }
 
 .holiday .day-number,
@@ -723,9 +723,9 @@ body {
 }
 
 .leave-tag {
-    font-size: 0.65rem;
-    width: 28px;
-    height: 28px;
+    font-size: 0.55rem;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -734,7 +734,7 @@ body {
     cursor: pointer;
     transition: transform 0.2s;
     border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .leave-tag:hover {
@@ -985,8 +985,10 @@ body {
     border-radius: 1.5rem;
     max-height: 95vh;
     overflow-y: auto;
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
     transform: translateY(20px);
     transition: transform 0.3s ease;
@@ -1244,9 +1246,10 @@ body {
         width: 95%;
         padding: 1.25rem;
     }
-    
+
     /* Disable sticky columns on small screens to allow horizontal scrolling */
-    .sticky-col-1, .sticky-col-2 {
+    .sticky-col-1,
+    .sticky-col-2 {
         position: static !important;
         background: transparent !important;
         backdrop-filter: none !important;
@@ -1402,7 +1405,7 @@ body {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .spreadsheet-toolbar {
         justify-content: flex-start;
         gap: 0.4rem;
@@ -1420,12 +1423,14 @@ body {
     .profile-text-info {
         display: none !important;
     }
+
     .user-profile {
         padding: 5px !important;
     }
-    
+
     /* Responsive Form Grid for Modal */
-    .form-grid, .modal-grid-responsive {
+    .form-grid,
+    .modal-grid-responsive {
         grid-template-columns: 1fr !important;
     }
 }
@@ -1441,11 +1446,13 @@ body {
         flex-direction: column !important;
         gap: 0.5rem !important;
     }
-    .btn-group-responsive .btn, .btn-group-responsive button {
+
+    .btn-group-responsive .btn,
+    .btn-group-responsive button {
         width: 100% !important;
         flex: none !important;
     }
-    
+
     .external-participant-row {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -1454,6 +1461,7 @@ body {
         padding-bottom: 0.75rem;
         margin-bottom: 0.75rem !important;
     }
+
     .external-participant-row button {
         align-self: flex-end;
     }

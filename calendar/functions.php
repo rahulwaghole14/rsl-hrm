@@ -10,7 +10,7 @@ function getEventsForMonth($year, $month)
 
     $start_date = sprintf("%04d-%02d-01", $year, $month);
     $end_date = date("Y-m-t", strtotime($start_date));
-    
+
     try {
         $stmt = $pdo->prepare("SELECT e.* FROM events e WHERE e.event_date BETWEEN ? AND ?");
         $stmt->execute([$start_date, $end_date]);
@@ -25,26 +25,26 @@ function getEventsForMonth($year, $month)
                                JOIN users u ON l.user_id = u.id 
                                WHERE (l.from_date <= ? AND l.to_date >= ?)");
         $stmt->execute([$end_date, $start_date]);
-        
+
         while ($row = $stmt->fetch()) {
             $start = new DateTime(max($row['from_date'], $start_date));
             $end = new DateTime(min($row['to_date'], $end_date));
             $end->modify('+1 day');
-            
+
             $interval = new DateInterval('P1D');
             $daterange = new DatePeriod($start, $interval, $end);
-            
+
             $approved_list = $row['approved_dates'] ? json_decode($row['approved_dates'], true) : [];
 
-            foreach($daterange as $date){
+            foreach ($daterange as $date) {
                 $dateStr = $date->format("Y-m-d");
                 $dayOfWeek = $date->format("N"); // 1 (Mon) to 7 (Sun)
-                
+
                 // Skip weekends (6=Sat, 7=Sun)
                 if ($dayOfWeek >= 6) {
                     continue;
                 }
-                
+
                 $shouldShow = false;
                 if ($row['status'] === 'pending' || $row['status'] === 'rejected') {
                     $shouldShow = true;
@@ -186,46 +186,51 @@ function renderCalendar($year, $month)
         }
 
         echo '<div class="day-cell ' . implode(' ', $classes) . '" ' . $clickAttr . '>';
-        
+
         // Header Row for Number and Tags
         echo '<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; width: 100%; margin-bottom: 0.25rem;">';
-            echo '<div class="day-number">' . $day . '</div>';
-            
-            echo '<div class="day-tags-top">';
-                // Display Birthdays
-                $dayBirthdays = isset($birthdays[$day_padded]) ? $birthdays[$day_padded] : [];
-                foreach ($dayBirthdays as $bdayName) {
-                    $bwords = explode(" ", $bdayName);
-                    $binitials = "";
-                    foreach ($bwords as $w) { if(!empty($w)) $binitials .= strtoupper($w[0]); }
-                    $bdisplayInitials = substr($binitials, 0, 2);
+        echo '<div class="day-number">' . $day . '</div>';
 
-                    echo '<div class="birthday-tag" title="Happy Birthday ' . htmlspecialchars($bdayName) . '!">';
-                    echo '🎂' . htmlspecialchars($bdisplayInitials);
-                    echo '</div>';
-                }
+        echo '<div class="day-tags-top">';
+        // Display Birthdays
+        $dayBirthdays = isset($birthdays[$day_padded]) ? $birthdays[$day_padded] : [];
+        foreach ($dayBirthdays as $bdayName) {
+            $bwords = explode(" ", $bdayName);
+            $binitials = "";
+            foreach ($bwords as $w) {
+                if (!empty($w))
+                    $binitials .= strtoupper($w[0]);
+            }
+            $bdisplayInitials = substr($binitials, 0, 2);
 
-                // Display Leaves
-                foreach ($dayLeaves as $leave) {
-                    $words = explode(" ", $leave['user_name'] ?? 'U');
-                    $initials = "";
-                    foreach ($words as $w) { $initials .= strtoupper($w[0] ?? ''); }
-                    $displayInitials = substr($initials, 0, 2);
-
-                    $title = "Leave: " . htmlspecialchars($leave['user_name']) . " (" . ucfirst(str_replace('_', ' ', $leave['status'])) . ")";
-
-                    if ($isAdmin) {
-                        $leaveJson = htmlspecialchars(json_encode($leave));
-                        echo '<div class="leave-tag status-' . $leave['status'] . '" onclick="event.stopPropagation(); openAdminViewModal(' . $leaveJson . ')" title="' . $title . '">';
-                        echo $displayInitials;
-                        echo '</div>';
-                    } elseif ($leave['user_id'] == $currentUserId) {
-                        echo '<div class="leave-tag status-' . $leave['status'] . '" style="cursor:default;" onclick="event.stopPropagation();" title="Your ' . $title . '">';
-                        echo $displayInitials;
-                        echo '</div>';
-                    }
-                }
+            echo '<div class="birthday-tag" title="Happy Birthday ' . htmlspecialchars($bdayName) . '!">';
+            echo '🎂' . htmlspecialchars($bdisplayInitials);
             echo '</div>';
+        }
+
+        // Display Leaves
+        foreach ($dayLeaves as $leave) {
+            $words = explode(" ", $leave['user_name'] ?? 'U');
+            $initials = "";
+            foreach ($words as $w) {
+                $initials .= strtoupper($w[0] ?? '');
+            }
+            $displayInitials = substr($initials, 0, 2);
+
+            $title = "Leave: " . htmlspecialchars($leave['user_name']) . " (" . ucfirst(str_replace('_', ' ', $leave['status'])) . ")";
+
+            if ($isAdmin) {
+                $leaveJson = htmlspecialchars(json_encode($leave));
+                echo '<div class="leave-tag status-' . $leave['status'] . '" onclick="event.stopPropagation(); openAdminViewModal(' . $leaveJson . ')" title="' . $title . '">';
+                echo $displayInitials;
+                echo '</div>';
+            } elseif ($leave['user_id'] == $currentUserId) {
+                echo '<div class="leave-tag status-' . $leave['status'] . '" style="cursor:default;" onclick="event.stopPropagation();" title="Your ' . $title . '">';
+                echo $displayInitials;
+                echo '</div>';
+            }
+        }
+        echo '</div>';
         echo '</div>';
 
         echo '<div class="event-list">';
@@ -234,7 +239,7 @@ function renderCalendar($year, $month)
             if ($event['type'] === 'working' || $event['title'] === 'Weekend') {
                 continue;
             }
-            
+
             $tagClass = 'type-event';
             if ($event['type'] === 'holiday') {
                 $tagClass = 'holiday-tag';
@@ -333,17 +338,25 @@ function renderWeekView($year, $month)
         $isCurrentMonth = (date('m', $dayStamp) == $month);
 
         $classes = ['day-cell'];
-        if ($isWeekend) $classes[] = 'weekend';
-        if ($isToday) $classes[] = 'today';
-        if (!$isCurrentMonth) $classes[] = 'other-month';
+        if ($isWeekend)
+            $classes[] = 'weekend';
+        if ($isToday)
+            $classes[] = 'today';
+        if (!$isCurrentMonth)
+            $classes[] = 'other-month';
 
         // Events
         $dayEvents = isset($events[$currentDate]) ? $events[$currentDate] : [];
         $isHoliday = false;
         foreach ($dayEvents as $event) {
-            if ($event['type'] === 'holiday') { $isHoliday = true; $classes[] = 'holiday'; }
-            if ($event['type'] === 'event') $classes[] = 'event-day';
-            if ($event['type'] === 'half_day') $classes[] = 'half-day';
+            if ($event['type'] === 'holiday') {
+                $isHoliday = true;
+                $classes[] = 'holiday';
+            }
+            if ($event['type'] === 'event')
+                $classes[] = 'event-day';
+            if ($event['type'] === 'half_day')
+                $classes[] = 'half-day';
         }
 
         // Leaves
@@ -358,7 +371,8 @@ function renderWeekView($year, $month)
                 $hasApprovedLeave = true;
             }
         }
-        if ($hasApprovedLeave) $classes[] = 'leave-approved';
+        if ($hasApprovedLeave)
+            $classes[] = 'leave-approved';
 
         // Click behavior
         $clickAttr = '';
@@ -383,10 +397,13 @@ function renderWeekView($year, $month)
         // Event tags
         echo '<div class="event-list">';
         foreach ($dayEvents as $event) {
-            if ($event['type'] === 'working' || $event['title'] === 'Weekend') continue;
+            if ($event['type'] === 'working' || $event['title'] === 'Weekend')
+                continue;
             $tagClass = 'type-event';
-            if ($event['type'] === 'holiday') $tagClass = 'holiday-tag';
-            elseif ($event['type'] === 'half_day') $tagClass = 'type-half-day';
+            if ($event['type'] === 'holiday')
+                $tagClass = 'holiday-tag';
+            elseif ($event['type'] === 'half_day')
+                $tagClass = 'type-half-day';
 
             if ($isAdmin) {
                 echo '<a href="manage_event.php?id=' . $event['id'] . '" class="event-tag ' . $tagClass . '" title="' . htmlspecialchars($event['title']) . '" onclick="event.stopPropagation();">';
@@ -406,7 +423,10 @@ function renderWeekView($year, $month)
         foreach ($dayBirthdays as $bdayName) {
             $bwords = explode(" ", $bdayName);
             $binitials = "";
-            foreach ($bwords as $w) { if(!empty($w)) $binitials .= strtoupper($w[0]); }
+            foreach ($bwords as $w) {
+                if (!empty($w))
+                    $binitials .= strtoupper($w[0]);
+            }
             $bdisplayInitials = substr($binitials, 0, 2);
 
             echo '<div class="birthday-tag" title="Happy Birthday ' . htmlspecialchars($bdayName) . '!">🎂' . htmlspecialchars($bdisplayInitials) . '</div>';
@@ -414,7 +434,9 @@ function renderWeekView($year, $month)
         foreach ($dayLeaves as $leave) {
             $words = explode(" ", $leave['user_name'] ?? 'U');
             $initials = "";
-            foreach ($words as $w) { $initials .= strtoupper($w[0] ?? ''); }
+            foreach ($words as $w) {
+                $initials .= strtoupper($w[0] ?? '');
+            }
             $displayInitials = substr($initials, 0, 2);
             $title = "Leave: " . htmlspecialchars($leave['user_name']) . " (" . ucfirst(str_replace('_', ' ', $leave['status'])) . ")";
 
