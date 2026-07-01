@@ -117,80 +117,247 @@ $isLoginPage = ($currentPage == 'login.php');
         .loader-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+            transition: opacity 0.35s ease, visibility 0.35s ease;
         }
 
         [data-theme="dark"] .loader-overlay {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.88);
         }
 
         .loader-overlay.hidden {
             opacity: 0;
             visibility: hidden;
+            pointer-events: none;
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(99, 102, 241, 0.2);
-            border-top: 4px solid var(--primary-color);
+        .loader-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 600px 400px at 30% 20%, rgba(99, 102, 241, 0.06), transparent),
+                radial-gradient(ellipse 500px 350px at 70% 80%, rgba(139, 92, 246, 0.05), transparent);
+            pointer-events: none;
+        }
+
+        .loader-orb-wrap {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin-bottom: 1.6rem;
+        }
+
+        .loader-orb-ring {
+            position: absolute;
+            inset: 0;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+            border: 2.5px solid transparent;
         }
 
-        .loader-text {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            letter-spacing: 0.5px;
-            animation: pulse 1.5s infinite;
+        .loader-orb-ring:nth-child(1) {
+            border-top-color: #6366f1;
+            border-right-color: rgba(99, 102, 241, 0.3);
+            animation: loaderSpin 1.2s cubic-bezier(.5, .1, .5, .9) infinite;
         }
 
-        @keyframes spin {
+        .loader-orb-ring:nth-child(2) {
+            inset: 9px;
+            border-top-color: #8b5cf6;
+            border-left-color: rgba(139, 92, 246, 0.3);
+            animation: loaderSpin 1.8s cubic-bezier(.5, .1, .5, .9) infinite reverse;
+        }
+
+        .loader-orb-ring:nth-child(3) {
+            inset: 18px;
+            border-bottom-color: #a78bfa;
+            border-right-color: rgba(167, 139, 250, 0.3);
+            animation: loaderSpin 2.5s cubic-bezier(.5, .1, .5, .9) infinite;
+        }
+
+        .loader-orb-center {
+            position: absolute;
+            inset: 27px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.3), 0 0 50px rgba(139, 92, 246, 0.1);
+            animation: loaderPulse 2s ease-in-out infinite;
+        }
+
+        .loader-orb-center svg {
+            width: 18px;
+            height: 18px;
+            color: white;
+        }
+
+        .loader-brand {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .loader-status {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #94a3b8;
+            position: relative;
+            z-index: 1;
+        }
+
+        .loader-dot-pulse {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+
+        .loader-dot-pulse span {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #6366f1;
+            animation: loaderDot 1.4s ease-in-out infinite;
+        }
+
+        .loader-dot-pulse span:nth-child(2) {
+            animation-delay: .16s;
+        }
+
+        .loader-dot-pulse span:nth-child(3) {
+            animation-delay: .32s;
+        }
+
+        .loader-progress-track {
+            width: 180px;
+            height: 3px;
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .loader-progress-track {
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .loader-progress-bar {
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #c4b5fd, #8b5cf6, #6366f1);
+            background-size: 200% 100%;
+            border-radius: 100px;
+            animation: loaderShimmer 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loaderSpin {
             0% {
-                transform: rotate(0deg);
+                transform: rotate(0)
             }
 
             100% {
-                transform: rotate(360deg);
+                transform: rotate(360deg)
             }
         }
 
-        @keyframes pulse {
+        @keyframes loaderPulse {
 
             0%,
             100% {
-                opacity: 1;
+                transform: scale(1);
+                box-shadow: 0 0 25px rgba(99, 102, 241, .3), 0 0 50px rgba(139, 92, 246, .1)
             }
 
             50% {
-                opacity: 0.5;
+                transform: scale(1.05);
+                box-shadow: 0 0 35px rgba(99, 102, 241, .45), 0 0 70px rgba(139, 92, 246, .18)
+            }
+        }
+
+        @keyframes loaderDot {
+
+            0%,
+            80%,
+            100% {
+                opacity: .25;
+                transform: scale(.8)
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1.3)
+            }
+        }
+
+        @keyframes loaderShimmer {
+            0% {
+                transform: translateX(-100%);
+                background-position: 0 0
+            }
+
+            50% {
+                background-position: 100% 0
+            }
+
+            100% {
+                transform: translateX(350%);
+                background-position: 0 0
             }
         }
     </style>
-    <div class="loader-overlay hidden" id="globalLoader">
-        <div class="spinner"></div>
-        <div class="loader-text">Loading...</div>
+
+    <!-- Loader visible by default — hides automatically when page is ready -->
+    <div class="loader-overlay" id="globalLoader">
+        <div class="loader-orb-wrap">
+            <div class="loader-orb-ring"></div>
+            <div class="loader-orb-ring"></div>
+            <div class="loader-orb-ring"></div>
+            <div class="loader-orb-center">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="loader-brand">RSL WorkSync</div>
+        <div class="loader-status">Loading<div class="loader-dot-pulse"><span></span><span></span><span></span></div>
+        </div>
+        <div class="loader-progress-track">
+            <div class="loader-progress-bar"></div>
+        </div>
     </div>
+
     <script>
         function showLoader() {
-            const loader = document.getElementById('globalLoader');
-            if (loader) loader.classList.remove('hidden');
+            const l = document.getElementById('globalLoader');
+            if (l) l.classList.remove('hidden');
         }
         function hideLoader() {
-            const loader = document.getElementById('globalLoader');
-            if (loader) loader.classList.add('hidden');
+            const l = document.getElementById('globalLoader');
+            if (l) l.classList.add('hidden');
         }
+        // Auto-hide quickly — just a brief branded flash
+        setTimeout(hideLoader, 300);
     </script>
 
     <!-- Sidebar Overlay Backdrop for Mobile -->

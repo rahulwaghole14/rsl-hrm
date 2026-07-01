@@ -20,11 +20,7 @@ if (isset($_GET['id'])) {
         $stmt = $pdo->prepare("DELETE FROM tasks WHERE id = ?");
         $stmt->execute([$task_id]);
         
-        // Auto-sync to Google Sheet if configured
-        require_once 'includes/google_sheet_helper.php';
-        $sync_month = date('Y-m', strtotime($existing['task_date']));
-        syncTasksToGoogleSheet($pdo, $sync_month);
-        
+        // Google Sheet sync now happens in background via AJAX on the redirected page        
         $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'task_tracker.php';
         header("Location: $redirect?success=deleted");
         exit;

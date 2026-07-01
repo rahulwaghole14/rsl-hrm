@@ -94,14 +94,14 @@ include 'includes/header.php';
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Check
                     In Time</label>
-                <input type="time" name="check_in_time" value="<?php echo $record['check_in_time']; ?>" required
+                <input type="time" name="check_in_time" value="<?php echo !empty($record['check_in_time']) ? date('H:i', strtotime($record['check_in_time'])) : ''; ?>" required
                     style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.75rem; font-size: 1rem; background: var(--bg-color); color: var(--text-main);">
             </div>
 
             <div class="form-group" style="margin-bottom: 2rem;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Check
                     Out Time</label>
-                <input type="time" name="check_out_time" value="<?php echo $record['check_out_time']; ?>"
+                <input type="time" name="check_out_time" value="<?php echo !empty($record['check_out_time']) ? date('H:i', strtotime($record['check_out_time'])) : ''; ?>"
                     style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.75rem; font-size: 1rem; background: var(--bg-color); color: var(--text-main);">
                 <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">Leave blank if employee is
                     still working.</small>

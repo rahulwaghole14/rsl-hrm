@@ -12,7 +12,7 @@ function syncTasksToGoogleSheet($pdo, $filter_month) {
             return ['status' => 'error', 'message' => 'Google Sheet Web App URL is not configured.'];
         }
     
-        // 2. Fetch tasks for the selected month and all employee names
+        // 2. Fetch ALL tasks (all months) and all employee names
         // Fetch all active user names
         $userStmt = $pdo->query("SELECT name FROM users WHERE role != 'admin' ORDER BY name ASC");
         $all_users = $userStmt->fetchAll(PDO::FETCH_COLUMN);
@@ -22,10 +22,8 @@ function syncTasksToGoogleSheet($pdo, $filter_month) {
                        t.estimated_hours, t.actual_hours, t.status, t.delay_reason, t.remarks, t.delay_flag 
                 FROM tasks t 
                 JOIN users u ON t.user_id = u.id 
-                WHERE DATE_FORMAT(t.task_date, '%Y-%m') = ?
                 ORDER BY t.task_date DESC, u.name ASC";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$filter_month]);
+        $stmt = $pdo->query($sql);
         $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Convert estimate and actual hours to floats for safety
@@ -52,7 +50,7 @@ function syncTasksToGoogleSheet($pdo, $filter_month) {
         ]);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Apps Script redirects to a temporary URL
         curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // Force HTTP/1.1 to avoid PROTOCOL_ERROR
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);

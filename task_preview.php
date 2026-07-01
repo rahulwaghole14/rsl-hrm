@@ -319,6 +319,15 @@ include 'includes/header.php';
     function handleOverlayClick(e, id) {
         if (e.target.id === id) closeEmpModal(id);
     }
+
+    // Trigger background Google Sheet sync if redirected with a success parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+        fetch('sync_tasks_ajax.php')
+            .then(response => response.json())
+            .then(data => console.log('Background Sync Response:', data))
+            .catch(error => console.error('Background Sync Failed:', error));
+    }
 </script>
 
 <div class="container-fluid"
@@ -337,6 +346,15 @@ include 'includes/header.php';
     <?php if (isset($_GET['sync_error'])): ?>
         <div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem 1.5rem; border-bottom: 1px solid rgba(239, 68, 68, 0.2); font-weight: 600; font-size:0.85rem; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
             <span>❌ Sync failed: <?php echo htmlspecialchars($_GET['sync_error']); ?></span>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_GET['success']) && $_GET['success'] === 'deleted'): ?>
+        <div style="background: rgba(22, 163, 74, 0.1); color: #16a34a; padding: 0.75rem 1.5rem; border-bottom: 1px solid rgba(22, 163, 74, 0.2); font-weight: 600; font-size:0.85rem; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+            <span>✅ Task deleted successfully! Google Sheet syncing in the background.</span>
+        </div>
+    <?php elseif (isset($_GET['success'])): ?>
+        <div style="background: rgba(22, 163, 74, 0.1); color: #16a34a; padding: 0.75rem 1.5rem; border-bottom: 1px solid rgba(22, 163, 74, 0.2); font-weight: 600; font-size:0.85rem; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+            <span>✅ Task updated successfully! Google Sheet syncing in the background.</span>
         </div>
     <?php endif; ?>
 

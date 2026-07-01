@@ -31,7 +31,7 @@ $stmt->execute([$userId, $today]);
 $todayAttendance = $stmt->fetch();
 
 // Get last 7 days for graph
-$stmt = $pdo->prepare("SELECT date, total_hours FROM attendance WHERE user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY date ASC");
+$stmt = $pdo->prepare("SELECT date, total_hours, status, check_in_time, total_break_seconds, last_break_start FROM attendance WHERE user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY date ASC");
 $stmt->execute([$userId]);
 $attendanceHistory = $stmt->fetchAll();
 
@@ -39,7 +39,31 @@ $labels = [];
 $dataValues = [];
 foreach ($attendanceHistory as $row) {
     $labels[] = date('D (d M)', strtotime($row['date']));
-    $dataValues[] = $row['total_hours'] ?: 0;
+    
+    $hours = 0;
+    if ($row['status'] === 'checked_out') {
+        $hours = (float)($row['total_hours'] ?? 0);
+    } else {
+        // Session in progress
+        $check_in_ts = strtotime($row['date'] . ' ' . $row['check_in_time']);
+        $total_break = (int)$row['total_break_seconds'];
+        $now = time();
+        
+        if ($row['status'] === 'on_break') {
+            // If on break, the working time stopped at last_break_start
+            $break_start = strtotime($row['date'] . ' ' . ($row['last_break_start'] ?? 'now'));
+            $total_elapsed = $break_start - $check_in_ts;
+        } else {
+            // Still working: elapsed is up to now
+            $total_elapsed = $now - $check_in_ts;
+        }
+        
+        $working_sec = $total_elapsed - $total_break;
+        if ($working_sec < 0) $working_sec = 0;
+        $hours = round($working_sec / 3600, 2);
+    }
+    
+    $dataValues[] = $hours;
 }
 
 include 'includes/header.php';
@@ -348,6 +372,21 @@ include 'includes/header.php';
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let val = context.raw;
+                                if (val === null || val === undefined) return '';
+                                let hrs = Math.floor(val);
+                                let mins = Math.round((val - hrs) * 60);
+                                if (mins >= 60) {
+                                    mins = 0;
+                                    hrs += 1;
+                                }
+                                return ' Hours Worked: ' + hrs + ' Hr ' + (mins < 10 ? '0' : '') + mins + ' Min';
+                            }
+                        }
                     }
                 }
             }

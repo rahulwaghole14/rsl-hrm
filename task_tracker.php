@@ -119,10 +119,15 @@ include 'includes/header.php';
         </div>
     </div>
 
-    <?php if (isset($_GET['success'])): ?>
+    <?php if (isset($_GET['success']) && $_GET['success'] === 'deleted'): ?>
         <div
             style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
-            ✅ Task updated successfully!
+            ✅ Task deleted successfully! Google Sheet syncing in the background.
+        </div>
+    <?php elseif (isset($_GET['success'])): ?>
+        <div
+            style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
+            ✅ Task updated successfully! Google Sheet syncing in the background.
         </div>
     <?php endif; ?>
 
@@ -665,6 +670,15 @@ include 'includes/header.php';
         document.getElementById('taskStartTime').addEventListener(evt, calculateHours);
         document.getElementById('taskEndTime').addEventListener(evt, calculateHours);
     });
+
+    // Trigger background Google Sheet sync if redirected with a success parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+        fetch('sync_tasks_ajax.php')
+            .then(response => response.json())
+            .then(data => console.log('Background Sync Response:', data))
+            .catch(error => console.error('Background Sync Failed:', error));
+    }
 </script>
 
 <?php include 'includes/footer.php'; ?>
