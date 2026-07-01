@@ -667,94 +667,86 @@ $isLoginPage = ($currentPage == 'login.php');
                             }
 
                             $notifications = [];
-                            $showNotificationBell = false;
-
-                            if ($currentPage === 'index.php' || $currentPage === 'meetings.php') {
-                                $showNotificationBell = true;
-                            }
+                            $showNotificationBell = $isLoggedIn; // Bell visible globally for logged in users
 
                             $curRole = $_SESSION['role'] ?? 'employee';
                             $curUserId = $_SESSION['user_id'] ?? null;
 
-                            if (isset($pdo) && $pdo !== null) {
-                                if ($currentPage === 'index.php') {
-                                    $today = date('Y-m-d');
-                                    $endRange = date('Y-m-d', strtotime('+7 days'));
+                            if ($showNotificationBell && isset($pdo) && $pdo !== null) {
+                                $today = date('Y-m-d');
+                                $endRange = date('Y-m-d', strtotime('+7 days'));
+                                $currentTime = date('H:i:s');
 
-                                    try {
-                                        // 1. Fetch Events
-                                        $stmt = $pdo->prepare("SELECT title, event_date, type FROM events WHERE event_date >= ? AND event_date <= ? AND title != 'Weekend' ORDER BY event_date ASC");
-                                        $stmt->execute([$today, $endRange]);
-                                        $eventsList = $stmt->fetchAll();
+                                try {
+                                    // 1. Fetch Events
+                                    $stmt = $pdo->prepare("SELECT title, event_date, type FROM events WHERE event_date >= ? AND event_date <= ? AND title != 'Weekend' ORDER BY event_date ASC");
+                                    $stmt->execute([$today, $endRange]);
+                                    $eventsList = $stmt->fetchAll();
 
-                                        foreach ($eventsList as $ev) {
-                                            $dateStr = date('d M', strtotime($ev['event_date']));
+                                    foreach ($eventsList as $ev) {
+                                        $dateStr = date('d M', strtotime($ev['event_date']));
+                                        $notif_id = md5('event_' . $ev['title'] . '_' . $ev['event_date']);
+                                        $notifications[] = [
+                                            'id' => $notif_id,
+                                            'icon' => $ev['type'] === 'holiday' ? '🎉' : '📅',
+                                            'title' => htmlspecialchars($ev['title']),
+                                            'subtitle' => ucfirst($ev['type']) . ' on ' . $dateStr,
+                                            'date' => $ev['event_date']
+                                        ];
+                                    }
+
+                                    // 2. Fetch Birthdays
+                                    $birthday_dates = [];
+                                    $birthday_date_map = [];
+                                    for ($i = 0; $i <= 7; $i++) {
+                                        $d = strtotime("+$i days");
+                                        $md = date('m-d', $d);
+                                        $birthday_dates[] = $md;
+                                        $birthday_date_map[$md] = date('Y-m-d', $d);
+                                    }
+
+                                    if (count($birthday_dates) > 0) {
+                                        $placeholders = implode(',', array_fill(0, count($birthday_dates), '?'));
+                                        $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE dob IS NOT NULL AND DATE_FORMAT(dob, '%m-%d') IN ($placeholders)");
+                                        $stmt->execute($birthday_dates);
+                                        $birthdaysList = $stmt->fetchAll();
+
+                                        foreach ($birthdaysList as $b) {
+                                            $md = date('m-d', strtotime($b['dob']));
+                                            $upcomingDate = $birthday_date_map[$md] ?? date('Y-m-d');
+                                            $dateStr = date('d M', strtotime($upcomingDate));
+                                            $notif_id = md5('birthday_' . $b['name'] . '_' . $upcomingDate);
                                             $notifications[] = [
-                                                'icon' => $ev['type'] === 'holiday' ? '🎉' : '📅',
-                                                'title' => htmlspecialchars($ev['title']),
-                                                'subtitle' => ucfirst($ev['type']) . ' on ' . $dateStr,
-                                                'date' => $ev['event_date']
+                                                'id' => $notif_id,
+                                                'icon' => '🎂',
+                                                'title' => htmlspecialchars($b['name']) . "'s Birthday",
+                                                'subtitle' => 'Birthday on ' . $dateStr,
+                                                'date' => $upcomingDate
                                             ];
                                         }
+                                    }
 
-                                        // 2. Fetch Birthdays
-                                        $birthday_dates = [];
-                                        $birthday_date_map = [];
-                                        for ($i = 0; $i <= 7; $i++) {
-                                            $d = strtotime("+$i days");
-                                            $md = date('m-d', $d);
-                                            $birthday_dates[] = $md;
-                                            $birthday_date_map[$md] = date('Y-m-d', $d);
+                                    // 3. Fetch Admin Status
+                                    try {
+                                        $stmt = $pdo->prepare("SELECT status, admin_name FROM admin_daily_status WHERE status_date = ?");
+                                        $stmt->execute([$today]);
+                                        $adminStatusData = $stmt->fetch();
+                                        if ($adminStatusData) {
+                                            $aName = $adminStatusData['admin_name'] ? $adminStatusData['admin_name'] : 'Admin';
+                                            $statusWord = $adminStatusData['status'] === 'WFH' ? 'Working From Home (WFH)' : 'on Leave';
+                                            $notif_id = md5('admin_status_' . $aName . '_' . $adminStatusData['status'] . '_' . $today);
+                                            $notifications[] = [
+                                                'id' => $notif_id,
+                                                'icon' => '📢',
+                                                'title' => htmlspecialchars($aName) . ' Status',
+                                                'subtitle' => htmlspecialchars($aName) . " is $statusWord today.",
+                                                'date' => $today
+                                            ];
                                         }
-
-                                        if (count($birthday_dates) > 0) {
-                                            $placeholders = implode(',', array_fill(0, count($birthday_dates), '?'));
-                                            $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE dob IS NOT NULL AND DATE_FORMAT(dob, '%m-%d') IN ($placeholders)");
-                                            $stmt->execute($birthday_dates);
-                                            $birthdaysList = $stmt->fetchAll();
-
-                                            foreach ($birthdaysList as $b) {
-                                                $md = date('m-d', strtotime($b['dob']));
-                                                $upcomingDate = $birthday_date_map[$md] ?? date('Y-m-d');
-                                                $dateStr = date('d M', strtotime($upcomingDate));
-                                                $notifications[] = [
-                                                    'icon' => '🎂',
-                                                    'title' => htmlspecialchars($b['name']) . "'s Birthday",
-                                                    'subtitle' => 'Birthday on ' . $dateStr,
-                                                    'date' => $upcomingDate
-                                                ];
-                                            }
-                                        }
-
-                                        // 3. Fetch Admin Status
-                                        try {
-                                            $stmt = $pdo->prepare("SELECT status, admin_name FROM admin_daily_status WHERE status_date = ?");
-                                            $stmt->execute([date('Y-m-d')]);
-                                            $adminStatusData = $stmt->fetch();
-                                            if ($adminStatusData) {
-                                                $aName = $adminStatusData['admin_name'] ? $adminStatusData['admin_name'] : 'Admin';
-                                                $statusWord = $adminStatusData['status'] === 'WFH' ? 'Working From Home (WFH)' : 'on Leave';
-                                                $notifications[] = [
-                                                    'icon' => '📢',
-                                                    'title' => htmlspecialchars($aName) . ' Status',
-                                                    'subtitle' => htmlspecialchars($aName) . " is $statusWord today.",
-                                                    'date' => date('Y-m-d')
-                                                ];
-                                            }
-                                        } catch (Exception $e) {
-                                        }
-
-                                        // 4. Sort notifications chronologically
-                                        usort($notifications, function ($a, $b) {
-                                            return strcmp($a['date'], $b['date']);
-                                        });
-
                                     } catch (Exception $e) {
                                     }
-                                } elseif ($currentPage === 'meetings.php') {
-                                    $today = date('Y-m-d');
-                                    $currentTime = date('H:i:s');
 
+                                    // 4. Fetch Meetings
                                     try {
                                         $stmt = $pdo->prepare("SELECT DISTINCT m.title, m.meeting_time 
                                                               FROM meetings m 
@@ -772,14 +764,24 @@ $isLoginPage = ($currentPage == 'login.php');
 
                                         foreach ($meetingsList as $mtg) {
                                             $timeStr = date('h:i A', strtotime($mtg['meeting_time']));
+                                            $notif_id = md5('meeting_' . $mtg['title'] . '_' . $mtg['meeting_time'] . '_' . $today);
                                             $notifications[] = [
+                                                'id' => $notif_id,
                                                 'icon' => '🕒',
                                                 'title' => htmlspecialchars($mtg['title']),
-                                                'subtitle' => 'Today at ' . $timeStr
+                                                'subtitle' => 'Today at ' . $timeStr,
+                                                'date' => $today . ' ' . $mtg['meeting_time']
                                             ];
                                         }
                                     } catch (Exception $e) {
                                     }
+
+                                    // Sort notifications chronologically
+                                    usort($notifications, function ($a, $b) {
+                                        return strcmp($a['date'], $b['date']);
+                                    });
+
+                                } catch (Exception $e) {
                                 }
                             }
                             ?>
@@ -795,25 +797,33 @@ $isLoginPage = ($currentPage == 'login.php');
                                             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
                                         </path>
                                     </svg>
-                                    <?php if (count($notifications) > 0): ?>
-                                        <span
-                                            style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #fff;"><?php echo count($notifications); ?></span>
-                                    <?php endif; ?>
+                                    <span id="notifBadge"
+                                        style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; width: 16px; height: 16px; display: none; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #fff;">0</span>
 
                                     <div id="notifDropdown" class="notif-dropdown">
                                         <div
                                             style="padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: 700; color: var(--text-main);">
                                             Notifications</div>
+                                            
+                                        <!-- Tabs inside Dropdown -->
+                                        <div class="notif-tabs" style="display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-color); font-size: 0.8rem; font-weight: 600;">
+                                            <div class="notif-tab active" data-tab="all" style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--primary-color);">All (<span id="count-all">0</span>)</div>
+                                            <div class="notif-tab" data-tab="unread" style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">Unread (<span id="count-unread">0</span>)</div>
+                                            <div class="notif-tab" data-tab="read" style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">Read (<span id="count-read">0</span>)</div>
+                                        </div>
+
                                         <div style="max-height: 300px; overflow-y: auto;">
                                             <?php if (count($notifications) > 0): ?>
                                                 <?php foreach ($notifications as $n): ?>
-                                                    <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; gap: 0.75rem; align-items: flex-start; transition: background 0.2s;"
+                                                    <div class="notif-item" data-id="<?php echo $n['id']; ?>" onclick="markAsRead(event, '<?php echo $n['id']; ?>')"
+                                                        style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; gap: 0.75rem; align-items: flex-start; transition: background 0.2s;"
                                                         onmouseover="this.style.background='var(--bg-color)'"
                                                         onmouseout="this.style.background='transparent'">
                                                         <div style="font-size: 1.2rem;"><?php echo $n['icon']; ?></div>
-                                                        <div>
-                                                            <div style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">
-                                                                <?php echo $n['title']; ?>
+                                                        <div style="flex: 1;">
+                                                            <div style="font-weight: 600; color: var(--text-main); font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                                                                <span><?php echo $n['title']; ?></span>
+                                                                <span class="unread-dot" style="display: none; width: 6px; height: 6px; background: #6366f1; border-radius: 50%; flex-shrink: 0;"></span>
                                                             </div>
                                                             <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem;">
                                                                 <?php echo $n['subtitle']; ?>
@@ -821,11 +831,10 @@ $isLoginPage = ($currentPage == 'login.php');
                                                         </div>
                                                     </div>
                                                 <?php endforeach; ?>
-                                            <?php else: ?>
-                                                <div
-                                                    style="padding: 1.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                                                    No upcoming notifications</div>
                                             <?php endif; ?>
+                                            <div id="notifEmptyPlaceholder"
+                                                style="display: none; padding: 1.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                                                No notifications</div>
                                         </div>
                                     </div>
                                 </div>
@@ -862,6 +871,114 @@ $isLoginPage = ($currentPage == 'login.php');
                                     }
                                 </style>
                                 <script>
+                                    // Initialize state
+                                    let readNotifications = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+
+                                    function updateNotifUI() {
+                                        const items = document.querySelectorAll('.notif-item');
+                                        let totalCount = items.length;
+                                        let unreadCount = 0;
+                                        let readCount = 0;
+
+                                        items.forEach(item => {
+                                            const id = item.getAttribute('data-id');
+                                            const isRead = readNotifications.includes(id);
+
+                                            if (isRead) {
+                                                item.classList.remove('unread');
+                                                item.classList.add('read');
+                                                const dot = item.querySelector('.unread-dot');
+                                                if (dot) dot.style.display = 'none';
+                                                item.style.opacity = '0.6';
+                                            } else {
+                                                item.classList.add('unread');
+                                                item.classList.remove('read');
+                                                const dot = item.querySelector('.unread-dot');
+                                                if (dot) dot.style.display = 'inline-block';
+                                                item.style.opacity = '1';
+                                                unreadCount++;
+                                            }
+                                        });
+
+                                        readCount = totalCount - unreadCount;
+
+                                        // Update counters
+                                        const cAll = document.getElementById('count-all');
+                                        const cUnread = document.getElementById('count-unread');
+                                        const cRead = document.getElementById('count-read');
+                                        if (cAll) cAll.textContent = totalCount;
+                                        if (cUnread) cUnread.textContent = unreadCount;
+                                        if (cRead) cRead.textContent = readCount;
+
+                                        // Update badge (unread only)
+                                        const badge = document.getElementById('notifBadge');
+                                        if (badge) {
+                                            if (unreadCount > 0) {
+                                                badge.textContent = unreadCount;
+                                                badge.style.display = 'flex';
+                                            } else {
+                                                badge.style.display = 'none';
+                                            }
+                                        }
+
+                                        filterNotifs();
+                                    }
+
+                                    function filterNotifs() {
+                                        const activeTabEl = document.querySelector('.notif-tab.active');
+                                        if (!activeTabEl) return;
+                                        const activeTab = activeTabEl.getAttribute('data-tab');
+                                        const items = document.querySelectorAll('.notif-item');
+                                        let visibleCount = 0;
+
+                                        items.forEach(item => {
+                                            const isRead = item.classList.contains('read');
+                                            if (activeTab === 'all') {
+                                                item.style.display = 'flex';
+                                                visibleCount++;
+                                            } else if (activeTab === 'unread' && !isRead) {
+                                                item.style.display = 'flex';
+                                                visibleCount++;
+                                            } else if (activeTab === 'read' && isRead) {
+                                                item.style.display = 'flex';
+                                                visibleCount++;
+                                            } else {
+                                                item.style.display = 'none';
+                                            }
+                                        });
+
+                                        const emptyPlaceholder = document.getElementById('notifEmptyPlaceholder');
+                                        if (emptyPlaceholder) {
+                                            emptyPlaceholder.style.display = (visibleCount === 0) ? 'block' : 'none';
+                                        }
+                                    }
+
+                                    function markAsRead(event, id) {
+                                        event.stopPropagation(); // Avoid closing dropdown when item is clicked
+                                        if (!readNotifications.includes(id)) {
+                                            readNotifications.push(id);
+                                            localStorage.setItem('readNotifications', JSON.stringify(readNotifications));
+                                            updateNotifUI();
+                                        }
+                                    }
+
+                                    // Tab Switching Handlers
+                                    document.querySelectorAll('.notif-tab').forEach(tab => {
+                                        tab.addEventListener('click', function (e) {
+                                            e.stopPropagation(); // Avoid closing dropdown
+                                            document.querySelectorAll('.notif-tab').forEach(t => {
+                                                t.classList.remove('active');
+                                                t.style.borderBottomColor = 'transparent';
+                                                t.style.color = 'var(--text-muted)';
+                                            });
+                                            this.classList.add('active');
+                                            this.style.borderBottomColor = 'var(--primary-color)';
+                                            this.style.color = 'var(--primary-color)';
+                                            filterNotifs();
+                                        });
+                                    });
+
+                                    // Close dropdown on click outside
                                     document.addEventListener('click', function (e) {
                                         const wrap = document.querySelector('.notification-wrap');
                                         if (wrap && !wrap.contains(e.target)) {
@@ -869,6 +986,13 @@ $isLoginPage = ($currentPage == 'login.php');
                                             if (dd) dd.classList.remove('active');
                                         }
                                     });
+
+                                    // Initialize on document load
+                                    if (document.readyState === 'loading') {
+                                        document.addEventListener('DOMContentLoaded', updateNotifUI);
+                                    } else {
+                                        updateNotifUI();
+                                    }
                                 </script>
                             <?php endif; ?>
 
