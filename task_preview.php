@@ -572,7 +572,7 @@ include 'includes/header.php';
         <h2 id="modalTitle" style="color:#1a73e8; margin-bottom:1.5rem;">Edit Task Entry</h2>
 
         <form action="process_task.php" method="POST">
-            <input type="hidden" name="redirect" value="task_preview.php">
+            <input type="hidden" name="redirect" value="task_preview.php?filter_month=<?php echo urlencode($filter_month); ?>">
             <input type="hidden" name="task_id" id="taskId">
 
             <div class="modal-grid-responsive" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">

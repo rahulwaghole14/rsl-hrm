@@ -2,17 +2,17 @@
 require_once __DIR__ . '/../config/db.php';
 
 function syncTasksToGoogleSheet($pdo, $filter_month) {
-    // 1. Fetch the Google Sheet Web App URL
-    $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'google_sheet_web_app_url'");
-    $stmt->execute();
-    $web_app_url = $stmt->fetchColumn();
-    
-    if (empty($web_app_url)) {
-        return ['status' => 'error', 'message' => 'Google Sheet Web App URL is not configured.'];
-    }
-    
-    // 2. Fetch tasks for the selected month and all employee names
     try {
+        // 1. Fetch the Google Sheet Web App URL
+        $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'google_sheet_web_app_url'");
+        $stmt->execute();
+        $web_app_url = $stmt->fetchColumn();
+        
+        if (empty($web_app_url)) {
+            return ['status' => 'error', 'message' => 'Google Sheet Web App URL is not configured.'];
+        }
+    
+        // 2. Fetch tasks for the selected month and all employee names
         // Fetch all active user names
         $userStmt = $pdo->query("SELECT name FROM users WHERE role != 'admin' ORDER BY name ASC");
         $all_users = $userStmt->fetchAll(PDO::FETCH_COLUMN);

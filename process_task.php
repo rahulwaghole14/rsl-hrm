@@ -101,9 +101,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Auto-sync to Google Sheet if Web App URL is configured
-        require_once 'includes/google_sheet_helper.php';
-        $sync_month = date('Y-m', strtotime($task_date));
-        syncTasksToGoogleSheet($pdo, $sync_month);
+        try {
+            require_once 'includes/google_sheet_helper.php';
+            $sync_month = date('Y-m', strtotime($task_date));
+            syncTasksToGoogleSheet($pdo, $sync_month);
+        } catch (Exception $e) {
+            // Sync failure should not block the task update redirect
+        }
 
         $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : 'task_tracker.php?success=1';
         header("Location: " . $redirect);
