@@ -611,7 +611,7 @@ include 'includes/header.php';
                                 </td>
                                 <td class="sticky-col-2">
                                     <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
-                                        onclick='showEmployeeDetails(<?php echo json_encode(["id" => $row["user_id"], "name" => $row["name"], "email" => $row["email"], "role" => $row["role"], "emp_id" => $row["emp_id"]]); ?>)'>
+                                        onclick="showEmployeeDetails(<?php echo htmlspecialchars(json_encode(['id' => $row['user_id'], 'name' => $row['name'], 'email' => $row['email'], 'role' => $row['role'], 'emp_id' => $row['emp_id']]), ENT_QUOTES, 'UTF-8'); ?>)">
                                         <div
                                             style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
                                             <?php echo strtoupper(substr($row['name'], 0, 1)); ?>

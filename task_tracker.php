@@ -285,7 +285,7 @@ include 'includes/header.php';
                             </td>
                             <td>
                                 <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 0.4rem;"
-                                    onclick='openTaskModal(<?php echo json_encode($task); ?>)'>View/Edit</button>
+                                    onclick="openTaskModal(<?php echo htmlspecialchars(json_encode($task), ENT_QUOTES, 'UTF-8'); ?>)">View/Edit</button>
                             </td>
                         </tr>
                     <?php endforeach; ?>

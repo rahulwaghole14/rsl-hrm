@@ -116,7 +116,7 @@ include 'includes/header.php';
                             <td style="padding: 1rem; text-align: center;">
                                 <div style="display: flex; gap: 0.5rem; justify-content: center;">
                                     <button class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; border-color: var(--primary-color); color: var(--primary-color);" 
-                                        onclick='openEditEventModal(<?php echo json_encode($e); ?>)'>Edit</button>
+                                        onclick="openEditEventModal(<?php echo htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8'); ?>)">Edit</button>
                                     <a href="delete_event.php?id=<?php echo $e['id']; ?>" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; border-color: #ef4444; color: #ef4444; text-decoration: none;"
                                         onclick="return confirm('Are you sure you want to delete this event?')">Delete</a>
                                 </div>

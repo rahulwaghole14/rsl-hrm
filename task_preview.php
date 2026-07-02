@@ -469,7 +469,7 @@ include 'includes/header.php';
                                 <tr>
                                     <td class="row-num"><?php echo $rowNum++; ?></td>
                                     <td style="text-align: center;">
-                                        <button class="btn-grid-edit" onclick='openTaskModal(<?php echo json_encode($t); ?>)'
+                                        <button class="btn-grid-edit" onclick="openTaskModal(<?php echo htmlspecialchars(json_encode($t), ENT_QUOTES, 'UTF-8'); ?>)"
                                             title="Edit Task">
                                             ✏️
                                         </button>

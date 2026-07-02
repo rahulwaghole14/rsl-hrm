@@ -68,6 +68,89 @@ try {
 include 'includes/header.php';
 ?>
 
+<style>
+.kebab-container {
+    position: relative;
+    display: inline-block;
+}
+
+.kebab-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: var(--text-muted);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    outline: none;
+}
+
+.kebab-trigger:hover, .kebab-trigger.active {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+}
+
+.kebab-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 0.25rem;
+    background: #ffffff;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    min-width: 140px;
+    overflow: hidden;
+    padding: 0.35rem 0;
+}
+
+.kebab-dropdown.show {
+    display: block;
+}
+
+.kebab-dropdown button, .kebab-dropdown a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border: none;
+    background: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s;
+    box-sizing: border-box;
+}
+
+.kebab-dropdown button {
+    color: #4f46e5;
+}
+
+.kebab-dropdown a {
+    color: #ef4444;
+}
+
+.kebab-dropdown button:hover {
+    background-color: #f5f3ff;
+}
+
+.kebab-dropdown a:hover {
+    background-color: #fef2f2;
+}
+
+.kebab-dropdown svg {
+    flex-shrink: 0;
+}
+</style>
+
 <div class="container" style="margin-top: 1rem;">
     <div class="users-header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <div>
@@ -183,12 +266,29 @@ include 'includes/header.php';
                             <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
                                 <?php echo !empty($u['date_of_joining']) ? date('d M Y', strtotime($u['date_of_joining'])) : '-'; ?>
                             </td>
-                            <td style="padding: 1rem; text-align: center;">
-                                <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                    <button class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; border-color: var(--primary-color); color: var(--primary-color);" 
-                                        onclick='openEditUserModal(<?php echo json_encode($u); ?>)'>Edit</button>
-                                    <a href="delete_user.php?id=<?php echo $u['id']; ?>" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; border-color: #ef4444; color: #ef4444; text-decoration: none;"
-                                        onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">Delete</a>
+                            <td style="padding: 1rem; text-align: center; overflow: visible; position: relative;">
+                                <div class="kebab-container">
+                                    <button class="kebab-trigger" onclick="toggleKebab(event, <?php echo $u['id']; ?>)">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color: var(--text-muted);">
+                                            <path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                    <div class="kebab-dropdown" id="kebab-<?php echo $u['id']; ?>">
+                                        <button onclick='openEditUserModal(<?php echo htmlspecialchars(json_encode($u), ENT_QUOTES, 'UTF-8'); ?>)'>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #4f46e5;">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                            Edit
+                                        </button>
+                                        <a href="delete_user.php?id=<?php echo $u['id']; ?>" onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444;">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                            Delete
+                                        </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -357,6 +457,31 @@ include 'includes/header.php';
             eyeOffIcon.style.display = 'none';
         }
     }
+
+    function toggleKebab(event, userId) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('kebab-' + userId);
+        const trigger = event.currentTarget;
+        
+        document.querySelectorAll('.kebab-dropdown').forEach(d => {
+            if (d.id !== 'kebab-' + userId) {
+                d.classList.remove('show');
+            }
+        });
+        document.querySelectorAll('.kebab-trigger').forEach(b => {
+            if (b !== trigger) {
+                b.classList.remove('active');
+            }
+        });
+
+        dropdown.classList.toggle('show');
+        trigger.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.kebab-dropdown').forEach(d => d.classList.remove('show'));
+        document.querySelectorAll('.kebab-trigger').forEach(b => b.classList.remove('active'));
+    });
 </script>
 
 <?php include 'includes/footer.php'; ?>
