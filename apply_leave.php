@@ -153,18 +153,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mail->isHTML(true);
             $leave_range_text = date('d M', strtotime($from_date)) . " to " . date('d M', strtotime($to_date));
             $mail->Subject = "Leave Request: $emp_name ($leave_range_text)";
+            // Dynamically construct base URL for email links
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+            $host = $_SERVER['HTTP_HOST'];
+            $baseDir = str_replace(basename($_SERVER['SCRIPT_NAME']), "", $_SERVER['SCRIPT_NAME']);
+            $siteUrl = $protocol . $host . $baseDir;
+
+            $approveUrl = $siteUrl . "process_leave.php?id=" . $leave_id . "&status=approved";
+            $rejectUrl = $siteUrl . "process_leave.php?id=" . $leave_id . "&status=rejected";
+
             $mail->Body = "
-                <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                    <h2 style='color: #4f46e5;'>New Leave Request</h2>
-                    <p><strong>Employee:</strong> $emp_name ($emp_email)</p>
-                    <p><strong>Range:</strong> $leave_range_text</p>
-                    <p><strong>Subject:</strong> $subject</p>
-                    <p><strong>Description:</strong><br>$description</p>
-                    <div style='margin-top: 2rem; display: flex; gap: 1rem;'>
-                        <p>Please review this request in the admin dashboard.</p>
+                <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 1rem; overflow: hidden; margin: auto;'>
+                    <div style='background: #4f46e5; padding: 2rem; text-align: center; color: white;'>
+                        <h2 style='margin: 0; font-size: 1.5rem;'>New Leave Request</h2>
                     </div>
-                    <hr style='margin-top: 2rem;'>
-                    <p style='font-size: 0.9rem; color: #666;'>This is an automated notification from RSL Calendar System.</p>
+                    <div style='padding: 2rem;'>
+                        <p><strong>Employee:</strong> $emp_name ($emp_email)</p>
+                        <p><strong>Range:</strong> $leave_range_text</p>
+                        <p><strong>Subject:</strong> $subject</p>
+                        <p><strong>Description:</strong><br>$description</p>
+                        
+                        <div style='margin: 2.5rem 0; text-align: center; display: flex; justify-content: center; gap: 1.5rem;'>
+                            <a href='$approveUrl' style='display: inline-block; padding: 0.75rem 1.5rem; background: #10b981; color: white; text-decoration: none; border-radius: 0.5rem; font-weight: bold; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);'>Accept Request</a>
+                            <a href='$rejectUrl' style='display: inline-block; padding: 0.75rem 1.5rem; background: #ef4444; color: white; text-decoration: none; border-radius: 0.5rem; font-weight: bold; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);'>Reject Request</a>
+                        </div>
+                        
+                        <p style='font-size: 0.9rem; color: #64748b; text-align: center; margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem;'>
+                            You can also manage this request directly on the portal.
+                        </p>
+                    </div>
                 </div>";
 
             $mail->send();

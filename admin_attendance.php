@@ -16,8 +16,44 @@ function formatHours($decimal)
         $minutes = 0;
         $hours++;
     }
-
     return sprintf("%02dh %02dm %02ds", $hours, $minutes, $seconds);
+}
+function getLeaveDays($lRow, $pdo) {
+    $status = strtolower($lRow['status']);
+    if ($status !== 'approved' && $status !== 'partially_approved') {
+        return 0;
+    }
+    if (($status === 'approved' || $status === 'partially_approved') && !empty($lRow['approved_dates'])) {
+        $dates = json_decode($lRow['approved_dates'], true);
+        return is_array($dates) ? count($dates) : 0;
+    }
+    
+    // Calculate working weekdays in range (excluding weekends and holidays)
+    static $holidays = null;
+    if ($holidays === null) {
+        try {
+            $stmt = $pdo->query("SELECT event_date FROM events WHERE type = 'holiday'");
+            $holidays = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (\Exception $e) {
+            $holidays = [];
+        }
+    }
+    
+    $start = new DateTime($lRow['from_date']);
+    $end = new DateTime($lRow['to_date']);
+    $days = 0;
+    for ($d = clone $start; $d <= $end; $d->modify('+1 day')) {
+        $dateStr = $d->format('Y-m-d');
+        $dayOfWeek = $d->format('N');
+        if ($dayOfWeek == 6 || $dayOfWeek == 7) {
+            continue;
+        }
+        if (in_array($dateStr, $holidays)) {
+            continue;
+        }
+        $days++;
+    }
+    return $days;
 }
 
 require_once 'config/db.php';
@@ -32,6 +68,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+$activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'attendance';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filter_month = isset($_GET['filter_month']) ? $_GET['filter_month'] : '';
 
@@ -42,6 +79,7 @@ if (!isset($_GET['search']) && !isset($_GET['filter_date']) && !isset($_GET['fil
     $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
 }
 $records = [];
+$leaves = [];
 $users = [];
 
 try {
@@ -49,36 +87,53 @@ try {
     $usersStmt = $pdo->query("SELECT id, name, emp_id FROM users WHERE role != 'admin' ORDER BY name ASC");
     $users = $usersStmt->fetchAll();
 
-    $where = ["1=1"];
-    $params = [];
+    if ($activeTab === 'leaves') {
+        $where = ["1=1"];
+        $params = [];
+        if ($search !== '') {
+            $where[] = "u.name LIKE ?";
+            $params[] = '%' . $search . '%';
+        }
+        $sql = "SELECT l.*, u.id as user_id, u.name, u.emp_id, u.email 
+                FROM leaves l 
+                JOIN users u ON l.user_id = u.id 
+                WHERE " . implode(" AND ", $where) . " 
+                ORDER BY l.from_date DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $leaves = $stmt->fetchAll();
+    } else {
+        $where = ["1=1"];
+        $params = [];
 
-    if ($search !== '') {
-        $where[] = "u.name LIKE ?";
-        $params[] = '%' . $search . '%';
-    }
-    if ($filter_date !== '') {
-        $where[] = "a.date = ?";
-        $params[] = $filter_date;
-    }
-    if ($filter_month !== '') {
-        $where[] = "DATE_FORMAT(a.date, '%Y-%m') = ?";
-        $params[] = $filter_month;
-    }
+        if ($search !== '') {
+            $where[] = "u.name LIKE ?";
+            $params[] = '%' . $search . '%';
+        }
+        if ($filter_date !== '') {
+            $where[] = "a.date = ?";
+            $params[] = $filter_date;
+        }
+        if ($filter_month !== '') {
+            $where[] = "DATE_FORMAT(a.date, '%Y-%m') = ?";
+            $params[] = $filter_month;
+        }
 
-    $sql = "SELECT a.*, u.id as user_id, u.name, u.emp_id, u.email, u.role 
-            FROM attendance a 
-            JOIN users u ON a.user_id = u.id 
-            WHERE " . implode(" AND ", $where) . " 
-            ORDER BY a.date DESC, a.check_in_time DESC";
+        $sql = "SELECT a.*, u.id as user_id, u.name, u.emp_id, u.email, u.role 
+                FROM attendance a 
+                JOIN users u ON a.user_id = u.id 
+                WHERE " . implode(" AND ", $where) . " 
+                ORDER BY a.date DESC, a.check_in_time DESC";
 
-    // If no filters are applied, add a limit for performance
-    if ($search === '' && $filter_date === '' && $filter_month === '') {
-        $sql .= " LIMIT 50";
+        // If no filters are applied, add a limit for performance
+        if ($search === '' && $filter_date === '' && $filter_month === '') {
+            $sql .= " LIMIT 50";
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $records = $stmt->fetchAll();
     }
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $records = $stmt->fetchAll();
 } catch (PDOException $e) {
     $error = "Error fetching records: " . $e->getMessage();
 }
@@ -87,21 +142,62 @@ include 'includes/header.php';
 ?>
 
 <div class="container" style="margin-top: 1rem;">
+    <!-- Tabs Navigation -->
+    <div class="tabs-navigation" style="display: flex; gap: 1rem; border-bottom: 2px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.5rem; width: 100%;">
+        <a href="?tab=attendance" class="tab-btn <?php echo $activeTab === 'attendance' ? 'active' : ''; ?>" style="font-weight: 700; font-size: 1rem; color: var(--text-main); text-decoration: none; padding: 0.5rem 1rem; position: relative;">
+            Attendance Records
+        </a>
+        <a href="?tab=leaves" class="tab-btn <?php echo $activeTab === 'leaves' ? 'active' : ''; ?>" style="font-weight: 700; font-size: 1rem; color: var(--text-main); text-decoration: none; padding: 0.5rem 1rem; position: relative;">
+            Employees Leave
+        </a>
+    </div>
+    <style>
+        .tab-btn {
+            transition: color 0.2s;
+        }
+        .tab-btn:hover {
+            color: var(--primary-color) !important;
+        }
+        .tab-btn.active {
+            color: var(--primary-color) !important;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+    </style>
+
     <div class="attendance-header-section"
         style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; gap: 1rem;">
         <div
             style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 1rem;">
             <h2
                 style="font-size: 1.8rem; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
-                Employee Attendance
+                <?php echo $activeTab === 'leaves' ? 'Employees Leave' : 'Employee Attendance'; ?>
                 <span
                     style="font-size: 1rem; background: var(--primary-color); color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; display: inline-flex; align-items: center; justify-content: center;"
                     title="Total Records Shown">
-                    <?php echo count($records); ?>
+                    <?php 
+                    if ($activeTab === 'leaves') {
+                        $totalLeaveDays = 0;
+                        foreach ($leaves as $lRow) {
+                            $totalLeaveDays += getLeaveDays($lRow, $pdo);
+                        }
+                        echo $totalLeaveDays;
+                    } else {
+                        echo count($records);
+                    }
+                    ?>
                 </span>
             </h2>
 
-            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+            <?php if ($activeTab === 'attendance' && isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                 <form method="POST" action="process_admin_status.php"
                     style="display: flex; gap: 0.5rem; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 0.5rem; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <label
@@ -122,40 +218,46 @@ include 'includes/header.php';
         <div class="filter-card"
             style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                <input type="hidden" name="tab" value="<?php echo htmlspecialchars($activeTab); ?>">
+                
                 <div style="flex: 1; min-width: 200px;">
                     <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Name</label>
-                    <input type="text" name="search" placeholder="Search..."
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Employee Name</label>
+                    <input type="text" name="search" placeholder="Search by name..."
                         value="<?php echo htmlspecialchars($search); ?>"
                         style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
                 </div>
 
-                <div style="flex: 1; min-width: 150px;">
-                    <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Date</label>
-                    <input type="date" name="filter_date" value="<?php echo htmlspecialchars($filter_date); ?>"
-                        style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
-                </div>
+                <?php if ($activeTab === 'attendance'): ?>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label
+                            style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Date</label>
+                        <input type="date" name="filter_date" value="<?php echo htmlspecialchars($filter_date); ?>"
+                            style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
+                    </div>
 
-                <div style="flex: 1; min-width: 150px;">
-                    <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Month</label>
-                    <input type="month" name="filter_month" value="<?php echo htmlspecialchars($filter_month); ?>"
-                        style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
-                </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label
+                            style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Month</label>
+                        <input type="month" name="filter_month" value="<?php echo htmlspecialchars($filter_month); ?>"
+                            style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
+                    </div>
+                <?php endif; ?>
 
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">Filter</button>
-                    <a href="admin_attendance.php" class="btn"
+                    <a href="admin_attendance.php?tab=<?php echo htmlspecialchars($activeTab); ?>" class="btn"
                         style="text-decoration: none; padding: 0.65rem 1rem;">Clear</a>
-                    <a href="export_attendance.php?<?php echo http_build_query($_GET); ?>" class="btn"
-                        style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        📥 Export
-                    </a>
-                    <button type="button" class="btn btn-primary" onclick="openAddAttendanceOverlay()"
-                        style="background: var(--primary-color); border-color: var(--primary-color); padding: 0.65rem 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                        ➕ Add Attendance
-                    </button>
+                    <?php if ($activeTab === 'attendance'): ?>
+                        <a href="export_attendance.php?<?php echo http_build_query($_GET); ?>" class="btn"
+                            style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            📥 Export
+                        </a>
+                        <button type="button" class="btn btn-primary" onclick="openAddAttendanceOverlay()"
+                            style="background: var(--primary-color); border-color: var(--primary-color); padding: 0.65rem 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                            ➕ Add Attendance
+                        </button>
+                    <?php endif; ?>
                 </div>
             </form>
         </div>
@@ -165,6 +267,12 @@ include 'includes/header.php';
         <div
             style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
             ✅ Attendance recorded successfully!
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_GET['process']) && $_GET['process'] === 'success'): ?>
+        <div
+            style="background: #dcfce7; color: #16a34a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600; border: 1px solid #bbf7d0;">
+            ✅ Leave request updated and notification sent!
         </div>
     <?php endif; ?>
     <?php if (isset($_GET['broadcast']) && $_GET['broadcast'] === 'success'): ?>
@@ -365,123 +473,233 @@ include 'includes/header.php';
     </style>
 
     <div class="dense-terminal-container">
-        <table class="dense-table">
-            <thead>
-                <tr>
-                    <th class="sticky-col-1" style="width: 120px; min-width: 120px;">Date</th>
-                    <th class="sticky-col-2" style="width: 250px; min-width: 250px;">Employee</th>
-                    <th>Check In</th>
-                    <th>Check Out</th>
-                    <th>Break Time</th>
-                    <th>Mode</th>
-                    <th>Status / Total</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($records)): ?>
+        <?php if ($activeTab === 'leaves'): ?>
+            <table class="dense-table">
+                <thead>
                     <tr>
-                        <td colspan="8" style="padding: 3rem; text-align: center; color: var(--text-muted);">
-                            <div style="font-size: 2rem; margin-bottom: 1rem;">🔍</div>
-                            No attendance records found.
-                        </td>
+                        <th class="sticky-col-1" style="width: 250px; min-width: 250px;">Employee</th>
+                        <th>Leave Dates</th>
+                        <th>Subject / Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
-                <?php else: ?>
-                    <?php foreach ($records as $row): ?>
+                </thead>
+                <tbody>
+                    <?php if (empty($leaves)): ?>
                         <tr>
-                            <td class="sticky-col-1" style="font-weight: 600;">
-                                <?php echo date('d M Y', strtotime($row['date'])); ?>
-                            </td>
-                            <td class="sticky-col-2">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
-                                    onclick='showEmployeeDetails(<?php echo json_encode(["id" => $row["user_id"], "name" => $row["name"], "email" => $row["email"], "role" => $row["role"], "emp_id" => $row["emp_id"]]); ?>)'>
-                                    <div
-                                        style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
-                                        <?php echo strtoupper(substr($row['name'], 0, 1)); ?>
-                                    </div>
-                                    <strong
-                                        style="color: var(--primary-color);"><?php echo htmlspecialchars($row['name']); ?></strong>
-                                </div>
-                            </td>
-                            <td>
-                                <span style="color: var(--primary-color); font-weight: 600;">
-                                    <?php echo $row['check_in_time'] ? date('h:i A', strtotime($row['check_in_time'])) : '-'; ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span style="color: #ef4444; font-weight: 600;">
-                                    <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span style="font-weight: 600; color: #f59e0b;">
-                                    <?php
-                                    $break_secs = $row['total_break_seconds'] ?? 0;
-                                    $bh = floor($break_secs / 3600);
-                                    $bm = floor(($break_secs % 3600) / 60);
-                                    echo sprintf("%02d:%02d Hrs", $bh, $bm);
-                                    ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span
-                                    style="font-size: 0.75rem; font-weight: 800; color: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? '#8b5cf6' : '#10b981'; ?>; background: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)'; ?>; padding: 0.3rem 0.6rem; border-radius: 0.5rem; border: 1px solid <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)'; ?>;">
-                                    <?php echo htmlspecialchars($row['work_mode'] ?? 'WFO'); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <?php if ($row['check_out_time']): ?>
-                                    <span
-                                        style="background: #dcfce7; color: #16a34a; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #bbf7d0;">
-                                        <?php echo formatHours($row['total_hours']); ?>
-                                    </span>
-                                <?php else: ?>
-                                    <span
-                                        style="background: #fef9c3; color: #a16207; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #fef08a; display: inline-flex; align-items: center; gap: 0.4rem;">
-                                        <span
-                                            style="width: 8px; height: 8px; background: #eab308; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
-                                        Working
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <div class="kebab-menu">
-                                    <button class="kebab-trigger" onclick="toggleKebab(event, this)" title="Actions">
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                            <circle cx="3" cy="8" r="1.5"/>
-                                            <circle cx="8" cy="8" r="1.5"/>
-                                            <circle cx="13" cy="8" r="1.5"/>
-                                        </svg>
-                                    </button>
-                                    <div class="kebab-dropdown">
-                                        <a href="edit_attendance.php?id=<?php echo $row['id']; ?>" class="kebab-edit">
-                                            <span class="kebab-icon">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                                </svg>
-                                            </span>
-                                            Edit
-                                        </a>
-                                        <div class="kebab-divider"></div>
-                                        <a href="delete_attendance.php?id=<?php echo $row['id']; ?>" class="kebab-delete"
-                                            onclick="return confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')">
-                                            <span class="kebab-icon">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="3 6 5 6 21 6"/>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                                </svg>
-                                            </span>
-                                            Delete
-                                        </a>
-                                    </div>
-                                </div>
+                            <td colspan="5" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                                <div style="font-size: 2rem; margin-bottom: 1rem;">🔍</div>
+                                No leave requests found.
                             </td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    <?php else: ?>
+                        <?php foreach ($leaves as $lRow): ?>
+                            <tr>
+                                <td class="sticky-col-1">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div
+                                            style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
+                                            <?php echo strtoupper(substr($lRow['name'], 0, 1)); ?>
+                                        </div>
+                                        <div>
+                                            <strong style="color: var(--primary-color); display: block;"><?php echo htmlspecialchars($lRow['name']); ?></strong>
+                                            <span style="font-size: 0.75rem; color: var(--text-muted);"><?php echo htmlspecialchars($lRow['emp_id'] ?? ''); ?></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 600; color: var(--text-main);">
+                                        <?php echo date('d M Y', strtotime($lRow['from_date'])); ?> 
+                                        to 
+                                        <?php echo date('d M Y', strtotime($lRow['to_date'])); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: var(--text-main);"><?php echo htmlspecialchars($lRow['subject']); ?></div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); white-space: normal; max-width: 300px;">
+                                        <?php echo htmlspecialchars($lRow['description']); ?>
+                                    </div>
+                                    <?php if (!empty($lRow['attachment'])): ?>
+                                        <div style="margin-top: 0.3rem;">
+                                            <a href="uploads/leaves/<?php echo urlencode($lRow['attachment']); ?>" target="_blank" style="color: var(--primary-color); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                                📎 View Attachment
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    $status = strtolower($lRow['status']);
+                                    if ($status === 'pending') {
+                                        echo '<span style="background: #fef9c3; color: #a16207; padding: 0.25rem 0.6rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; border: 1px solid #fef08a;">Pending</span>';
+                                    } elseif ($status === 'approved') {
+                                        echo '<span style="background: #dcfce7; color: #15803d; padding: 0.25rem 0.6rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; border: 1px solid #bbf7d0;">Approved</span>';
+                                    } elseif ($status === 'partially_approved') {
+                                        echo '<span style="background: #dbeafe; color: #1d4ed8; padding: 0.25rem 0.6rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; border: 1px solid #bfdbfe;">Partially Approved</span>';
+                                    } else {
+                                        echo '<span style="background: #fee2e2; color: #b91c1c; padding: 0.25rem 0.6rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; border: 1px solid #fecaca;">Rejected</span>';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php if ($status === 'pending'): ?>
+                                        <div style="display: flex; gap: 0.4rem;">
+                                            <a href="process_leave.php?id=<?php echo $lRow['id']; ?>&status=approved" class="btn" 
+                                               style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem;"
+                                               onclick="return confirm('Are you sure you want to approve this leave request?')">
+                                                Approve
+                                            </a>
+                                            <a href="process_leave.php?id=<?php echo $lRow['id']; ?>&status=rejected" class="btn" 
+                                               style="background: #ef4444; border-color: #ef4444; color: white; text-decoration: none; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem;"
+                                               onclick="return confirm('Are you sure you want to reject this leave request?')">
+                                                Reject
+                                            </a>
+                                        </div>
+                                    <?php else: ?>
+                                        <?php 
+                                        $today = date('Y-m-d');
+                                        $isPast = ($lRow['to_date'] < $today);
+                                        if (!$isPast): 
+                                            $lRowJson = htmlspecialchars(json_encode($lRow));
+                                        ?>
+                                            <button class="btn" 
+                                               style="background: #ef4444; border-color: #ef4444; color: white; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem; display: inline-block; cursor: pointer;"
+                                               onclick="openAdminCancelModal(<?php echo $lRowJson; ?>)">
+                                                Cancel
+                                            </button>
+                                        <?php else: ?>
+                                            <button class="btn" disabled 
+                                               style="background: #cbd5e1; border-color: #cbd5e1; color: #64748b; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem; cursor: not-allowed; opacity: 0.6;"
+                                               title="Cannot cancel past leave requests">
+                                                Cancel
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <table class="dense-table">
+                <thead>
+                    <tr>
+                        <th class="sticky-col-1" style="width: 120px; min-width: 120px;">Date</th>
+                        <th class="sticky-col-2" style="width: 250px; min-width: 250px;">Employee</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Break Time</th>
+                        <th>Mode</th>
+                        <th>Status / Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($records)): ?>
+                        <tr>
+                            <td colspan="8" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                                <div style="font-size: 2rem; margin-bottom: 1rem;">🔍</div>
+                                No attendance records found.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($records as $row): ?>
+                            <tr>
+                                <td class="sticky-col-1" style="font-weight: 600;">
+                                    <?php echo date('d M Y', strtotime($row['date'])); ?>
+                                </td>
+                                <td class="sticky-col-2">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                                        onclick='showEmployeeDetails(<?php echo json_encode(["id" => $row["user_id"], "name" => $row["name"], "email" => $row["email"], "role" => $row["role"], "emp_id" => $row["emp_id"]]); ?>)'>
+                                        <div
+                                            style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
+                                            <?php echo strtoupper(substr($row['name'], 0, 1)); ?>
+                                        </div>
+                                        <strong
+                                            style="color: var(--primary-color);"><?php echo htmlspecialchars($row['name']); ?></strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="color: var(--primary-color); font-weight: 600;">
+                                        <?php echo $row['check_in_time'] ? date('h:i A', strtotime($row['check_in_time'])) : '-'; ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="color: #ef4444; font-weight: 600;">
+                                        <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 600; color: #f59e0b;">
+                                        <?php
+                                        $break_secs = $row['total_break_seconds'] ?? 0;
+                                        $bh = floor($break_secs / 3600);
+                                        $bm = floor(($break_secs % 3600) / 60);
+                                        echo sprintf("%02d:%02d Hrs", $bh, $bm);
+                                        ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span
+                                        style="font-size: 0.75rem; font-weight: 800; color: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? '#8b5cf6' : '#10b981'; ?>; background: <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)'; ?>; padding: 0.3rem 0.6rem; border-radius: 0.5rem; border: 1px solid <?php echo ($row['work_mode'] ?? 'WFO') === 'WFH' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)'; ?>;">
+                                        <?php echo htmlspecialchars($row['work_mode'] ?? 'WFO'); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if ($row['check_out_time']): ?>
+                                        <span
+                                            style="background: #dcfce7; color: #16a34a; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #bbf7d0;">
+                                            <?php echo formatHours($row['total_hours']); ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span
+                                            style="background: #fef9c3; color: #a16207; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #fef08a; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                            <span
+                                                style="width: 8px; height: 8px; background: #eab308; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
+                                            Working
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div class="kebab-menu">
+                                        <button class="kebab-trigger" onclick="toggleKebab(event, this)" title="Actions">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                                <circle cx="3" cy="8" r="1.5"/>
+                                                <circle cx="8" cy="8" r="1.5"/>
+                                                <circle cx="13" cy="8" r="1.5"/>
+                                            </svg>
+                                        </button>
+                                        <div class="kebab-dropdown">
+                                            <a href="edit_attendance.php?id=<?php echo $row['id']; ?>" class="kebab-edit">
+                                                <span class="kebab-icon">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                    </svg>
+                                                </span>
+                                                Edit
+                                            </a>
+                                            <div class="kebab-divider"></div>
+                                            <a href="delete_attendance.php?id=<?php echo $row['id']; ?>" class="kebab-delete"
+                                                onclick="return confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')">
+                                                <span class="kebab-icon">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="3 6 5 6 21 6"/>
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                    </svg>
+                                                </span>
+                                                Delete
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -869,4 +1087,5 @@ include 'includes/header.php';
     }
 </style>
 
+<?php include 'includes/modals.php'; ?>
 <?php include 'includes/footer.php'; ?>

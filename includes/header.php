@@ -668,7 +668,7 @@ $isLoginPage = ($currentPage == 'login.php');
 
                             $notifications = [];
                             $showNotificationBell = $isLoggedIn; // Bell visible globally for logged in users
-
+                    
                             $curRole = $_SESSION['role'] ?? 'employee';
                             $curUserId = $_SESSION['user_id'] ?? null;
 
@@ -804,26 +804,36 @@ $isLoginPage = ($currentPage == 'login.php');
                                         <div
                                             style="padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: 700; color: var(--text-main);">
                                             Notifications</div>
-                                            
+
                                         <!-- Tabs inside Dropdown -->
-                                        <div class="notif-tabs" style="display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-color); font-size: 0.8rem; font-weight: 600;">
-                                            <div class="notif-tab active" data-tab="all" style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--primary-color);">All (<span id="count-all">0</span>)</div>
-                                            <div class="notif-tab" data-tab="unread" style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">Unread (<span id="count-unread">0</span>)</div>
-                                            <div class="notif-tab" data-tab="read" style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">Read (<span id="count-read">0</span>)</div>
+                                        <div class="notif-tabs"
+                                            style="display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-color); font-size: 0.8rem; font-weight: 600;">
+                                            <div class="notif-tab active" data-tab="all"
+                                                style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--primary-color);">
+                                                All (<span id="count-all">0</span>)</div>
+                                            <div class="notif-tab" data-tab="unread"
+                                                style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+                                                Unread (<span id="count-unread">0</span>)</div>
+                                            <div class="notif-tab" data-tab="read"
+                                                style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+                                                Read (<span id="count-read">0</span>)</div>
                                         </div>
 
                                         <div style="max-height: 300px; overflow-y: auto;">
                                             <?php if (count($notifications) > 0): ?>
                                                 <?php foreach ($notifications as $n): ?>
-                                                    <div class="notif-item" data-id="<?php echo $n['id']; ?>" onclick="markAsRead(event, '<?php echo $n['id']; ?>')"
+                                                    <div class="notif-item" data-id="<?php echo $n['id']; ?>"
+                                                        onclick="markAsRead(event, '<?php echo $n['id']; ?>')"
                                                         style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; gap: 0.75rem; align-items: flex-start; transition: background 0.2s;"
                                                         onmouseover="this.style.background='var(--bg-color)'"
                                                         onmouseout="this.style.background='transparent'">
                                                         <div style="font-size: 1.2rem;"><?php echo $n['icon']; ?></div>
                                                         <div style="flex: 1;">
-                                                            <div style="font-weight: 600; color: var(--text-main); font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                                                            <div
+                                                                style="font-weight: 600; color: var(--text-main); font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
                                                                 <span><?php echo $n['title']; ?></span>
-                                                                <span class="unread-dot" style="display: none; width: 6px; height: 6px; background: #6366f1; border-radius: 50%; flex-shrink: 0;"></span>
+                                                                <span class="unread-dot"
+                                                                    style="display: none; width: 6px; height: 6px; background: #6366f1; border-radius: 50%; flex-shrink: 0;"></span>
                                                             </div>
                                                             <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem;">
                                                                 <?php echo $n['subtitle']; ?>

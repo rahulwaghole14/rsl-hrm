@@ -12,7 +12,8 @@ session_start();
 
 // Redirect to login if not authorized as admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login.php");
+    $redirectQuery = !empty($_GET) ? 'process_leave.php?' . http_build_query($_GET) : 'admin_attendance.php?tab=leaves';
+    header("Location: login.php?redirect=" . urlencode($redirectQuery));
     exit;
 }
 
@@ -50,9 +51,36 @@ if ($leave_id && $status) {
                 }
                 $json_approved_dates = json_encode($approved_days);
             } else {
-                // If "Approve" clicked but no days checked, reject it or keep pending? 
-                // We'll treat it as rejected if no days are selected.
-                $final_status = 'rejected';
+                // Get all working weekdays (no holiday, no weekend)
+                if (!function_exists('isHolidayOrWeekend')) {
+                    function isHolidayOrWeekend($date, $pdo) {
+                        $timestamp = strtotime($date);
+                        $dayOfWeek = date('N', $timestamp);
+                        if ($dayOfWeek == 6 || $dayOfWeek == 7) {
+                            return true;
+                        }
+                        $stmt = $pdo->prepare("SELECT COUNT(*) FROM events WHERE event_date = ? AND type = 'holiday'");
+                        $stmt->execute([$date]);
+                        return $stmt->fetchColumn() > 0;
+                    }
+                }
+
+                $start = new DateTime($leaveData['from_date']);
+                $end = new DateTime($leaveData['to_date']);
+                $auto_approved = [];
+                for ($d = clone $start; $d <= $end; $d->modify('+1 day')) {
+                    $dateStr = $d->format('Y-m-d');
+                    if (!isHolidayOrWeekend($dateStr, $pdo)) {
+                        $auto_approved[] = $dateStr;
+                    }
+                }
+
+                if (!empty($auto_approved)) {
+                    $json_approved_dates = json_encode($auto_approved);
+                    $final_status = 'approved';
+                } else {
+                    $final_status = 'rejected';
+                }
             }
         }
 
@@ -98,8 +126,15 @@ if ($leave_id && $status) {
                 $mail->isHTML(true);
                 $mail->Subject = "Leave Request Status: " . str_replace('_', ' ', ucfirst($final_status));
 
-                $statusText = str_replace('_', ' ', ucfirst($final_status));
-                $statusColor = ($final_status === 'approved' || $final_status === 'partially_approved') ? '#10b981' : '#ef4444';
+                if ($final_status === 'pending') {
+                    $statusText = "Reverted to Pending";
+                    $statusColor = '#64748b';
+                    $bodyText = "Your leave request for <strong>$leave_range</strong> has been reverted back to pending for review.";
+                } else {
+                    $statusText = str_replace('_', ' ', ucfirst($final_status));
+                    $statusColor = ($final_status === 'approved' || $final_status === 'partially_approved') ? '#10b981' : '#ef4444';
+                    $bodyText = "Your leave request for <strong>$leave_range</strong> has been processed.";
+                }
 
                 $mail->Body = "
                     <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 1rem; overflow: hidden;'>
@@ -108,11 +143,11 @@ if ($leave_id && $status) {
                         </div>
                         <div style='padding: 2rem;'>
                             <p>Hi <strong>$emp_name</strong>,</p>
-                            <p>Your leave request for <strong>$leave_range</strong> has been processed.</p>
+                            <p>$bodyText</p>
                             
                             <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0; border: 1px solid #e2e8f0;'>
-                                <p><strong>Final Status:</strong> <span style='color: $statusColor; font-weight: bold;'>$statusText</span></p>
-                                <p><strong>Approved Dates:</strong> $approved_list_str</p>
+                                <p><strong>Status:</strong> <span style='color: $statusColor; font-weight: bold;'>$statusText</span></p>
+                                " . ($final_status !== 'pending' ? "<p><strong>Approved Dates:</strong> $approved_list_str</p>" : "") . "
                             </div>
 
                             <p>Best Regards,<br>
@@ -127,12 +162,12 @@ if ($leave_id && $status) {
             }
         }
 
-        header("Location: index.php?process=success");
+        header("Location: admin_attendance.php?tab=leaves&process=success");
         exit;
     } catch (PDOException $e) {
         die("Error: " . $e->getMessage());
     }
 } else {
-    header("Location: index.php");
+    header("Location: admin_attendance.php?tab=leaves");
 }
 ?>

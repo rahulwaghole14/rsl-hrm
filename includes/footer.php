@@ -261,6 +261,28 @@ document.addEventListener('DOMContentLoaded', function() {
         div.textContent = str;
         return div.innerHTML;
     }
+
+    // Auto-submit search forms in the application on user input (debounced)
+    const formsWithSearch = document.querySelectorAll('form');
+    formsWithSearch.forEach(form => {
+        const searchInput = form.querySelector('input[name="search"]');
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    form.submit();
+                }, 500); // 500ms debounce
+            });
+
+            // Restore focus and cursor position to end of input if search value exists
+            if (searchInput.value) {
+                searchInput.focus();
+                const length = searchInput.value.length;
+                searchInput.setSelectionRange(length, length);
+            }
+        }
+    });
 });
 </script>
 

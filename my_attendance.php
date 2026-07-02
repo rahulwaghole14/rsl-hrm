@@ -30,37 +30,109 @@ $stmt = $pdo->prepare("SELECT * FROM attendance WHERE user_id = ? AND date = ?")
 $stmt->execute([$userId, $today]);
 $todayAttendance = $stmt->fetch();
 
-// Get last 7 days for graph
-$stmt = $pdo->prepare("SELECT date, total_hours, status, check_in_time, total_break_seconds, last_break_start FROM attendance WHERE user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY date ASC");
-$stmt->execute([$userId]);
+// Fetch leave counts for the logged-in user
+$leaveCounts = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+try {
+    // Fetch national holidays
+    $holidaysStmt = $pdo->query("SELECT event_date FROM events WHERE type = 'holiday'");
+    $holidays = $holidaysStmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $stmtLeaves = $pdo->prepare("SELECT status, from_date, to_date, approved_dates FROM leaves WHERE user_id = ?");
+    $stmtLeaves->execute([$userId]);
+    $leaveRows = $stmtLeaves->fetchAll();
+
+    foreach ($leaveRows as $lRow) {
+        $status = strtolower($lRow['status']);
+        $dayCount = 0;
+
+        if (($status === 'approved' || $status === 'partially_approved') && !empty($lRow['approved_dates'])) {
+            $dates = json_decode($lRow['approved_dates'], true);
+            if (is_array($dates)) {
+                $dayCount = count($dates);
+            }
+        } else {
+            // Calculate working days in range
+            $start = new DateTime($lRow['from_date']);
+            $end = new DateTime($lRow['to_date']);
+            for ($d = clone $start; $d <= $end; $d->modify('+1 day')) {
+                $dateStr = $d->format('Y-m-d');
+                $dayOfWeek = $d->format('N');
+                if ($dayOfWeek == 6 || $dayOfWeek == 7) {
+                    continue; // Skip weekends
+                }
+                if (in_array($dateStr, $holidays)) {
+                    continue; // Skip holidays
+                }
+                $dayCount++;
+            }
+        }
+
+        if ($status === 'pending') {
+            $leaveCounts['pending'] += $dayCount;
+        } elseif ($status === 'approved' || $status === 'partially_approved') {
+            $leaveCounts['approved'] += $dayCount;
+        } elseif ($status === 'rejected') {
+            $leaveCounts['rejected'] += $dayCount;
+        }
+    }
+} catch (PDOException $e) {
+    // Fail silently
+}
+
+// Get week offset for navigation
+$weekOffset = isset($_GET['week_offset']) ? (int)$_GET['week_offset'] : 0;
+$mondayTime = strtotime("this week Monday");
+if ($weekOffset !== 0) {
+    $mondayTime = strtotime("$weekOffset weeks", $mondayTime);
+}
+$startDate = date('Y-m-d', $mondayTime);
+$endDate = date('Y-m-d', strtotime('+6 days', $mondayTime));
+
+// Get week attendance history for graph
+$stmt = $pdo->prepare("SELECT date, total_hours, status, check_in_time, total_break_seconds, last_break_start FROM attendance WHERE user_id = ? AND date BETWEEN ? AND ? ORDER BY date ASC");
+$stmt->execute([$userId, $startDate, $endDate]);
 $attendanceHistory = $stmt->fetchAll();
 
-$labels = [];
-$dataValues = [];
+// Map attendance history by date
+$historyMap = [];
 foreach ($attendanceHistory as $row) {
-    $labels[] = date('D (d M)', strtotime($row['date']));
+    $historyMap[$row['date']] = $row;
+}
+
+$labels = [];
+$fullDates = [];
+$dataValues = [];
+for ($i = 0; $i < 7; $i++) {
+    $dayTime = strtotime("+$i days", $mondayTime);
+    $dayDate = date('Y-m-d', $dayTime);
+    
+    $labels[] = [date('D', $dayTime), date('j M', $dayTime)]; // Multi-line label: Day name + Date (e.g., ["Mon", "29 Jun"])
+    $fullDates[] = date('D (j M)', $dayTime); // Full date for tooltip
     
     $hours = 0;
-    if ($row['status'] === 'checked_out') {
-        $hours = (float)($row['total_hours'] ?? 0);
-    } else {
-        // Session in progress
-        $check_in_ts = strtotime($row['date'] . ' ' . $row['check_in_time']);
-        $total_break = (int)$row['total_break_seconds'];
-        $now = time();
-        
-        if ($row['status'] === 'on_break') {
-            // If on break, the working time stopped at last_break_start
-            $break_start = strtotime($row['date'] . ' ' . ($row['last_break_start'] ?? 'now'));
-            $total_elapsed = $break_start - $check_in_ts;
+    if (isset($historyMap[$dayDate])) {
+        $row = $historyMap[$dayDate];
+        if ($row['status'] === 'checked_out') {
+            $hours = (float)($row['total_hours'] ?? 0);
         } else {
-            // Still working: elapsed is up to now
-            $total_elapsed = $now - $check_in_ts;
+            // Session in progress
+            $check_in_ts = strtotime($row['date'] . ' ' . $row['check_in_time']);
+            $total_break = (int)$row['total_break_seconds'];
+            $now = time();
+            
+            if ($row['status'] === 'on_break') {
+                // If on break, the working time stopped at last_break_start
+                $break_start = strtotime($row['date'] . ' ' . ($row['last_break_start'] ?? 'now'));
+                $total_elapsed = $break_start - $check_in_ts;
+            } else {
+                // Still working: elapsed is up to now
+                $total_elapsed = $now - $check_in_ts;
+            }
+            
+            $working_sec = $total_elapsed - $total_break;
+            if ($working_sec < 0) $working_sec = 0;
+            $hours = round($working_sec / 3600, 2);
         }
-        
-        $working_sec = $total_elapsed - $total_break;
-        if ($working_sec < 0) $working_sec = 0;
-        $hours = round($working_sec / 3600, 2);
     }
     
     $dataValues[] = $hours;
@@ -70,8 +142,78 @@ include 'includes/header.php';
 ?>
 
 <div class="container" style="margin-top: 1rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h2 style="font-size: 1.5rem;">My Attendance</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; position: relative;">
+        <h2 style="font-size: 1.5rem; margin: 0;">My Attendance</h2>
+        
+        <div style="position: relative;" id="totalLeavesWrap">
+            <button class="btn" onclick="toggleLeavesDropdown(event)"
+                style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; border-radius: 2rem; border: 1px solid var(--border-color); background: var(--card-bg, #fff); color: var(--text-main); font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                <span>🍃</span> Total Leaves
+            </button>
+            <div id="leavesCountDropdown" class="leaves-count-dropdown">
+                <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; font-size: 0.95rem;">
+                    Leave Summary
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-weight: 500;">Pending:</span>
+                        <span style="background: #fef9c3; color: #a16207; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #fef08a; min-width: 28px; text-align: center;">
+                            <?php echo $leaveCounts['pending']; ?>
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-weight: 500;">Approved:</span>
+                        <span style="background: #dcfce7; color: #15803d; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #bbf7d0; min-width: 28px; text-align: center;">
+                            <?php echo $leaveCounts['approved']; ?>
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-weight: 500;">Rejected:</span>
+                        <span style="background: #fee2e2; color: #b91c1c; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #fecaca; min-width: 28px; text-align: center;">
+                            <?php echo $leaveCounts['rejected']; ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .leaves-count-dropdown {
+                display: none; 
+                position: absolute; 
+                top: calc(100% + 8px); 
+                right: 0; 
+                width: 220px; 
+                background: var(--card-bg, #fff); 
+                border: 1px solid var(--border-color); 
+                border-radius: 1rem; 
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); 
+                padding: 1.2rem; 
+                z-index: 1000;
+                animation: dropdownFadeIn 0.2s ease;
+            }
+            .leaves-count-dropdown.active {
+                display: block !important;
+            }
+            @keyframes dropdownFadeIn {
+                from { opacity: 0; transform: translateY(-8px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+        <script>
+            function toggleLeavesDropdown(e) {
+                e.stopPropagation();
+                const dropdown = document.getElementById('leavesCountDropdown');
+                dropdown.classList.toggle('active');
+            }
+            document.addEventListener('click', function(e) {
+                const wrap = document.getElementById('totalLeavesWrap');
+                const dropdown = document.getElementById('leavesCountDropdown');
+                if (wrap && dropdown && !wrap.contains(e.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        </script>
     </div>
 
     <?php if (isset($_SESSION['msg'])): ?>
@@ -193,7 +335,68 @@ include 'includes/header.php';
 
         <!-- Attendance Graph -->
         <div class="card attendance-graph-card" style="margin: 0;">
-            <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-main);">Last 7 Days</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <h3 style="font-size: 1.1rem; color: var(--text-main); margin: 0;">
+                    <?php 
+                    if ($weekOffset === 0) {
+                        echo "Current Week";
+                    } else {
+                        echo "Week of " . date('d M Y', $mondayTime);
+                    }
+                    ?>
+                </h3>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <?php
+                    $prevParams = $_GET;
+                    $prevParams['week_offset'] = $weekOffset - 1;
+                    $prevLink = '?' . http_build_query($prevParams);
+
+                    $nextParams = $_GET;
+                    $nextParams['week_offset'] = $weekOffset + 1;
+                    $nextLink = '?' . http_build_query($nextParams);
+                    ?>
+                    <a href="<?php echo htmlspecialchars($prevLink); ?>" class="graph-nav-btn" title="Previous Week">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </a>
+                    <?php if ($weekOffset !== 0): ?>
+                        <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['week_offset' => 0]))); ?>" class="btn"
+                           style="padding: 0.3rem 0.75rem; font-size: 0.75rem; border: 1px solid var(--border-color); text-decoration: none; color: var(--text-muted); border-radius: 2rem; font-weight: 600; background: var(--card-bg); transition: all 0.2s;">
+                            Current Week
+                        </a>
+                    <?php endif; ?>
+                    <a href="<?php echo htmlspecialchars($nextLink); ?>" class="graph-nav-btn" title="Next Week">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            
+            <style>
+                .graph-nav-btn {
+                    width: 32px;
+                    height: 32px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    background: var(--bg-color, rgba(0, 0, 0, 0.02));
+                    color: var(--text-muted);
+                    border: 1px solid var(--border-color);
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-decoration: none;
+                }
+                .graph-nav-btn:hover {
+                    background: var(--primary-color);
+                    color: #fff;
+                    border-color: var(--primary-color);
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+                }
+            </style>
             <div style="height: 250px;">
                 <canvas id="attendanceChart"></canvas>
             </div>
@@ -335,6 +538,8 @@ include 'includes/header.php';
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const ctx = document.getElementById('attendanceChart').getContext('2d');
+        const fullDates = <?php echo json_encode($fullDates); ?>;
+        
         new Chart(ctx, {
             type: 'bar',
             data: {
@@ -366,6 +571,10 @@ include 'includes/header.php';
                     x: {
                         grid: {
                             display: false
+                        },
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0
                         }
                     }
                 },
@@ -375,6 +584,10 @@ include 'includes/header.php';
                     },
                     tooltip: {
                         callbacks: {
+                            title: function(context) {
+                                const index = context[0].dataIndex;
+                                return fullDates[index] || '';
+                            },
                             label: function(context) {
                                 let val = context.raw;
                                 if (val === null || val === undefined) return '';

@@ -21,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['name'] = $user['name'];
                     $_SESSION['role'] = $user['role'];
-                    header("Location: index.php");
+                    $redirectUrl = isset($_GET['redirect']) ? $_GET['redirect'] : 'index.php';
+                    header("Location: " . $redirectUrl);
                     exit;
                 }
             } else {
@@ -475,7 +476,7 @@ include 'includes/header.php';
                     </div>
                 <?php endif; ?>
 
-                <form method="POST">
+                <form method="POST" action="login.php<?php echo isset($_GET['redirect']) ? '?redirect=' . urlencode($_GET['redirect']) : ''; ?>">
                     <div class="login-premium-form-group">
                         <label>Email address</label>
                         <input type="email" name="email" required placeholder="Enter your email address">
