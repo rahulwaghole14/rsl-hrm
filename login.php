@@ -21,7 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['name'] = $user['name'];
                     $_SESSION['role'] = $user['role'];
-                    $redirectUrl = isset($_GET['redirect']) ? $_GET['redirect'] : 'index.php';
+                    if (isset($_GET['redirect'])) {
+                        $redirectUrl = $_GET['redirect'];
+                    } else {
+                        $redirectUrl = ($user['role'] === 'admin') ? 'admin_attendance.php' : 'my_attendance.php';
+                    }
                     header("Location: " . $redirectUrl);
                     exit;
                 }
