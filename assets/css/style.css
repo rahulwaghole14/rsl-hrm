@@ -584,6 +584,18 @@ body {
     border-color: #c7d2fe;
 }
 
+.day-cell.wfh-day {
+    background: linear-gradient(135deg, rgba(243, 232, 255, 0.5) 0%, rgba(250, 245, 255, 0.7) 100%) !important;
+    border: 1.5px solid #d8b4fe !important;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .day-cell.wfh-day {
+    background: rgba(88, 28, 135, 0.25) !important;
+    border-color: rgba(168, 85, 247, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
 .day-cell.today {
     background: rgba(79, 70, 229, 0.18);
     /* Stronger faded blue tint */
@@ -720,6 +732,29 @@ body {
 
 .event-tag.type-half-day {
     background: #3b82f6;
+}
+
+.event-tag.type-wfh {
+    background: #f3e8ff;
+    color: #7e22ce;
+    border-left: 3px solid #a855f7;
+    border-radius: 6px;
+    padding: 6px 8px 6px 10px;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 4px rgba(168, 85, 247, 0.05);
+}
+
+[data-theme="dark"] .event-tag.type-wfh {
+    background: rgba(147, 51, 234, 0.2);
+    color: #e9d5ff;
+    border-left: 3px solid #a855f7;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .leave-tag {

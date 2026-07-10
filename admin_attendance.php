@@ -138,6 +138,40 @@ try {
     $error = "Error fetching records: " . $e->getMessage();
 }
 
+// Calculate month-wise attendance summary if name and month are searched
+$showSummary = ($activeTab === 'attendance' && $search !== '' && $filter_month !== '');
+$userSummaries = [];
+
+if ($showSummary && !empty($records)) {
+    foreach ($records as $row) {
+        $uid = $row['user_id'];
+        if (!isset($userSummaries[$uid])) {
+            $userSummaries[$uid] = [
+                'name' => $row['name'],
+                'emp_id' => $row['emp_id'],
+                'total_days' => 0,
+                'checked_out_days' => 0,
+                'total_hours' => 0.0,
+                'wfh_days' => 0,
+                'wfo_days' => 0,
+                'total_break_secs' => 0
+            ];
+        }
+        
+        $userSummaries[$uid]['total_days']++;
+        if ($row['status'] === 'checked_out') {
+            $userSummaries[$uid]['checked_out_days']++;
+            $userSummaries[$uid]['total_hours'] += (float)$row['total_hours'];
+        }
+        if (($row['work_mode'] ?? 'WFO') === 'WFH') {
+            $userSummaries[$uid]['wfh_days']++;
+        } else {
+            $userSummaries[$uid]['wfo_days']++;
+        }
+        $userSummaries[$uid]['total_break_secs'] += (int)($row['total_break_seconds'] ?? 0);
+    }
+}
+
 include 'includes/header.php';
 ?>
 
@@ -233,6 +267,7 @@ include 'includes/header.php';
                         <label
                             style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Date</label>
                         <input type="date" name="filter_date" value="<?php echo htmlspecialchars($filter_date); ?>"
+                            onchange="this.form.submit()"
                             style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
                     </div>
 
@@ -240,6 +275,7 @@ include 'includes/header.php';
                         <label
                             style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Month</label>
                         <input type="month" name="filter_month" value="<?php echo htmlspecialchars($filter_month); ?>"
+                            onchange="this.form.submit()"
                             style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
                     </div>
                 <?php endif; ?>
@@ -472,6 +508,119 @@ include 'includes/header.php';
         }
     </style>
 
+    <?php if ($showSummary && !empty($userSummaries)): ?>
+        <div class="monthly-summary-container" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+            <h3 style="font-size: 1.2rem; color: var(--text-main); margin: 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                📊 <span>Monthly Attendance Summary (<?php echo date('F Y', strtotime($filter_month . '-01')); ?>)</span>
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; width: 100%;">
+                <?php foreach ($userSummaries as $uid => $summary): 
+                    $avgHours = $summary['checked_out_days'] > 0 ? ($summary['total_hours'] / $summary['checked_out_days']) : 0;
+                    $avgHrs = floor($avgHours);
+                    $avgMins = round(($avgHours - $avgHrs) * 60);
+                    if ($avgMins >= 60) { $avgMins = 0; $avgHrs += 1; }
+
+                    $totHrs = floor($summary['total_hours']);
+                    $totMins = round(($summary['total_hours'] - $totHrs) * 60);
+                    if ($totMins >= 60) { $totMins = 0; $totHrs += 1; }
+                ?>
+                    <div class="card summary-card" style="margin: 0; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; background: var(--card-bg, rgba(255, 255, 255, 0.6)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 1.25rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); width: 100%;">
+                        <!-- Header: Profile & ID -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding-bottom: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-color), #4f46e5); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25); flex-shrink: 0;">
+                                    <?php echo strtoupper(substr($summary['name'], 0, 1)); ?>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1.2rem; color: var(--text-main); font-weight: 800; letter-spacing: -0.02em;"><?php echo htmlspecialchars($summary['name']); ?></h4>
+                                    <p style="margin: 0.2rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                        <span style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">ID: <?php echo htmlspecialchars($summary['emp_id']); ?></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 0.8rem; background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.3rem 0.8rem; border-radius: 2rem; font-weight: 700;">
+                                    <?php echo date('F Y', strtotime($filter_month . '-01')); ?>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Body: Grid stats (3 columns) -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; align-items: stretch;">
+                            <!-- Days Present -->
+                            <div style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary-color); flex-shrink: 0;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"></path>
+                                        </svg>
+                                    </div>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Days Present</span>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); line-height: 1;">
+                                        <?php echo $summary['total_days']; ?> <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">Days</span>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; display: flex; gap: 0.4rem;">
+                                        <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">WFO: <?php echo $summary['wfo_days']; ?></span>
+                                        <span style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">WFH: <?php echo $summary['wfh_days']; ?></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Average Daily Hours -->
+                            <div style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
+                                        </svg>
+                                    </div>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Average Daily</span>
+                                </div>
+                                <div>
+                                    <div style="display: flex; align-items: baseline; gap: 0.15rem; line-height: 1;">
+                                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo $avgHrs; ?></span>
+                                        <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-right: 0.3rem;">h</span>
+                                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo sprintf("%02d", $avgMins); ?></span>
+                                        <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">m</span>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.7rem; font-weight: 600;">
+                                        Across checked-out days
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Hours Worked -->
+                            <div style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>
+                                        </svg>
+                                    </div>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total Hours</span>
+                                </div>
+                                <div>
+                                    <div style="display: flex; align-items: baseline; gap: 0.15rem; line-height: 1;">
+                                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo $totHrs; ?></span>
+                                        <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-right: 0.3rem;">h</span>
+                                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo sprintf("%02d", $totMins); ?></span>
+                                        <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">m</span>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.7rem; font-weight: 600;">
+                                        Cumulative this month
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="dense-terminal-container">
         <?php if ($activeTab === 'leaves'): ?>
             <table class="dense-table">
@@ -647,7 +796,14 @@ include 'includes/header.php';
                                     </span>
                                 </td>
                                 <td>
-                                    <?php if ($row['check_out_time']): ?>
+                                    <?php if ($row['status'] === 'on_break'): ?>
+                                        <span
+                                            style="background: #ffedd5; color: #ea580c; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #fed7aa; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                            <span
+                                                style="width: 8px; height: 8px; background: #ea580c; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
+                                            Breaking
+                                        </span>
+                                    <?php elseif ($row['check_out_time'] || $row['status'] === 'checked_out'): ?>
                                         <span
                                             style="background: #dcfce7; color: #16a34a; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #bbf7d0;">
                                             <?php echo formatHours($row['total_hours']); ?>

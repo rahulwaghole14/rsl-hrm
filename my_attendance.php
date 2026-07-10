@@ -20,6 +20,15 @@ function formatDuration($seconds)
     return sprintf("%d Hr %02d Min", $h, $m);
 }
 
+// Helper function to format decimal hours into "X Hr Y Min"
+function formatDecimalHours($hours)
+{
+    if (!$hours || $hours < 0)
+        return "0 Hr 00 Min";
+    $seconds = round($hours * 3600);
+    return formatDuration($seconds);
+}
+
 $today = date('Y-m-d');
 
 // Auto-checkout any unclosed sessions from previous days at 23:59:59
@@ -29,6 +38,153 @@ autoCheckoutForgotten($pdo, $userId);
 $stmt = $pdo->prepare("SELECT * FROM attendance WHERE user_id = ? AND date = ?");
 $stmt->execute([$userId, $today]);
 $todayAttendance = $stmt->fetch();
+
+// Calculate weekly and monthly average working hours & counts
+$weeklyAvgHours = 0;
+$monthlyAvgHours = 0;
+$weeklyCount = 0;
+$monthlyCount = 0;
+
+try {
+    // 1. Weekly Average & Count
+    $stmtWeekly = $pdo->prepare("
+        SELECT AVG(total_hours) as avg_hours, COUNT(*) as cnt
+        FROM attendance 
+        WHERE user_id = ? 
+          AND YEARWEEK(date, 1) = YEARWEEK(CURDATE(), 1) 
+          AND status = 'checked_out'
+    ");
+    $stmtWeekly->execute([$userId]);
+    $weeklyRow = $stmtWeekly->fetch();
+    $weeklyAvgHours = (float)($weeklyRow['avg_hours'] ?? 0);
+    $weeklyCount = (int)($weeklyRow['cnt'] ?? 0);
+
+    // 2. Monthly Average & Count
+    $stmtMonthly = $pdo->prepare("
+        SELECT AVG(total_hours) as avg_hours, COUNT(*) as cnt
+        FROM attendance 
+        WHERE user_id = ? 
+          AND MONTH(date) = MONTH(CURDATE()) 
+          AND YEAR(date) = YEAR(CURDATE()) 
+          AND status = 'checked_out'
+    ");
+    $stmtMonthly->execute([$userId]);
+    $monthlyRow = $stmtMonthly->fetch();
+    $monthlyAvgHours = (float)($monthlyRow['avg_hours'] ?? 0);
+    $monthlyCount = (int)($monthlyRow['cnt'] ?? 0);
+} catch (PDOException $e) {
+    // Fail silently
+}
+
+// Calculate current month's performance score for the logged-in employee
+$currentMonthStr = date('Y-m');
+$empPerformanceScore = 0;
+$empRating = '';
+$empRank = 0;
+
+function getRatingBadgeStyle($rating) {
+    switch ($rating) {
+        case 'best': return 'background: #dcfce7; color: #16a34a; border-color: #bbf7d0;';
+        case 'better': return 'background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe;';
+        case 'good': return 'background: #f3e8ff; color: #7e22ce; border-color: #e9d5ff;';
+        case 'average': return 'background: #fef9c3; color: #a16207; border-color: #fef08a;';
+        case 'poor': return 'background: #fee2e2; color: #b91c1c; border-color: #fecaca;';
+        default: return 'background: #f1f5f9; color: #64748b; border-color: #cbd5e1;';
+    }
+}
+
+try {
+    // 1. Fetch all non-admin users
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT u.id, u.name
+        FROM users u
+        LEFT JOIN attendance a ON u.id = a.user_id AND DATE_FORMAT(a.date, '%Y-%m') = ?
+        WHERE u.role != 'admin' AND (u.status = 'active' OR a.id IS NOT NULL)
+    ");
+    $stmt->execute([$currentMonthStr]);
+    $usersForRank = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 2. Fetch ratings
+    $rStmt = $pdo->prepare("SELECT user_id, rating FROM monthly_ratings WHERE month = ?");
+    $rStmt->execute([$currentMonthStr]);
+    $ratingsRaw = $rStmt->fetchAll(PDO::FETCH_KEY_PAIR); // key-value map
+
+    $leaderboardRank = [];
+    foreach ($usersForRank as $u) {
+        $uid = $u['id'];
+        
+        $aStmt = $pdo->prepare("
+            SELECT check_in_time, total_break_seconds, total_hours
+            FROM attendance
+            WHERE user_id = ? AND DATE_FORMAT(date, '%Y-%m') = ?
+        ");
+        $aStmt->execute([$uid, $currentMonthStr]);
+        $atts = $aStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $days_present = count($atts);
+        $on_time_days = 0;
+        $break_compliant_days = 0;
+        $total_working_hours = 0.0;
+        
+        foreach ($atts as $r) {
+            if ($r['check_in_time'] && $r['check_in_time'] <= '10:00:00') {
+                $on_time_days++;
+            }
+            if ((int)($r['total_break_seconds'] ?? 0) <= 2700) {
+                $break_compliant_days++;
+            }
+            $total_working_hours += (float)($r['total_hours'] ?? 0.0);
+        }
+        
+        $p_rate = $days_present > 0 ? ($on_time_days / $days_present) : 0;
+        $b_rate = $days_present > 0 ? ($break_compliant_days / $days_present) : 0;
+        $exp_hours = $days_present * 7.75;
+        $h_score = 0;
+        if ($exp_hours > 0) {
+            $h_score = min(1.0, $total_working_hours / $exp_hours) * 40;
+        }
+        
+        $att_score = ($p_rate * 30) + ($b_rate * 30) + $h_score;
+        
+        $rat = $ratingsRaw[$uid] ?? '';
+        $r_score = 0;
+        if ($rat === 'best') $r_score = 50;
+        elseif ($rat === 'better') $r_score = 40;
+        elseif ($rat === 'good') $r_score = 30;
+        elseif ($rat === 'average') $r_score = 20;
+        elseif ($rat === 'poor') $r_score = 10;
+        
+        $tot_score = $att_score + $r_score;
+        
+        $leaderboardRank[] = [
+            'id' => $uid,
+            'total_score' => $tot_score,
+            'days_present' => $days_present
+        ];
+    }
+    
+    // Sort
+    usort($leaderboardRank, function($a, $b) {
+        if ($b['total_score'] == $a['total_score']) {
+            return $b['days_present'] - $a['days_present'];
+        }
+        return ($b['total_score'] < $a['total_score']) ? -1 : 1;
+    });
+    
+    // Find rank & details of logged-in user
+    $rankIndex = 1;
+    foreach ($leaderboardRank as $item) {
+        if ($item['id'] == $userId) {
+            $empRank = $rankIndex;
+            $empPerformanceScore = round($item['total_score'], 1);
+            $empRating = $ratingsRaw[$userId] ?? '';
+            break;
+        }
+        $rankIndex++;
+    }
+} catch (PDOException $e) {
+    // Silent fail
+}
 
 // Fetch leave counts for the logged-in user
 $leaveCounts = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
@@ -234,9 +390,18 @@ include 'includes/header.php';
         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
         <!-- Attendance Control -->
         <div class="card attendance-control-card"
-            style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.5rem; margin: 0;">
-            <h3 style="color: var(--text-muted); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                Daily Check-In</h3>
+            style="display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; margin: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding-bottom: 0.75rem; margin-bottom: 0.25rem; width: 100%;">
+                <h3 style="font-size: 1.1rem; color: var(--text-main); margin: 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <!-- Fingerprint/User icon -->
+                    <svg width="20" height="20" fill="none" stroke="var(--primary-color)" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.85;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"></path>
+                    </svg>
+                    <span>Daily Check-In</span>
+                </h3>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1.25rem; flex-grow: 1; justify-content: center; align-items: center; width: 100%;">
 
             <?php /* ... rest of the control content ... */ ?>
             <?php if (!$todayAttendance): ?>
@@ -331,7 +496,77 @@ include 'includes/header.php';
                     </p>
                 </div>
             <?php endif; ?>
+            </div>
         </div>
+
+        <!-- Attendance Statistics -->
+        <div class="card attendance-stats-card" style="margin: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding-bottom: 0.75rem; margin-bottom: 0.25rem;">
+                <h3 style="font-size: 1.1rem; color: var(--text-main); margin: 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" fill="none" stroke="var(--primary-color)" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.85;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
+                    </svg>
+                    <span>Average Working Hours</span>
+                </h3>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.25rem; flex-grow: 1; justify-content: center;">
+                <!-- Weekly Average Stat -->
+                <div style="display: flex; align-items: center; gap: 1rem; position: relative; padding: 0.25rem 0;">
+                    <div style="width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.05)); display: flex; align-items: center; justify-content: center; color: var(--primary-color); flex-shrink: 0;">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"></path>
+                        </svg>
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.15rem;">This Week</div>
+                        <div style="display: flex; align-items: baseline; gap: 0.15rem;">
+                            <?php 
+                            $wHrs = floor($weeklyAvgHours);
+                            $wMins = round(($weeklyAvgHours - $wHrs) * 60);
+                            if ($wMins >= 60) { $wMins = 0; $wHrs += 1; }
+                            ?>
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;"><?php echo $wHrs; ?></span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.4rem;">h</span>
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;"><?php echo sprintf("%02d", $wMins); ?></span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">m</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500;">
+                            Based on <?php echo $weeklyCount; ?> <?php echo $weeklyCount === 1 ? 'day' : 'days'; ?> of attendance
+                        </div>
+                    </div>
+                </div>
+
+                <div style="height: 1px; background: rgba(0, 0, 0, 0.05); margin: 0 0.25rem;"></div>
+                
+                <!-- Monthly Average Stat -->
+                <div style="display: flex; align-items: center; gap: 1rem; position: relative; padding: 0.25rem 0;">
+                    <div style="width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0;">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
+                        </svg>
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.15rem;">This Month</div>
+                        <div style="display: flex; align-items: baseline; gap: 0.15rem;">
+                            <?php 
+                            $mHrs = floor($monthlyAvgHours);
+                            $mMins = round(($monthlyAvgHours - $mHrs) * 60);
+                            if ($mMins >= 60) { $mMins = 0; $mHrs += 1; }
+                            ?>
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;"><?php echo $mHrs; ?></span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.4rem;">h</span>
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;"><?php echo sprintf("%02d", $mMins); ?></span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">m</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500;">
+                            Based on <?php echo $monthlyCount; ?> <?php echo $monthlyCount === 1 ? 'day' : 'days'; ?> of attendance
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Attendance Graph -->
         <div class="card attendance-graph-card" style="margin: 0;">
@@ -400,6 +635,85 @@ include 'includes/header.php';
             <div style="height: 250px;">
                 <canvas id="attendanceChart"></canvas>
             </div>
+        </div>
+    </div>
+
+    <!-- My Performance History Section -->
+    <div style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04); overflow: hidden; margin-bottom: 2rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 0; font-family: 'Outfit', sans-serif;">My Performance History (All Months)</h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Track your monthly ratings and scores history</span>
+            </div>
+        </div>
+        <div style="overflow-x: auto; width: 100%;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1.5px solid var(--border-color); background: rgba(0,0,0,0.01); white-space: nowrap;">
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Month</th>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Present Days</th>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Attendance Score</th>
+                        <?php if ($_SESSION['role'] !== 'employee' && $_SESSION['role'] !== 'sub_admin'): ?>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Admin Rating</th>
+                        <?php endif; ?>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Total Score</th>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Rank</th>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $perfHistory = getEmployeePerformanceHistory($pdo, $userId);
+                    if (empty($perfHistory)): 
+                    ?>
+                        <tr>
+                            <td colspan="<?php echo ($_SESSION['role'] === 'employee' || $_SESSION['role'] === 'sub_admin') ? '6' : '7'; ?>" style="padding: 3rem; text-align: center; color: var(--text-muted); font-weight: 600;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                                No monthly performance history available yet.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($perfHistory as $mKey => $record): 
+                            $monthLabel = date('F Y', strtotime($mKey . '-01'));
+                            $isTop = ($record['rank'] === 1 && $record['days_present'] > 0);
+                        ?>
+                            <tr style="border-bottom: 1px solid var(--border-color); background: <?php echo $isTop ? 'rgba(245, 158, 11, 0.03)' : 'transparent'; ?>; transition: background 0.2s; white-space: nowrap;">
+                                <td style="padding: 1rem; font-weight: 700; color: var(--text-main);">
+                                    <?php echo htmlspecialchars($monthLabel); ?>
+                                </td>
+                                <td style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text-main);">
+                                    <?php echo $record['days_present']; ?> days
+                                </td>
+                                <td style="padding: 1rem; text-align: center; font-weight: 700; color: var(--primary-color);">
+                                    <?php echo $record['attendance_score']; ?> <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">/ 100</span>
+                                </td>
+                                <?php if ($_SESSION['role'] !== 'employee' && $_SESSION['role'] !== 'sub_admin'): ?>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <span style="display: inline-block; padding: 0.25rem 0.6rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 700; border: 1px solid; <?php echo getRatingBadgeStyle($record['rating']); ?>">
+                                        <?php echo ucfirst($record['rating']); ?> (+<?php echo $record['rating_score']; ?>)
+                                    </span>
+                                </td>
+                                <?php endif; ?>
+                                <td style="padding: 1rem; text-align: center; font-weight: 850; color: <?php echo $isTop ? '#b45309' : 'var(--text-main)'; ?>; font-size: 1.05rem;">
+                                    <?php echo $record['total_score']; ?> <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">/ 150</span>
+                                </td>
+                                <td style="padding: 1rem; text-align: center; font-weight: 700; color: var(--text-main);">
+                                    Rank #<?php echo $record['rank']; ?>
+                                </td>
+                                <td style="padding: 1rem; font-weight: 600;">
+                                    <?php if ($isTop): ?>
+                                        <span style="color: #d97706; background: #fef3c7; border: 1px solid #fde68a; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.72rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                            👑 Employee of the Month
+                                        </span>
+                                    <?php else: ?>
+                                        <span style="color: var(--text-muted); font-size: 0.75rem;">Completed</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 

@@ -48,3 +48,13 @@ CREATE TABLE IF NOT EXISTS attendance (
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE KEY (user_id, date)
 );
+
+CREATE TABLE IF NOT EXISTS monthly_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    month CHAR(7) NOT NULL,
+    rating ENUM('best', 'better', 'good', 'average', 'poor') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE KEY (user_id, month)
+);

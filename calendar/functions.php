@@ -125,6 +125,7 @@ function renderCalendar($year, $month)
         $isEvent = false;
         $isHalfDay = false;
         $isWorking = false;
+        $isWfh = false;
         foreach ($dayEvents as $event) {
             if ($event['type'] === 'holiday') {
                 $isHoliday = true;
@@ -134,6 +135,8 @@ function renderCalendar($year, $month)
                 $isHalfDay = true;
             } elseif ($event['type'] === 'working') {
                 $isWorking = true;
+            } elseif ($event['type'] === 'wfh') {
+                $isWfh = true;
             }
         }
         if ($isHoliday)
@@ -144,6 +147,8 @@ function renderCalendar($year, $month)
             $classes[] = 'half-day';
         if ($isWorking)
             $classes[] = 'working-day';
+        if ($isWfh)
+            $classes[] = 'wfh-day';
 
         $dayLeaves = isset($leaves[$currentDate]) ? $leaves[$currentDate] : [];
         $hasApprovedLeave = false;
@@ -247,16 +252,23 @@ function renderCalendar($year, $month)
                 $tagClass = 'type-half-day';
             } elseif ($event['type'] === 'working') {
                 $tagClass = 'type-working';
+            } elseif ($event['type'] === 'wfh') {
+                $tagClass = 'type-wfh';
+            }
+
+            $displayTitle = htmlspecialchars($event['title']);
+            if ($event['type'] === 'wfh') {
+                $displayTitle = '🏠 ' . $displayTitle;
             }
 
             if ($isAdmin) {
                 // Use stopPropagation to prevent the parent cell click from triggering when clicking the tag
                 echo '<a href="manage_event.php?id=' . $event['id'] . '" class="event-tag ' . $tagClass . '" title="' . htmlspecialchars($event['title']) . '" onclick="event.stopPropagation();">';
-                echo htmlspecialchars($event['title']);
+                echo $displayTitle;
                 echo '</a>';
             } else {
                 echo '<div class="event-tag ' . $tagClass . '" style="cursor: default;" title="' . htmlspecialchars($event['title']) . '">';
-                echo htmlspecialchars($event['title']);
+                echo $displayTitle;
                 echo '</div>';
             }
         }
@@ -348,6 +360,7 @@ function renderWeekView($year, $month)
         // Events
         $dayEvents = isset($events[$currentDate]) ? $events[$currentDate] : [];
         $isHoliday = false;
+        $isWfh = false;
         foreach ($dayEvents as $event) {
             if ($event['type'] === 'holiday') {
                 $isHoliday = true;
@@ -357,6 +370,10 @@ function renderWeekView($year, $month)
                 $classes[] = 'event-day';
             if ($event['type'] === 'half_day')
                 $classes[] = 'half-day';
+            if ($event['type'] === 'wfh') {
+                $isWfh = true;
+                $classes[] = 'wfh-day';
+            }
         }
 
         // Leaves
@@ -404,14 +421,21 @@ function renderWeekView($year, $month)
                 $tagClass = 'holiday-tag';
             elseif ($event['type'] === 'half_day')
                 $tagClass = 'type-half-day';
+            elseif ($event['type'] === 'wfh')
+                $tagClass = 'type-wfh';
+
+            $displayTitle = htmlspecialchars($event['title']);
+            if ($event['type'] === 'wfh') {
+                $displayTitle = '🏠 ' . $displayTitle;
+            }
 
             if ($isAdmin) {
                 echo '<a href="manage_event.php?id=' . $event['id'] . '" class="event-tag ' . $tagClass . '" title="' . htmlspecialchars($event['title']) . '" onclick="event.stopPropagation();">';
-                echo htmlspecialchars($event['title']);
+                echo $displayTitle;
                 echo '</a>';
             } else {
                 echo '<div class="event-tag ' . $tagClass . '" style="cursor: default;" title="' . htmlspecialchars($event['title']) . '">';
-                echo htmlspecialchars($event['title']);
+                echo $displayTitle;
                 echo '</div>';
             }
         }

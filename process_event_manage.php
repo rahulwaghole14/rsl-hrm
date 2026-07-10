@@ -7,7 +7,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = (int)$_POST['id'];
+    $id = (int) $_POST['id'];
     $title = trim($_POST['title']);
     $date = $_POST['event_date'];
     $type = $_POST['type'];
@@ -30,10 +30,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Send WhatsApp broadcast immediately
             $formattedDate = date('l, d M Y', strtotime($date));
             $displayType = 'Event';
-            if ($type === 'holiday') $displayType = 'Official Holiday';
-            elseif ($type === 'half_day') $displayType = 'Half Day';
-            elseif ($type === 'working') $displayType = 'Working Day';
-            elseif ($type === 'event') $displayType = 'Company Event';
+            if ($type === 'holiday')
+                $displayType = 'Official Holiday';
+            elseif ($type === 'half_day')
+                $displayType = 'Half Day';
+            elseif ($type === 'working')
+                $displayType = 'Working Day';
+            elseif ($type === 'event')
+                $displayType = 'Company Event';
+            elseif ($type === 'wfh')
+                $displayType = 'Work from Home';
 
             $waMsg = "📢 *New Event Added* 📢\n\n";
             $waMsg .= "A new event has been added to the calendar:\n\n";

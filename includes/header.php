@@ -444,6 +444,15 @@ $isLoginPage = ($currentPage == 'login.php');
                                 </svg>
                                 Attendance
                             </a>
+                            <a href="admin_performance.php"
+                                class="nav-btn <?php echo ($currentPage == 'admin_performance.php') ? 'active' : ''; ?>">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.246.588 1.81l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.178 0l-3.97 2.883c-.783.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 10.1c-.773-.565-.375-1.81.587-1.81h4.907a1 1 0 00.95-.69l1.519-4.674z">
+                                    </path>
+                                </svg>
+                                Performance
+                            </a>
                             <a href="manage_events.php"
                                 class="nav-btn <?php echo ($currentPage == 'manage_events.php') ? 'active' : ''; ?>">
                                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

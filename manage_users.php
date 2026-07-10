@@ -56,7 +56,7 @@ try {
     $sql = "SELECT id, name, email, mob_no, dob, role, emp_id, department, status, date_of_joining 
             FROM users 
             WHERE " . implode(" AND ", $where) . " 
-            ORDER BY name ASC";
+            ORDER BY FIELD(role, 'admin', 'sub_admin', 'employee') ASC, name ASC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);

@@ -34,6 +34,14 @@ $pdo = null;
 
 try {
      $pdo = new PDO($dsn, $user, $pass, $options);
+     // Auto-migrate schema: add is_primary if not exists
+     try {
+          $pdo->query("SELECT is_primary FROM users LIMIT 1");
+     } catch (\Exception $e) {
+          $pdo->exec("ALTER TABLE users ADD COLUMN is_primary TINYINT(1) DEFAULT 0");
+          // Mark specific admins as the primary admins
+          $pdo->exec("UPDATE users SET is_primary = 1 WHERE email IN ('pawanepratik2001@gmail.com', 'rsl.pratik27@gmail.com')");
+     }
 } catch (\PDOException $e) {
      // Connection failed. UI will handle null $pdo.
      // error_log($e->getMessage());

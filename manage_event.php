@@ -37,10 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Send WhatsApp broadcast immediately
         $formattedDate = date('l, d M Y', strtotime($date));
         $displayType = 'Event';
-        if ($type === 'holiday') $displayType = 'Official Holiday';
-        elseif ($type === 'half_day') $displayType = 'Half Day';
-        elseif ($type === 'working') $displayType = 'Working Day';
-        elseif ($type === 'event') $displayType = 'Company Event';
+        if ($type === 'holiday')
+            $displayType = 'Official Holiday';
+        elseif ($type === 'half_day')
+            $displayType = 'Half Day';
+        elseif ($type === 'working')
+            $displayType = 'Working Day';
+        elseif ($type === 'event')
+            $displayType = 'Company Event';
+        elseif ($type === 'wfh')
+            $displayType = 'Work from Home';
 
         $waMsg = "📢 *New Event Added* 📢\n\n";
         $waMsg .= "A new event has been added to the calendar:\n\n";
@@ -73,8 +79,7 @@ include 'includes/header.php';
 
         <div class="form-group">
             <label>Date</label>
-            <input type="date" name="event_date" value="<?php echo $preset_date; ?>" 
-                <?php echo ($id == 0) ? 'min="' . date('Y-m-d') . '"' : ''; ?> required>
+            <input type="date" name="event_date" value="<?php echo $preset_date; ?>" <?php echo ($id == 0) ? 'min="' . date('Y-m-d') . '"' : ''; ?> required>
         </div>
 
         <div class="form-group">
@@ -88,6 +93,7 @@ include 'includes/header.php';
                     Day</option>
                 <option value="working" <?php echo ($event && $event['type'] == 'working') ? 'selected' : ''; ?>>Working
                     Day</option>
+                <option value="wfh" <?php echo ($event && $event['type'] == 'wfh') ? 'selected' : ''; ?>>Work from Home</option>
             </select>
         </div>
 

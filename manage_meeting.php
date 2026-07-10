@@ -310,7 +310,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Send to Admins if scheduled by sub_admin
             if ($organizer['role'] === 'sub_admin') {
-                $adminStmt = $pdo->query("SELECT name, mob_no FROM users WHERE role = 'admin' AND status = 'active'");
+                // Fetch only primary admins
+                $adminStmt = $pdo->query("SELECT name, mob_no FROM users WHERE role = 'admin' AND status = 'active' AND is_primary = 1");
                 $admins = $adminStmt->fetchAll();
                 foreach ($admins as $admin) {
                     if (!empty($admin['mob_no'])) {
@@ -405,12 +406,29 @@ include 'includes/header.php';
                         <?php if ($meeting['is_rsl_employee']): ?>
                             <?php if (!empty($meeting['participants'])): ?>
                                 <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem;">
-                                    <?php foreach ($meeting['participants'] as $p): ?>
-                                        <span
-                                            style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600;">
-                                            👤 <?php echo htmlspecialchars($p['name']); ?>
+                                    <?php 
+                                    $pCount = count($meeting['participants']);
+                                    if ($pCount <= 3): 
+                                        foreach ($meeting['participants'] as $p): 
+                                    ?>
+                                            <span style="background: rgba(99, 102, 241, 0.08); color: var(--primary-color); padding: 0.15rem 0.45rem; border-radius: 0.25rem; font-size: 0.72rem; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                                👤 <?php echo htmlspecialchars($p['name']); ?>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <?php for ($i = 0; $i < 2; $i++): $p = $meeting['participants'][$i]; ?>
+                                            <span style="background: rgba(99, 102, 241, 0.08); color: var(--primary-color); padding: 0.15rem 0.45rem; border-radius: 0.25rem; font-size: 0.72rem; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                                👤 <?php echo htmlspecialchars($p['name']); ?>
+                                            </span>
+                                        <?php endfor; ?>
+                                        <?php 
+                                        $allNames = array_map(function($p) { return $p['name']; }, $meeting['participants']);
+                                        $tooltipText = implode(', ', $allNames);
+                                        ?>
+                                        <span title="<?php echo htmlspecialchars($tooltipText); ?>" style="background: var(--primary-color); color: #fff; padding: 0.15rem 0.45rem; border-radius: 0.25rem; font-size: 0.72rem; font-weight: 700; cursor: help; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.2rem; box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);">
+                                            👥 +<?php echo ($pCount - 2); ?> more
                                         </span>
-                                    <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </div>
                             <?php elseif (isset($meeting['participants_hidden'])): ?>
                                 🔒 <em>Private Participants</em>

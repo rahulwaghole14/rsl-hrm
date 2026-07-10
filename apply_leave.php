@@ -24,13 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // --- VALIDATION: Check if from_date or to_date is holiday/weekend ---
     if (!function_exists('isHolidayOrWeekend')) {
-        function isHolidayOrWeekend($date, $pdo) {
+        function isHolidayOrWeekend($date, $pdo)
+        {
             $timestamp = strtotime($date);
             $dayOfWeek = date('N', $timestamp); // 1 = Mon, 7 = Sun
             if ($dayOfWeek == 6 || $dayOfWeek == 7) {
                 return true; // Weekend
             }
-            
+
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM events WHERE event_date = ? AND type = 'holiday'");
             $stmt->execute([$date]);
             return $stmt->fetchColumn() > 0;
@@ -125,9 +126,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Recipients
             $mail->Sender = SMTP_USER;
             $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
-            
-            // Fetch all admins and send to all of them
-            $adminStmt = $pdo->query("SELECT email, name FROM users WHERE role = 'admin'");
+
+            // Fetch only primary admins and send to them
+            $adminStmt = $pdo->query("SELECT email, name FROM users WHERE role = 'admin' AND is_primary = 1");
             $admins = $adminStmt->fetchAll();
             $hasAdmins = false;
             foreach ($admins as $admin) {
@@ -136,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $hasAdmins = true;
                 }
             }
-            
+
             // Fallback to config admin email if no admins found in DB
             if (!$hasAdmins) {
                 $mail->addAddress(ADMIN_EMAIL);
