@@ -87,6 +87,15 @@ if ($leave_id && $status) {
         $stmt = $pdo->prepare("UPDATE leaves SET status = ?, approved_dates = ? WHERE id = ?");
         $stmt->execute([$final_status, $json_approved_dates, $leave_id]);
 
+        // Apply Late Check-in Policy Recalculation
+        require_once 'includes/late_policy.php';
+        $startMonth = date('Y-m', strtotime($leaveData['from_date']));
+        $endMonth = date('Y-m', strtotime($leaveData['to_date']));
+        recalculateUserMonthlyLatePolicy($pdo, $leaveData['user_id'], $startMonth);
+        if ($startMonth !== $endMonth) {
+            recalculateUserMonthlyLatePolicy($pdo, $leaveData['user_id'], $endMonth);
+        }
+
         // --- FETCH EMPLOYEE DETAILS FOR NOTIFICATION ---
         $stmt = $pdo->prepare("SELECT l.from_date, l.to_date, l.subject, u.name, u.email 
                                FROM leaves l 

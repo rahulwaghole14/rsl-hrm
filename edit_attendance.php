@@ -54,6 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update = $pdo->prepare("UPDATE attendance SET check_in_time = ?, check_out_time = ?, total_hours = ?, work_mode = ?, total_break_seconds = ? WHERE id = ?");
         $update->execute([$check_in, $check_out, $totalHours, $work_mode, $total_break_seconds, $id]);
 
+        // Apply Late Check-in Policy Recalculation
+        require_once 'includes/late_policy.php';
+        recalculateUserMonthlyLatePolicy($pdo, $record['user_id'], date('Y-m', strtotime($date)));
+
         $_SESSION['msg'] = "Attendance record for " . htmlspecialchars($record['name']) . " updated successfully.";
         header("Location: admin_attendance.php");
         exit;

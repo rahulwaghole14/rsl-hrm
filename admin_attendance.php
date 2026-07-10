@@ -146,6 +146,21 @@ if ($showSummary && !empty($records)) {
     foreach ($records as $row) {
         $uid = $row['user_id'];
         if (!isset($userSummaries[$uid])) {
+            // Apply Late Check-in Policy Recalculation to get most accurate count
+            require_once 'includes/late_policy.php';
+            $latePolicyStats = recalculateUserMonthlyLatePolicy($pdo, $uid, $filter_month);
+            $late_count_cycle = $latePolicyStats['cycle_late_count'];
+            $late_count_total = $latePolicyStats['total_late_count'];
+
+            // Fetch count of half days marked due to late check-ins for the selected month
+            $hdStmt = $pdo->prepare("
+                SELECT COUNT(*) 
+                FROM attendance 
+                WHERE user_id = ? AND DATE_FORMAT(date, '%Y-%m') = ? AND is_half_day = 1
+            ");
+            $hdStmt->execute([$uid, $filter_month]);
+            $half_days_late = $hdStmt->fetchColumn();
+
             $userSummaries[$uid] = [
                 'name' => $row['name'],
                 'emp_id' => $row['emp_id'],
@@ -154,7 +169,10 @@ if ($showSummary && !empty($records)) {
                 'total_hours' => 0.0,
                 'wfh_days' => 0,
                 'wfo_days' => 0,
-                'total_break_secs' => 0
+                'total_break_secs' => 0,
+                'late_count_cycle' => $late_count_cycle,
+                'late_count_total' => $late_count_total,
+                'half_days_late' => $half_days_late
             ];
         }
         
@@ -614,6 +632,29 @@ include 'includes/header.php';
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Late Check-in Status -->
+                            <div style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; color: #ef4444; flex-shrink: 0;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z"></path>
+                                        </svg>
+                                    </div>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Late Status</span>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); line-height: 1;">
+                                        <?php echo $summary['late_count_total']; ?> <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">Lates</span>
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem; font-weight: 600;">
+                                        Cycle: <?php echo $summary['late_count_cycle']; ?> / 2 concessions
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; display: flex; gap: 0.4rem;">
+                                        <span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">Half Days: <?php echo $summary['half_days_late']; ?></span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -803,11 +844,23 @@ include 'includes/header.php';
                                                 style="width: 8px; height: 8px; background: #ea580c; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
                                             Breaking
                                         </span>
+                                        <?php if (!empty($row['is_half_day'])): ?>
+                                            <span
+                                                style="background: #fee2e2; color: #ef4444; padding: 0.25rem 0.6rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; border: 1px solid #fecaca; margin-left: 0.25rem;">
+                                                Half Day
+                                            </span>
+                                        <?php endif; ?>
                                     <?php elseif ($row['check_out_time'] || $row['status'] === 'checked_out'): ?>
                                         <span
                                             style="background: #dcfce7; color: #16a34a; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #bbf7d0;">
                                             <?php echo formatHours($row['total_hours']); ?>
                                         </span>
+                                        <?php if (!empty($row['is_half_day'])): ?>
+                                            <span
+                                                style="background: #fee2e2; color: #ef4444; padding: 0.25rem 0.6rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; border: 1px solid #fecaca; margin-left: 0.25rem;">
+                                                Half Day
+                                            </span>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <span
                                             style="background: #fef9c3; color: #a16207; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; border: 1px solid #fef08a; display: inline-flex; align-items: center; gap: 0.4rem;">
@@ -815,6 +868,12 @@ include 'includes/header.php';
                                                 style="width: 8px; height: 8px; background: #eab308; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
                                             Working
                                         </span>
+                                        <?php if (!empty($row['is_half_day'])): ?>
+                                            <span
+                                                style="background: #fee2e2; color: #ef4444; padding: 0.25rem 0.6rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; border: 1px solid #fecaca; margin-left: 0.25rem;">
+                                                Half Day
+                                            </span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>

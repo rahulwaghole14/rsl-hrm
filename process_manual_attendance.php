@@ -48,6 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$user_id, $date, $check_in, $check_out, $total_hours_formatted, $work_mode, $total_break_seconds]);
         }
 
+        // Apply Late Check-in Policy Recalculation
+        require_once 'includes/late_policy.php';
+        recalculateUserMonthlyLatePolicy($pdo, $user_id, date('Y-m', strtotime($date)));
+
         header("Location: admin_attendance.php?success=1");
         exit;
     } catch (PDOException $e) {

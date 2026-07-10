@@ -22,10 +22,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // UPDATE
             $stmt = $pdo->prepare("UPDATE events SET title = ?, event_date = ?, type = ? WHERE id = ?");
             $stmt->execute([$title, $date, $type, $id]);
+
+            // Recalculate late policy for all users as calendar events changed
+            require_once 'includes/late_policy.php';
+            runLatePolicyFullMigration($pdo);
+
             header("Location: manage_events.php?success=Event updated successfully.");
         } else {
             $stmt = $pdo->prepare("INSERT INTO events (title, event_date, type) VALUES (?, ?, ?)");
             $stmt->execute([$title, $date, $type]);
+
+            // Recalculate late policy for all users as calendar events changed
+            require_once 'includes/late_policy.php';
+            runLatePolicyFullMigration($pdo);
 
             // Send WhatsApp broadcast immediately
             $formattedDate = date('l, d M Y', strtotime($date));

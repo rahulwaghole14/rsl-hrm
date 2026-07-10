@@ -26,6 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $work_mode = $_POST['work_mode'] ?? 'WFO';
             $stmt = $pdo->prepare("INSERT INTO attendance (user_id, date, check_in_time, status, work_mode) VALUES (?, ?, ?, 'checked_in', ?)");
             $stmt->execute([$user_id, $date, $time, $work_mode]);
+            
+            // Apply Late Check-in Policy Recalculation
+            require_once 'includes/late_policy.php';
+            recalculateUserMonthlyLatePolicy($pdo, $user_id, date('Y-m', strtotime($date)));
+
             $_SESSION['msg'] = "Checked in ($work_mode) successfully at " . date('h:i A');
         } elseif ($action === 'break_in') {
             $stmt = $pdo->prepare("UPDATE attendance SET status = 'on_break', last_break_start = ? WHERE user_id = ? AND date = ? AND status = 'checked_in'");

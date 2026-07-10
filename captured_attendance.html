@@ -1,0 +1,1843 @@
+
+Notice: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\calendar\my_attendance.php on line 4
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSL TeamHub</title>
+    <link rel="icon" type="image/png" href="assets/img/rsl-logo.png">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css?v=1783408736">
+    <script>
+        // Theme Logic
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') === 'dark' ? 'light' : 'dark';
+            applyTheme(currentTheme);
+        }
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        // Auto-run meeting reminders in the background every 60 seconds
+        setInterval(() => {
+            fetch('cron_meeting_reminders.php')
+                .then(res => res.text())
+                .catch(e => console.error('Reminder check failed:', e));
+        }, 60000);
+        // Run once on load as well
+        setTimeout(() => {
+            fetch('cron_meeting_reminders.php').catch(e => { });
+        }, 3000);
+
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar && overlay) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            }
+        }
+    </script>
+</head>
+
+<body class="">
+    <!-- Global Loading Overlay -->
+    <style>
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.35s ease, visibility 0.35s ease;
+        }
+
+        [data-theme="dark"] .loader-overlay {
+            background: rgba(15, 23, 42, 0.88);
+        }
+
+        .loader-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loader-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 600px 400px at 30% 20%, rgba(99, 102, 241, 0.06), transparent),
+                radial-gradient(ellipse 500px 350px at 70% 80%, rgba(139, 92, 246, 0.05), transparent);
+            pointer-events: none;
+        }
+
+        .loader-orb-wrap {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin-bottom: 1.6rem;
+        }
+
+        .loader-orb-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2.5px solid transparent;
+        }
+
+        .loader-orb-ring:nth-child(1) {
+            border-top-color: #6366f1;
+            border-right-color: rgba(99, 102, 241, 0.3);
+            animation: loaderSpin 1.2s cubic-bezier(.5, .1, .5, .9) infinite;
+        }
+
+        .loader-orb-ring:nth-child(2) {
+            inset: 9px;
+            border-top-color: #8b5cf6;
+            border-left-color: rgba(139, 92, 246, 0.3);
+            animation: loaderSpin 1.8s cubic-bezier(.5, .1, .5, .9) infinite reverse;
+        }
+
+        .loader-orb-ring:nth-child(3) {
+            inset: 18px;
+            border-bottom-color: #a78bfa;
+            border-right-color: rgba(167, 139, 250, 0.3);
+            animation: loaderSpin 2.5s cubic-bezier(.5, .1, .5, .9) infinite;
+        }
+
+        .loader-orb-center {
+            position: absolute;
+            inset: 27px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.3), 0 0 50px rgba(139, 92, 246, 0.1);
+            animation: loaderPulse 2s ease-in-out infinite;
+        }
+
+        .loader-orb-center svg {
+            width: 18px;
+            height: 18px;
+            color: white;
+        }
+
+        .loader-brand {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .loader-status {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #94a3b8;
+            position: relative;
+            z-index: 1;
+        }
+
+        .loader-dot-pulse {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+
+        .loader-dot-pulse span {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #6366f1;
+            animation: loaderDot 1.4s ease-in-out infinite;
+        }
+
+        .loader-dot-pulse span:nth-child(2) {
+            animation-delay: .16s;
+        }
+
+        .loader-dot-pulse span:nth-child(3) {
+            animation-delay: .32s;
+        }
+
+        .loader-progress-track {
+            width: 180px;
+            height: 3px;
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .loader-progress-track {
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .loader-progress-bar {
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #c4b5fd, #8b5cf6, #6366f1);
+            background-size: 200% 100%;
+            border-radius: 100px;
+            animation: loaderShimmer 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loaderSpin {
+            0% {
+                transform: rotate(0)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        @keyframes loaderPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 25px rgba(99, 102, 241, .3), 0 0 50px rgba(139, 92, 246, .1)
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 35px rgba(99, 102, 241, .45), 0 0 70px rgba(139, 92, 246, .18)
+            }
+        }
+
+        @keyframes loaderDot {
+
+            0%,
+            80%,
+            100% {
+                opacity: .25;
+                transform: scale(.8)
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1.3)
+            }
+        }
+
+        @keyframes loaderShimmer {
+            0% {
+                transform: translateX(-100%);
+                background-position: 0 0
+            }
+
+            50% {
+                background-position: 100% 0
+            }
+
+            100% {
+                transform: translateX(350%);
+                background-position: 0 0
+            }
+        }
+    </style>
+
+    <!-- Loader visible by default — hides automatically when page is ready -->
+    <div class="loader-overlay" id="globalLoader">
+        <div class="loader-orb-wrap">
+            <div class="loader-orb-ring"></div>
+            <div class="loader-orb-ring"></div>
+            <div class="loader-orb-ring"></div>
+            <div class="loader-orb-center">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="loader-brand">RSL WorkSync</div>
+        <div class="loader-status">Loading<div class="loader-dot-pulse"><span></span><span></span><span></span></div>
+        </div>
+        <div class="loader-progress-track">
+            <div class="loader-progress-bar"></div>
+        </div>
+    </div>
+
+    <script>
+        function showLoader() {
+            const l = document.getElementById('globalLoader');
+            if (l) l.classList.remove('hidden');
+        }
+        function hideLoader() {
+            const l = document.getElementById('globalLoader');
+            if (l) l.classList.add('hidden');
+        }
+        // Auto-hide quickly — just a brief branded flash
+        setTimeout(hideLoader, 300);
+    </script>
+
+    <!-- Sidebar Overlay Backdrop for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+    <div class="app-layout ">
+
+                    <!-- FIXED SIDEBAR -->
+            <aside class="sidebar">
+                <a href="index.php" style="text-decoration: none;">
+                    <div class="logo-container">
+                        <img src="assets/img/rsl-logo.png" alt="RSL logo" onerror="this.src=''; this.alt='RSL Logo';">
+                    </div>
+                </a>
+
+                <nav class="nav-links">
+                    <a href="index.php" class="nav-btn ">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        Calendar
+                    </a>
+                    <a href="holidays.php" class="nav-btn ">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z">
+                            </path>
+                        </svg>
+                        Holidays
+                    </a>
+
+                                                                    <a href="task_tracker.php"
+                            class="nav-btn ">
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                                </path>
+                            </svg>
+                            Task Tracker
+                        </a>
+
+                                                    <a href="meetings.php" class="nav-btn ">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                    </path>
+                                </svg>
+                                Meetings
+                            </a>
+                        
+                                                    <a href="my_attendance.php"
+                                class="nav-btn ">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Attendance
+                            </a>
+                        
+                        
+                        <a href="logout.php" class="nav-btn btn-logout">
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                </path>
+                            </svg>
+                            Logout
+                        </a>
+                                    </nav>
+            </aside>
+        
+        <!-- MAIN CONTAINER -->
+        <div class="main-container">
+
+                            <!-- STATIC TOP HEADER -->
+                <header class="static-header">
+                    <div class="header-left" style="display: flex; align-items: center;">
+                        <!-- Hamburger Menu Button (visible on mobile) -->
+                        <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()"
+                            style="display: none; background: none; border: none; color: var(--text-main); cursor: pointer; padding: 0.5rem; margin-right: 0.75rem; align-items: center; justify-content: center;">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                                                    <div class="current-date" style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">
+                                Get html                            </div>
+                                            </div>
+
+                    <div class="header-center">
+                        <span class="search-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </span>
+                        <input type="text" id="calendarSearch" class="search-bar" placeholder="Search events, holidays...">
+                    </div>
+
+                    <div class="header-right">
+                                                <div class="view-toggles">
+                            <a href="index.php?month=7&year=2026&view=month"
+                                class="view-btn active"
+                                style="text-decoration: none; color: inherit;">Month</a>
+                            <a href="index.php?month=7&year=2026&view=week"
+                                class="view-btn "
+                                style="text-decoration: none; color: inherit;">Week</a>
+                        </div>
+
+
+                                                    
+                            
+                                                            <div class="notification-wrap"
+                                    style="position: relative; margin-right: 1.5rem; display: flex; align-items: center; cursor: pointer;"
+                                    onclick="document.getElementById('notifDropdown').classList.toggle('active')">
+                                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        style="color: var(--text-muted); transition: color 0.2s;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                        </path>
+                                    </svg>
+                                    <span id="notifBadge"
+                                        style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; width: 16px; height: 16px; display: none; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #fff;">0</span>
+
+                                    <div id="notifDropdown" class="notif-dropdown">
+                                        <div
+                                            style="padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: 700; color: var(--text-main);">
+                                            Notifications</div>
+
+                                        <!-- Tabs inside Dropdown -->
+                                        <div class="notif-tabs"
+                                            style="display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-color); font-size: 0.8rem; font-weight: 600;">
+                                            <div class="notif-tab active" data-tab="all"
+                                                style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--primary-color);">
+                                                All (<span id="count-all">0</span>)</div>
+                                            <div class="notif-tab" data-tab="unread"
+                                                style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+                                                Unread (<span id="count-unread">0</span>)</div>
+                                            <div class="notif-tab" data-tab="read"
+                                                style="flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+                                                Read (<span id="count-read">0</span>)</div>
+                                        </div>
+
+                                        <div style="max-height: 300px; overflow-y: auto;">
+                                                                                        <div id="notifEmptyPlaceholder"
+                                                style="display: none; padding: 1.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                                                No notifications</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <style>
+                                    .notification-wrap:hover svg {
+                                        color: var(--primary-color) !important;
+                                    }
+
+                                    .notif-dropdown {
+                                        display: none;
+                                        position: absolute;
+                                        top: calc(100% + 15px);
+                                        right: -10px;
+                                        width: 300px;
+                                        background: rgba(255, 255, 255, 0.9);
+                                        backdrop-filter: blur(16px);
+                                        -webkit-backdrop-filter: blur(16px);
+                                        border: 1px solid rgba(255, 255, 255, 0.6);
+                                        border-radius: 1rem;
+                                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                                        z-index: 5000;
+                                        overflow: hidden;
+                                    }
+
+                                    [data-theme="dark"] .notif-dropdown {
+                                        background: rgba(30, 41, 59, 0.9);
+                                        border-color: rgba(255, 255, 255, 0.1);
+                                    }
+
+                                    .notif-dropdown.active {
+                                        display: block;
+                                        animation: slideDown 0.2s ease;
+                                    }
+                                </style>
+                                <script>
+                                    // Initialize state
+                                    let readNotifications = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+
+                                    function updateNotifUI() {
+                                        const items = document.querySelectorAll('.notif-item');
+                                        let totalCount = items.length;
+                                        let unreadCount = 0;
+                                        let readCount = 0;
+
+                                        items.forEach(item => {
+                                            const id = item.getAttribute('data-id');
+                                            const isRead = readNotifications.includes(id);
+
+                                            if (isRead) {
+                                                item.classList.remove('unread');
+                                                item.classList.add('read');
+                                                const dot = item.querySelector('.unread-dot');
+                                                if (dot) dot.style.display = 'none';
+                                                item.style.opacity = '0.6';
+                                            } else {
+                                                item.classList.add('unread');
+                                                item.classList.remove('read');
+                                                const dot = item.querySelector('.unread-dot');
+                                                if (dot) dot.style.display = 'inline-block';
+                                                item.style.opacity = '1';
+                                                unreadCount++;
+                                            }
+                                        });
+
+                                        readCount = totalCount - unreadCount;
+
+                                        // Update counters
+                                        const cAll = document.getElementById('count-all');
+                                        const cUnread = document.getElementById('count-unread');
+                                        const cRead = document.getElementById('count-read');
+                                        if (cAll) cAll.textContent = totalCount;
+                                        if (cUnread) cUnread.textContent = unreadCount;
+                                        if (cRead) cRead.textContent = readCount;
+
+                                        // Update badge (unread only)
+                                        const badge = document.getElementById('notifBadge');
+                                        if (badge) {
+                                            if (unreadCount > 0) {
+                                                badge.textContent = unreadCount;
+                                                badge.style.display = 'flex';
+                                            } else {
+                                                badge.style.display = 'none';
+                                            }
+                                        }
+
+                                        filterNotifs();
+                                    }
+
+                                    function filterNotifs() {
+                                        const activeTabEl = document.querySelector('.notif-tab.active');
+                                        if (!activeTabEl) return;
+                                        const activeTab = activeTabEl.getAttribute('data-tab');
+                                        const items = document.querySelectorAll('.notif-item');
+                                        let visibleCount = 0;
+
+                                        items.forEach(item => {
+                                            const isRead = item.classList.contains('read');
+                                            if (activeTab === 'all') {
+                                                item.style.display = 'flex';
+                                                visibleCount++;
+                                            } else if (activeTab === 'unread' && !isRead) {
+                                                item.style.display = 'flex';
+                                                visibleCount++;
+                                            } else if (activeTab === 'read' && isRead) {
+                                                item.style.display = 'flex';
+                                                visibleCount++;
+                                            } else {
+                                                item.style.display = 'none';
+                                            }
+                                        });
+
+                                        const emptyPlaceholder = document.getElementById('notifEmptyPlaceholder');
+                                        if (emptyPlaceholder) {
+                                            emptyPlaceholder.style.display = (visibleCount === 0) ? 'block' : 'none';
+                                        }
+                                    }
+
+                                    function markAsRead(event, id) {
+                                        event.stopPropagation(); // Avoid closing dropdown when item is clicked
+                                        if (!readNotifications.includes(id)) {
+                                            readNotifications.push(id);
+                                            localStorage.setItem('readNotifications', JSON.stringify(readNotifications));
+                                            updateNotifUI();
+                                        }
+                                    }
+
+                                    // Tab Switching Handlers
+                                    document.querySelectorAll('.notif-tab').forEach(tab => {
+                                        tab.addEventListener('click', function (e) {
+                                            e.stopPropagation(); // Avoid closing dropdown
+                                            document.querySelectorAll('.notif-tab').forEach(t => {
+                                                t.classList.remove('active');
+                                                t.style.borderBottomColor = 'transparent';
+                                                t.style.color = 'var(--text-muted)';
+                                            });
+                                            this.classList.add('active');
+                                            this.style.borderBottomColor = 'var(--primary-color)';
+                                            this.style.color = 'var(--primary-color)';
+                                            filterNotifs();
+                                        });
+                                    });
+
+                                    // Close dropdown on click outside
+                                    document.addEventListener('click', function (e) {
+                                        const wrap = document.querySelector('.notification-wrap');
+                                        if (wrap && !wrap.contains(e.target)) {
+                                            const dd = document.getElementById('notifDropdown');
+                                            if (dd) dd.classList.remove('active');
+                                        }
+                                    });
+
+                                    // Initialize on document load
+                                    if (document.readyState === 'loading') {
+                                        document.addEventListener('DOMContentLoaded', updateNotifUI);
+                                    } else {
+                                        updateNotifUI();
+                                    }
+                                </script>
+                            
+                            <!-- PROFILE TRIGGER with Hover Tooltip (Option 3) -->
+                            <div class="profile-tooltip-wrap">
+                                <div class="user-profile" onclick="openProfileModal()">
+                                    <div class="profile-text-info">
+                                        <div class="profile-name">Vikas Kambale</div>
+                                        <div class="profile-role-label">employee</div>
+                                    </div>
+                                    <div class="avatar"
+                                        style="background:#4f46e5; color:white; font-size:0.9rem; letter-spacing:0.5px;">
+                                        VK                                    </div>
+                                </div>
+
+                                <!-- HOVER TOOLTIP (CSS-only, no JS needed) -->
+                                <div class="profile-hover-tooltip" onclick="openProfileModal()" style="cursor: pointer;">
+                                    <div class="pht-inner">
+                                        <div class="pht-avatar">VK</div>
+                                        <div>
+                                            <div class="pht-name">
+                                                Vikas Kambale                                            </div>
+                                            <div class="pht-email">vikaskambale6631@gmail.com                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="pht-divider"></div>
+                                    <div class="pht-footer">Click to view <span>full profile →</span></div>
+                                </div>
+                            </div>
+                                            </div>
+                </header>
+            
+            <!-- PROFILE MODAL (Premium – Option 3) -->
+            <div class="profile-overlay" id="profileModal" onclick="handleOverlayClick(event, 'profileModal')">
+                <div class="profile-modal-card">
+                    <button class="profile-close-x" onclick="closeProfileModal()">&#x2715;</button>
+
+                    <!-- Spinning gradient ring avatar -->
+                    <div class="profile-avatar-ring">VK</div>
+
+                    <h2 class="pmodal-name">Vikas Kambale</h2>
+                    <div class="pmodal-role-badge">employee                    </div>
+
+                    <div class="pmodal-fields">
+                        <div class="pmodal-field">
+                            <label>Employee ID</label>
+                            <div>23667</div>
+                        </div>
+                        <div class="pmodal-field">
+                            <label>Mobile No</label>
+                            <div>7887640770</div>
+                        </div>
+                        <div class="pmodal-field">
+                            <label>Email Address</label>
+                            <div style="font-size:0.82rem;">
+                                vikaskambale6631@gmail.com                            </div>
+                        </div>
+                        <div class="pmodal-field">
+                            <label>Date of Birth</label>
+                            <div>08/05/2001</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button onclick="closeProfileModal()" class="pmodal-close-btn"
+                            style="margin-top: 0; flex: 1;">Close</button>
+                        <a href="logout.php" class="pmodal-close-btn"
+                            style="margin-top: 0; flex: 1; background: #ef4444; text-decoration: none; display: flex; align-items: center; justify-content: center;">Logout</a>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                /* ---- Profile Trigger ---- */
+                .user-profile {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.6rem;
+                    cursor: pointer;
+                    padding: 5px 10px 5px 5px;
+                    border-radius: 100px;
+                    transition: background 0.2s;
+                }
+
+                .user-profile:hover {
+                    background: #f1f5f9;
+                }
+
+                .profile-text-info {
+                    text-align: right;
+                }
+
+                .profile-name {
+                    font-weight: 700;
+                    font-size: 0.88rem;
+                    color: #0f172a;
+                }
+
+                .profile-role-label {
+                    font-size: 0.65rem;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                /* ---- Tooltip Wrapper ---- */
+                .profile-tooltip-wrap {
+                    position: relative;
+                    display: inline-flex;
+                }
+
+                /* ---- Hover Tooltip ---- */
+                .profile-hover-tooltip {
+                    position: absolute;
+                    top: calc(100% + 10px);
+                    right: 0;
+                    width: 230px;
+                    background: #0f172a;
+                    color: white;
+                    border-radius: 16px;
+                    padding: 1rem;
+                    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+                    z-index: 1000;
+                    opacity: 0;
+                    pointer-events: none;
+                    transform: translateY(-6px);
+                    transition: opacity 0.2s ease, transform 0.2s ease;
+                }
+
+                /* Arrow */
+                .profile-hover-tooltip::before {
+                    content: '';
+                    position: absolute;
+                    top: -5px;
+                    right: 18px;
+                    width: 10px;
+                    height: 10px;
+                    background: #0f172a;
+                    transform: rotate(45deg);
+                    border-radius: 2px;
+                }
+
+                .profile-tooltip-wrap:hover .profile-hover-tooltip {
+                    opacity: 1;
+                    pointer-events: auto;
+                    transform: translateY(0);
+                }
+
+                .pht-inner {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.65rem;
+                    margin-bottom: 0.75rem;
+                }
+
+                .pht-avatar {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                    color: white;
+                    font-weight: 800;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+
+                .pht-name {
+                    font-weight: 700;
+                    font-size: 0.88rem;
+                }
+
+                .pht-email {
+                    font-size: 0.72rem;
+                    color: #94a3b8;
+                    margin-top: 2px;
+                }
+
+                .pht-divider {
+                    height: 1px;
+                    background: rgba(255, 255, 255, 0.1);
+                    margin: 0.5rem 0;
+                }
+
+                .pht-footer {
+                    font-size: 0.72rem;
+                    color: #64748b;
+                    text-align: center;
+                }
+
+                .pht-footer span {
+                    color: #818cf8;
+                    font-weight: 600;
+                }
+
+                /* ---- Premium Modal ---- */
+                .profile-overlay {
+                    display: none;
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(15, 23, 42, 0.5);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    z-index: 9999;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .profile-overlay.active {
+                    display: flex;
+                    animation: pmodalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+
+                @keyframes pmodalFadeIn {
+                    from {
+                        opacity: 0;
+                    }
+
+                    to {
+                        opacity: 1;
+                    }
+                }
+
+                .profile-modal-card {
+                    background: white;
+                    border-radius: 24px;
+                    padding: 2.5rem 2rem;
+                    width: 90%;
+                    max-width: 420px;
+                    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+                    text-align: center;
+                    position: relative;
+                    animation: pmodalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+
+                @keyframes pmodalSlideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(24px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .profile-close-x {
+                    position: absolute;
+                    top: 1.25rem;
+                    right: 1.25rem;
+                    border: none;
+                    background: none;
+                    font-size: 1.4rem;
+                    cursor: pointer;
+                    color: #94a3b8;
+                    transition: color 0.2s;
+                }
+
+                .profile-close-x:hover {
+                    color: #0f172a;
+                }
+
+                /* Spinning gradient ring avatar */
+                .profile-avatar-ring {
+                    width: 88px;
+                    height: 88px;
+                    border-radius: 50%;
+                    background: #4f46e5;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 2rem;
+                    font-weight: 800;
+                    margin: 0 auto 1.25rem;
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .profile-avatar-ring::before {
+                    content: '';
+                    position: absolute;
+                    inset: -4px;
+                    border-radius: 50%;
+                    background: conic-gradient(#4f46e5, #7c3aed, #06b6d4, #4f46e5);
+                    z-index: -1;
+                    animation: ringSpinAnim 3s linear infinite;
+                }
+
+                .profile-avatar-ring::after {
+                    content: '';
+                    position: absolute;
+                    inset: -6px;
+                    border-radius: 50%;
+                    background: white;
+                    z-index: -2;
+                }
+
+                @keyframes ringSpinAnim {
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+
+                .pmodal-name {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 1.3rem;
+                    font-weight: 800;
+                    color: #0f172a;
+                    margin-bottom: 0.25rem;
+                }
+
+                .pmodal-role-badge {
+                    display: inline-block;
+                    margin: 0.35rem 0 1.5rem;
+                    background: #eef2ff;
+                    color: #4f46e5;
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.07em;
+                    padding: 4px 14px;
+                    border-radius: 100px;
+                }
+
+                .pmodal-fields {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.75rem;
+                    text-align: left;
+                }
+
+                .pmodal-field {
+                    background: #f8fafc;
+                    border-radius: 12px;
+                    padding: 0.7rem 1rem;
+                }
+
+                .pmodal-field label {
+                    display: block;
+                    font-size: 0.62rem;
+                    font-weight: 700;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                    margin-bottom: 3px;
+                }
+
+                .pmodal-field div {
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    color: #0f172a;
+                }
+
+                .pmodal-close-btn {
+                    width: 100%;
+                    margin-top: 1.5rem;
+                    background: #4f46e5;
+                    color: white;
+                    border: none;
+                    padding: 0.85rem;
+                    border-radius: 14px;
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                }
+
+                .pmodal-close-btn:hover {
+                    background: #3730a3;
+                }
+            </style>
+
+            <script>
+                function openProfileModal() { document.getElementById('profileModal').classList.add('active'); }
+                function closeProfileModal() { document.getElementById('profileModal').classList.remove('active'); }
+                function handleOverlayClick(e, id) { if (e.target.id === id) closeProfileModal(); }
+            </script>
+
+            <!-- SCROLLABLE CONTENT -->
+            <div
+                class="scrollable-content  ">
+                <main
+                    style="">
+<div class="container" style="margin-top: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; position: relative;">
+        <h2 style="font-size: 1.5rem; margin: 0;">My Attendance</h2>
+        
+        <div style="position: relative;" id="totalLeavesWrap">
+            <button class="btn" onclick="toggleLeavesDropdown(event)"
+                style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; border-radius: 2rem; border: 1px solid var(--border-color); background: var(--card-bg, #fff); color: var(--text-main); font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                <span>🍃</span> Total Leaves
+            </button>
+            <div id="leavesCountDropdown" class="leaves-count-dropdown">
+                <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; font-size: 0.95rem;">
+                    Leave Summary
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-weight: 500;">Pending:</span>
+                        <span style="background: #fef9c3; color: #a16207; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #fef08a; min-width: 28px; text-align: center;">
+                            2                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-weight: 500;">Approved:</span>
+                        <span style="background: #dcfce7; color: #15803d; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #bbf7d0; min-width: 28px; text-align: center;">
+                            4                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-weight: 500;">Rejected:</span>
+                        <span style="background: #fee2e2; color: #b91c1c; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #fecaca; min-width: 28px; text-align: center;">
+                            0                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .leaves-count-dropdown {
+                display: none; 
+                position: absolute; 
+                top: calc(100% + 8px); 
+                right: 0; 
+                width: 220px; 
+                background: var(--card-bg, #fff); 
+                border: 1px solid var(--border-color); 
+                border-radius: 1rem; 
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); 
+                padding: 1.2rem; 
+                z-index: 1000;
+                animation: dropdownFadeIn 0.2s ease;
+            }
+            .leaves-count-dropdown.active {
+                display: block !important;
+            }
+            @keyframes dropdownFadeIn {
+                from { opacity: 0; transform: translateY(-8px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+        <script>
+            function toggleLeavesDropdown(e) {
+                e.stopPropagation();
+                const dropdown = document.getElementById('leavesCountDropdown');
+                dropdown.classList.toggle('active');
+            }
+            document.addEventListener('click', function(e) {
+                const wrap = document.getElementById('totalLeavesWrap');
+                const dropdown = document.getElementById('leavesCountDropdown');
+                if (wrap && dropdown && !wrap.contains(e.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        </script>
+    </div>
+
+    
+    <div class="attendance-dashboard-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Attendance Control -->
+        <div class="card attendance-control-card"
+            style="display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; margin: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding-bottom: 0.75rem; margin-bottom: 0.25rem; width: 100%;">
+                <h3 style="font-size: 1.1rem; color: var(--text-main); margin: 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <!-- Fingerprint/User icon -->
+                    <svg width="20" height="20" fill="none" stroke="var(--primary-color)" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.85;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"></path>
+                    </svg>
+                    <span>Daily Check-In</span>
+                </h3>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1.25rem; flex-grow: 1; justify-content: center; align-items: center; width: 100%;">
+
+                                        <div style="text-align: center; width: 100%;">
+                    <div
+                        style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <p
+                                style="font-size: 0.8rem; color: var(--primary-color); font-weight: 600; margin-bottom: 0.25rem;">
+                                Checked In</p>
+                            <p style="font-size: 1.2rem; font-weight: 700; color: var(--primary-color);">
+                                10:03 AM                            </p>
+                        </div>
+                                            </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: center;">
+                                                    <form action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
+                                <input type="hidden" name="action" value="break_in">
+                                <button type="submit" class="btn"
+                                    style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #f59e0b; color: #d97706; background: #fff;">
+                                    Break</button>
+                            </form>
+                        
+                        <form action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
+                            <input type="hidden" name="action" value="check_out">
+                            <button type="submit" class="btn"
+                                onclick="return confirm('Are you sure you want to check out?')"
+                                style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #f87171; color: #ef4444; background: #fff;">⏹️
+                                Check Out</button>
+                        </form>
+                    </div>
+                </div>
+                        </div>
+        </div>
+
+        <!-- Attendance Statistics -->
+        <div class="card attendance-stats-card" style="margin: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding-bottom: 0.75rem; margin-bottom: 0.25rem;">
+                <h3 style="font-size: 1.1rem; color: var(--text-main); margin: 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" fill="none" stroke="var(--primary-color)" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.85;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
+                    </svg>
+                    <span>Average Working Hours</span>
+                </h3>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.25rem; flex-grow: 1; justify-content: center;">
+                <!-- Weekly Average Stat -->
+                <div style="display: flex; align-items: center; gap: 1rem; position: relative; padding: 0.25rem 0;">
+                    <div style="width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.05)); display: flex; align-items: center; justify-content: center; color: var(--primary-color); flex-shrink: 0;">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"></path>
+                        </svg>
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.15rem;">This Week</div>
+                        <div style="display: flex; align-items: baseline; gap: 0.15rem;">
+                                                        <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;">7</span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.4rem;">h</span>
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;">56</span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">m</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500;">
+                            Based on 3 days of attendance
+                        </div>
+                    </div>
+                </div>
+
+                <div style="height: 1px; background: rgba(0, 0, 0, 0.05); margin: 0 0.25rem;"></div>
+                
+                <!-- Monthly Average Stat -->
+                <div style="display: flex; align-items: center; gap: 1rem; position: relative; padding: 0.25rem 0;">
+                    <div style="width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0;">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
+                        </svg>
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.15rem;">This Month</div>
+                        <div style="display: flex; align-items: baseline; gap: 0.15rem;">
+                                                        <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;">9</span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.4rem;">h</span>
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;">11</span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">m</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500;">
+                            Based on 4 days of attendance
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Late Check-in Status Card -->
+        <div class="card late-policy-card" style="margin: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding-bottom: 0.75rem; margin-bottom: 0.25rem;">
+                <h3 style="font-size: 1.1rem; color: var(--text-main); margin: 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <!-- Clock/Exclamation icon -->
+                    <svg width="20" height="20" fill="none" stroke="var(--primary-color)" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.85;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"></path>
+                    </svg>
+                    <span>Late Check-in Status</span>
+                </h3>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.25rem; flex-grow: 1; justify-content: center;">
+                <!-- Late Arrivals Stat -->
+                <div style="display: flex; align-items: center; gap: 1rem; position: relative; padding: 0.25rem 0;">
+                    <div style="width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05)); display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"></path>
+                        </svg>
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.15rem;">Late Arrivals</div>
+                        <div style="display: flex; align-items: baseline; gap: 0.15rem;">
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;">4</span>
+                            <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-left: 0.2rem;">this month</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500;">
+                            Active cycle: 1 / 2 concessions used
+                        </div>
+                    </div>
+                </div>
+
+                <div style="height: 1px; background: rgba(0, 0, 0, 0.05); margin: 0 0.25rem;"></div>
+                
+                <!-- Half Days Stat -->
+                <div style="display: flex; align-items: center; gap: 1rem; position: relative; padding: 0.25rem 0;">
+                    <div style="width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05)); display: flex; align-items: center; justify-content: center; color: #ef4444; flex-shrink: 0;">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z"></path>
+                        </svg>
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.15rem;">Half Days (Late)</div>
+                        <div style="display: flex; align-items: baseline; gap: 0.15rem;">
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1;">1</span>
+                            <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-left: 0.2rem;">this month</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500;">
+                            Resets concession counter to 0 on occurrence
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Graph -->
+        <div class="card attendance-graph-card" style="margin: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <h3 style="font-size: 1.1rem; color: var(--text-main); margin: 0;">
+                    Current Week                </h3>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <a href="?week_offset=-1" class="graph-nav-btn" title="Previous Week">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </a>
+                                        <a href="?week_offset=1" class="graph-nav-btn" title="Next Week">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            
+            <style>
+                .graph-nav-btn {
+                    width: 32px;
+                    height: 32px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    background: var(--bg-color, rgba(0, 0, 0, 0.02));
+                    color: var(--text-muted);
+                    border: 1px solid var(--border-color);
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-decoration: none;
+                }
+                .graph-nav-btn:hover {
+                    background: var(--primary-color);
+                    color: #fff;
+                    border-color: var(--primary-color);
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+                }
+            </style>
+            <div style="height: 250px;">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Performance History Section -->
+    <div style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04); overflow: hidden; margin-bottom: 2rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 0; font-family: 'Outfit', sans-serif;">My Performance History (All Months)</h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Track your monthly ratings and scores history</span>
+            </div>
+        </div>
+        <div style="overflow-x: auto; width: 100%;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1.5px solid var(--border-color); background: rgba(0,0,0,0.01); white-space: nowrap;">
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Month</th>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Present Days</th>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Attendance Score</th>
+                                                <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Total Score</th>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Rank</th>
+                        <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                                            <tr>
+                            <td colspan="6" style="padding: 3rem; text-align: center; color: var(--text-muted); font-weight: 600;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                                No monthly performance history available yet.
+                            </td>
+                        </tr>
+                                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="attendance-table-container">
+        <div
+            style="padding: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.3); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="font-size: 1.1rem;">Recent History</h3>
+
+            <form action="" method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
+                <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Filter:</label>
+                <select name="filter" onchange="this.form.submit()"
+                    style="padding: 0.4rem 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); font-weight: 500; font-size: 0.9rem; cursor: pointer; outline: none;">
+                                        <option value="all" selected>Recent (Last 7)</option>
+                    <option value="this_week" >This Week
+                    </option>
+                    <option value="last_week" >Last Week
+                    </option>
+                    <option value="this_month" >This Month
+                    </option>
+                    <option value="last_month" >Last Month
+                    </option>
+                </select>
+            </form>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 2px solid rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.2);">
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Date</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Check In</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Check Out</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Mode</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Total Time</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Break</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Working Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                                                            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                            <td style="padding: 1rem; font-weight: 600;">10 Jul 2026                            </td>
+                            <td style="padding: 1rem;">10:03 AM</td>
+                            <td style="padding: 1rem;">
+                                -                            </td>
+                            <td style="padding: 1rem;">
+                                <span
+                                    style="font-size: 0.75rem; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.5rem; border-radius: 0.25rem;">
+                                    WFO                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                                -                            </td>
+                            <td style="padding: 1rem; font-size: 0.85rem; color: #f59e0b;">
+                                0 Hr 00 Min                            </td>
+                            <td style="padding: 1rem;">
+                                                                    <span
+                                        style="background: #fef9c3; color: #a16207; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
+                                        Checked in                                    </span>
+                                                                                                </td>
+                        </tr>
+                                            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                            <td style="padding: 1rem; font-weight: 600;">09 Jul 2026                            </td>
+                            <td style="padding: 1rem;">10:22 AM</td>
+                            <td style="padding: 1rem;">
+                                06:34 PM                            </td>
+                            <td style="padding: 1rem;">
+                                <span
+                                    style="font-size: 0.75rem; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.5rem; border-radius: 0.25rem;">
+                                    WFO                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                                8 Hr 12 Min                            </td>
+                            <td style="padding: 1rem; font-size: 0.85rem; color: #f59e0b;">
+                                0 Hr 30 Min                            </td>
+                            <td style="padding: 1rem;">
+                                                                    <span
+                                        style="background: #dcfce7; color: #16a34a; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
+                                        7 Hr 42 Min                                    </span>
+                                                                        <script>
+                                        var rowData = {
+                                            check_in: "10:22:00",
+                                            check_out: "18:34:00",
+                                            break_mins: 30,
+                                            working_hours: "7.70"                                        };
+                                        console.log("HISTORY [2026-07-09]:", JSON.stringify(rowData));
+                                    </script>
+                                                            </td>
+                        </tr>
+                                            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                            <td style="padding: 1rem; font-weight: 600;">08 Jul 2026                            </td>
+                            <td style="padding: 1rem;">10:24 AM</td>
+                            <td style="padding: 1rem;">
+                                06:30 PM                            </td>
+                            <td style="padding: 1rem;">
+                                <span
+                                    style="font-size: 0.75rem; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.5rem; border-radius: 0.25rem;">
+                                    WFO                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                                8 Hr 06 Min                            </td>
+                            <td style="padding: 1rem; font-size: 0.85rem; color: #f59e0b;">
+                                1 Hr 00 Min                            </td>
+                            <td style="padding: 1rem;">
+                                                                    <span
+                                        style="background: #dcfce7; color: #16a34a; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
+                                        7 Hr 06 Min                                    </span>
+                                                                            <span style="background: #fee2e2; color: #ef4444; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 700; margin-left: 0.25rem; border: 1px solid #fecaca;">Half Day</span>
+                                                                        <script>
+                                        var rowData = {
+                                            check_in: "10:24:00",
+                                            check_out: "18:30:00",
+                                            break_mins: 60,
+                                            working_hours: "7.10"                                        };
+                                        console.log("HISTORY [2026-07-08]:", JSON.stringify(rowData));
+                                    </script>
+                                                            </td>
+                        </tr>
+                                            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                            <td style="padding: 1rem; font-weight: 600;">07 Jul 2026                            </td>
+                            <td style="padding: 1rem;">10:21 AM</td>
+                            <td style="padding: 1rem;">
+                                07:44 PM                            </td>
+                            <td style="padding: 1rem;">
+                                <span
+                                    style="font-size: 0.75rem; font-weight: 800; color: #8b5cf6; background: rgba(139, 92, 246, 0.1); padding: 0.2rem 0.5rem; border-radius: 0.25rem;">
+                                    WFH                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                                9 Hr 23 Min                            </td>
+                            <td style="padding: 1rem; font-size: 0.85rem; color: #f59e0b;">
+                                0 Hr 23 Min                            </td>
+                            <td style="padding: 1rem;">
+                                                                    <span
+                                        style="background: #dcfce7; color: #16a34a; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
+                                        9 Hr 00 Min                                    </span>
+                                                                        <script>
+                                        var rowData = {
+                                            check_in: "10:21:00",
+                                            check_out: "19:44:00",
+                                            break_mins: 23,
+                                            working_hours: "9.00"                                        };
+                                        console.log("HISTORY [2026-07-07]:", JSON.stringify(rowData));
+                                    </script>
+                                                            </td>
+                        </tr>
+                                            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                            <td style="padding: 1rem; font-weight: 600;">02 Jul 2026                            </td>
+                            <td style="padding: 1rem;">11:03 AM</td>
+                            <td style="padding: 1rem;">
+                                11:59 PM                            </td>
+                            <td style="padding: 1rem;">
+                                <span
+                                    style="font-size: 0.75rem; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.5rem; border-radius: 0.25rem;">
+                                    WFO                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                                12 Hr 56 Min                            </td>
+                            <td style="padding: 1rem; font-size: 0.85rem; color: #f59e0b;">
+                                0 Hr 00 Min                            </td>
+                            <td style="padding: 1rem;">
+                                                                    <span
+                                        style="background: #dcfce7; color: #16a34a; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
+                                        12 Hr 56 Min                                    </span>
+                                                                        <script>
+                                        var rowData = {
+                                            check_in: "11:03:24",
+                                            check_out: "23:59:59",
+                                            break_mins: 0,
+                                            working_hours: "12.94"                                        };
+                                        console.log("HISTORY [2026-07-02]:", JSON.stringify(rowData));
+                                    </script>
+                                                            </td>
+                        </tr>
+                                                </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('attendanceChart').getContext('2d');
+        const fullDates = ["Mon (6 Jul)","Tue (7 Jul)","Wed (8 Jul)","Thu (9 Jul)","Fri (10 Jul)","Sat (11 Jul)","Sun (12 Jul)"];
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [["Mon","6 Jul"],["Tue","7 Jul"],["Wed","8 Jul"],["Thu","9 Jul"],["Fri","10 Jul"],["Sat","11 Jul"],["Sun","12 Jul"]],
+                datasets: [{
+                    label: 'Hours Worked',
+                    data: [0,9,7.1,7.7,2.12,0,0],
+                    backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                    borderColor: 'rgb(99, 102, 241)',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                const index = context[0].dataIndex;
+                                return fullDates[index] || '';
+                            },
+                            label: function(context) {
+                                let val = context.raw;
+                                if (val === null || val === undefined) return '';
+                                let hrs = Math.floor(val);
+                                let mins = Math.round((val - hrs) * 60);
+                                if (mins >= 60) {
+                                    mins = 0;
+                                    hrs += 1;
+                                }
+                                return ' Hours Worked: ' + hrs + ' Hr ' + (mins < 10 ? '0' : '') + mins + ' Min';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+        </main>
+        <footer style="margin-top: 3rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; padding-bottom: 2rem;">
+            &copy; 2026 RSL Calendar System. Built for efficiency.
+        </footer>
+    </div> <!-- .scrollable-content -->
+</div> <!-- .main-container -->
+</div> <!-- .app-layout -->
+
+<style>
+    /* Search highlight styles */
+    .day-cell.search-match {
+        outline: 3px solid var(--primary-color) !important;
+        outline-offset: -3px;
+        z-index: 10 !important;
+        animation: searchPulse 1.5s ease-in-out infinite;
+    }
+
+    .day-cell.search-dimmed {
+        opacity: 0.3;
+    }
+
+    .event-tag.search-highlight,
+    .holiday-tag.search-highlight,
+    .birthday-tag.search-highlight,
+    .leave-tag.search-highlight {
+        background: #fef08a !important;
+        color: #1e293b !important;
+        font-weight: 700 !important;
+        box-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
+    }
+
+    @keyframes searchPulse {
+        0%, 100% { outline-color: var(--primary-color); }
+        50% { outline-color: #a5b4fc; }
+    }
+
+    /* Search dropdown */
+    .search-dropdown {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        left: 0;
+        right: 0;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 999;
+        display: none;
+    }
+
+    .search-dropdown.visible { display: block; }
+
+    .search-result-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.15s;
+        text-decoration: none;
+        color: var(--text-main);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: #f1f5f9; }
+
+    .search-result-item:first-child { border-radius: 1rem 1rem 0 0; }
+    .search-result-item:last-child { border-radius: 0 0 1rem 1rem; }
+
+    .result-badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 0.4rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .result-badge.holiday { background: #fee2e2; color: #ef4444; }
+    .result-badge.event { background: #fef3c7; color: #d97706; }
+    .result-badge.half_day { background: #fef9c3; color: #ca8a04; }
+    .result-badge.birthday { background: #ede9fe; color: #7c3aed; }
+    .result-badge.working { background: #dcfce7; color: #16a34a; }
+
+    .result-title { font-weight: 600; font-size: 0.9rem; }
+    .result-date { font-size: 0.8rem; color: var(--text-muted); }
+
+    .search-no-results {
+        padding: 1.5rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .search-loading {
+        padding: 1.5rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .search-results-badge {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--primary-color);
+        color: white;
+        padding: 0.15rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        pointer-events: none;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('calendarSearch');
+    if (!searchInput) return;
+
+    const headerCenter = searchInput.parentElement;
+    headerCenter.style.position = 'relative';
+
+    // Create dropdown
+    const dropdown = document.createElement('div');
+    dropdown.className = 'search-dropdown';
+    headerCenter.appendChild(dropdown);
+
+    // Create badge
+    const badge = document.createElement('span');
+    badge.className = 'search-results-badge';
+    badge.style.display = 'none';
+    headerCenter.appendChild(badge);
+
+    let debounceTimer;
+    let currentQuery = '';
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        currentQuery = query;
+
+        clearTimeout(debounceTimer);
+
+        if (query.length < 2) {
+            dropdown.classList.remove('visible');
+            badge.style.display = 'none';
+            clearHighlights();
+            return;
+        }
+
+        badge.style.display = 'none';
+        dropdown.innerHTML = '<div class="search-loading">Searching all months...</div>';
+        dropdown.classList.add('visible');
+
+        debounceTimer = setTimeout(() => fetchResults(query), 250);
+    });
+
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            currentQuery = '';
+            dropdown.classList.remove('visible');
+            badge.style.display = 'none';
+            clearHighlights();
+            this.blur();
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!headerCenter.contains(e.target)) {
+            dropdown.classList.remove('visible');
+        }
+    });
+
+    // Re-show dropdown on focus if there's a query
+    searchInput.addEventListener('focus', function() {
+        if (this.value.trim().length >= 2 && dropdown.innerHTML) {
+            dropdown.classList.add('visible');
+        }
+    });
+
+    function fetchResults(query) {
+        fetch('search_events.php?q=' + encodeURIComponent(query))
+            .then(res => res.json())
+            .then(results => {
+                // Check if query hasn't changed while we were fetching
+                if (query !== currentQuery) return;
+
+                if (results.length === 0) {
+                    dropdown.innerHTML = '<div class="search-no-results">No events or holidays found for "<strong>' + escapeHtml(query) + '</strong>"</div>';
+                    badge.textContent = 'No results';
+                    badge.style.display = 'inline-block';
+                    badge.style.background = '#ef4444';
+                    clearHighlights();
+                    return;
+                }
+
+                badge.textContent = results.length + ' found';
+                badge.style.display = 'inline-block';
+                badge.style.background = 'var(--primary-color)';
+
+                let html = '';
+                results.forEach(item => {
+                    const badgeClass = item.type;
+                    const label = item.type === 'half_day' ? 'Half Day' : item.type.charAt(0).toUpperCase() + item.type.slice(1);
+                    
+                    html += '<a href="index.php?month=' + item.month + '&year=2026&view=month" class="search-result-item">';
+                    html += '<span class="result-badge ' + badgeClass + '">' + label + '</span>';
+                    html += '<div><div class="result-title">' + escapeHtml(item.title) + '</div>';
+                    html += '<div class="result-date">' + item.date_display + '</div></div>';
+                    html += '</a>';
+                });
+
+                dropdown.innerHTML = html;
+
+                // Also highlight on current page if results match
+                highlightOnPage(query);
+            })
+            .catch(() => {
+                dropdown.innerHTML = '<div class="search-no-results">Search failed. Please try again.</div>';
+            });
+    }
+
+    function highlightOnPage(query) {
+        clearHighlights();
+        const dayCells = document.querySelectorAll('.day-cell:not(.other-month)');
+        const allTags = document.querySelectorAll('.event-tag, .holiday-tag, .birthday-tag, .leave-tag');
+        const lowerQuery = query.toLowerCase();
+        const matchedCells = new Set();
+
+        allTags.forEach(tag => {
+            if (tag.textContent.toLowerCase().includes(lowerQuery)) {
+                tag.classList.add('search-highlight');
+                const parentCell = tag.closest('.day-cell');
+                if (parentCell && !parentCell.classList.contains('other-month')) {
+                    matchedCells.add(parentCell);
+                }
+            }
+        });
+
+        dayCells.forEach(cell => {
+            if (matchedCells.has(cell)) {
+                cell.classList.add('search-match');
+            } else {
+                cell.classList.add('search-dimmed');
+            }
+        });
+    }
+
+    function clearHighlights() {
+        document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('search-match', 'search-dimmed'));
+        document.querySelectorAll('.search-highlight').forEach(t => t.classList.remove('search-highlight'));
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Auto-submit search forms in the application on user input (debounced)
+    const formsWithSearch = document.querySelectorAll('form');
+    formsWithSearch.forEach(form => {
+        const searchInput = form.querySelector('input[name="search"]');
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    form.submit();
+                }, 500); // 500ms debounce
+            });
+
+            // Restore focus and cursor position to end of input if search value exists
+            if (searchInput.value) {
+                searchInput.focus();
+                const length = searchInput.value.length;
+                searchInput.setSelectionRange(length, length);
+            }
+        }
+    });
+});
+</script>
+
+
+</body>
+</html>
