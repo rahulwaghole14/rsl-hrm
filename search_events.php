@@ -43,7 +43,7 @@ try {
 
     // Search Birthdays
     $stmt = $pdo->prepare(
-        "SELECT name, dob FROM users WHERE name LIKE ? AND dob IS NOT NULL LIMIT 10"
+        "SELECT name, dob FROM users WHERE status = 'active' AND name LIKE ? AND dob IS NOT NULL LIMIT 10"
     );
     $stmt->execute([$searchTerm]);
 

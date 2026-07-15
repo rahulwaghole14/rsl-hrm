@@ -18,7 +18,8 @@ function formatHours($decimal)
     }
     return sprintf("%02dh %02dm %02ds", $hours, $minutes, $seconds);
 }
-function getLeaveDays($lRow, $pdo) {
+function getLeaveDays($lRow, $pdo)
+{
     $status = strtolower($lRow['status']);
     if ($status !== 'approved' && $status !== 'partially_approved') {
         return 0;
@@ -27,7 +28,7 @@ function getLeaveDays($lRow, $pdo) {
         $dates = json_decode($lRow['approved_dates'], true);
         return is_array($dates) ? count($dates) : 0;
     }
-    
+
     // Calculate working weekdays in range (excluding weekends and holidays)
     static $holidays = null;
     if ($holidays === null) {
@@ -38,7 +39,7 @@ function getLeaveDays($lRow, $pdo) {
             $holidays = [];
         }
     }
-    
+
     $start = new DateTime($lRow['from_date']);
     $end = new DateTime($lRow['to_date']);
     $days = 0;
@@ -175,18 +176,18 @@ if ($showSummary && !empty($records)) {
                 'half_days_late' => $half_days_late
             ];
         }
-        
+
         $userSummaries[$uid]['total_days']++;
         if ($row['status'] === 'checked_out') {
             $userSummaries[$uid]['checked_out_days']++;
-            $userSummaries[$uid]['total_hours'] += (float)$row['total_hours'];
+            $userSummaries[$uid]['total_hours'] += (float) $row['total_hours'];
         }
         if (($row['work_mode'] ?? 'WFO') === 'WFH') {
             $userSummaries[$uid]['wfh_days']++;
         } else {
             $userSummaries[$uid]['wfo_days']++;
         }
-        $userSummaries[$uid]['total_break_secs'] += (int)($row['total_break_seconds'] ?? 0);
+        $userSummaries[$uid]['total_break_secs'] += (int) ($row['total_break_seconds'] ?? 0);
     }
 }
 
@@ -195,11 +196,14 @@ include 'includes/header.php';
 
 <div class="container" style="margin-top: 1rem;">
     <!-- Tabs Navigation -->
-    <div class="tabs-navigation" style="display: flex; gap: 1rem; border-bottom: 2px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.5rem; width: 100%;">
-        <a href="?tab=attendance" class="tab-btn <?php echo $activeTab === 'attendance' ? 'active' : ''; ?>" style="font-weight: 700; font-size: 1rem; color: var(--text-main); text-decoration: none; padding: 0.5rem 1rem; position: relative;">
+    <div class="tabs-navigation"
+        style="display: flex; gap: 1rem; border-bottom: 2px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.5rem; width: 100%;">
+        <a href="?tab=attendance" class="tab-btn <?php echo $activeTab === 'attendance' ? 'active' : ''; ?>"
+            style="font-weight: 700; font-size: 1rem; color: var(--text-main); text-decoration: none; padding: 0.5rem 1rem; position: relative;">
             Attendance Records
         </a>
-        <a href="?tab=leaves" class="tab-btn <?php echo $activeTab === 'leaves' ? 'active' : ''; ?>" style="font-weight: 700; font-size: 1rem; color: var(--text-main); text-decoration: none; padding: 0.5rem 1rem; position: relative;">
+        <a href="?tab=leaves" class="tab-btn <?php echo $activeTab === 'leaves' ? 'active' : ''; ?>"
+            style="font-weight: 700; font-size: 1rem; color: var(--text-main); text-decoration: none; padding: 0.5rem 1rem; position: relative;">
             Employees Leave
         </a>
     </div>
@@ -207,12 +211,15 @@ include 'includes/header.php';
         .tab-btn {
             transition: color 0.2s;
         }
+
         .tab-btn:hover {
             color: var(--primary-color) !important;
         }
+
         .tab-btn.active {
             color: var(--primary-color) !important;
         }
+
         .tab-btn.active::after {
             content: '';
             position: absolute;
@@ -235,7 +242,7 @@ include 'includes/header.php';
                 <span
                     style="font-size: 1rem; background: var(--primary-color); color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; display: inline-flex; align-items: center; justify-content: center;"
                     title="Total Records Shown">
-                    <?php 
+                    <?php
                     if ($activeTab === 'leaves') {
                         $totalLeaveDays = 0;
                         foreach ($leaves as $lRow) {
@@ -271,10 +278,11 @@ include 'includes/header.php';
             style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.4);">
             <form action="" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
                 <input type="hidden" name="tab" value="<?php echo htmlspecialchars($activeTab); ?>">
-                
+
                 <div style="flex: 1; min-width: 200px;">
                     <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Employee Name</label>
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600;">Employee
+                        Name</label>
                     <input type="text" name="search" placeholder="Search by name..."
                         value="<?php echo htmlspecialchars($search); ?>"
                         style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; width: 100%;">
@@ -475,6 +483,7 @@ include 'includes/header.php';
                 opacity: 0;
                 transform: translateY(-4px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -527,131 +536,195 @@ include 'includes/header.php';
     </style>
 
     <?php if ($showSummary && !empty($userSummaries)): ?>
-        <div class="monthly-summary-container" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
-            <h3 style="font-size: 1.2rem; color: var(--text-main); margin: 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+        <div class="monthly-summary-container"
+            style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+            <h3
+                style="font-size: 1.2rem; color: var(--text-main); margin: 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                 📊 <span>Monthly Attendance Summary (<?php echo date('F Y', strtotime($filter_month . '-01')); ?>)</span>
             </h3>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; width: 100%;">
-                <?php foreach ($userSummaries as $uid => $summary): 
+
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; width: 100%;">
+                <?php foreach ($userSummaries as $uid => $summary):
                     $avgHours = $summary['checked_out_days'] > 0 ? ($summary['total_hours'] / $summary['checked_out_days']) : 0;
                     $avgHrs = floor($avgHours);
                     $avgMins = round(($avgHours - $avgHrs) * 60);
-                    if ($avgMins >= 60) { $avgMins = 0; $avgHrs += 1; }
+                    if ($avgMins >= 60) {
+                        $avgMins = 0;
+                        $avgHrs += 1;
+                    }
 
                     $totHrs = floor($summary['total_hours']);
                     $totMins = round(($summary['total_hours'] - $totHrs) * 60);
-                    if ($totMins >= 60) { $totMins = 0; $totHrs += 1; }
-                ?>
-                    <div class="card summary-card" style="margin: 0; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; background: var(--card-bg, rgba(255, 255, 255, 0.6)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 1.25rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); width: 100%;">
+                    if ($totMins >= 60) {
+                        $totMins = 0;
+                        $totHrs += 1;
+                    }
+                    ?>
+                    <div class="card summary-card"
+                        style="margin: 0; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; background: var(--card-bg, rgba(255, 255, 255, 0.6)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 1.25rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); width: 100%;">
                         <!-- Header: Profile & ID -->
-                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding-bottom: 1rem;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding-bottom: 1rem;">
                             <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-color), #4f46e5); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25); flex-shrink: 0;">
+                                <div
+                                    style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-color), #4f46e5); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25); flex-shrink: 0;">
                                     <?php echo strtoupper(substr($summary['name'], 0, 1)); ?>
                                 </div>
                                 <div>
-                                    <h4 style="margin: 0; font-size: 1.2rem; color: var(--text-main); font-weight: 800; letter-spacing: -0.02em;"><?php echo htmlspecialchars($summary['name']); ?></h4>
-                                    <p style="margin: 0.2rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
-                                        <span style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">ID: <?php echo htmlspecialchars($summary['emp_id']); ?></span>
+                                    <h4
+                                        style="margin: 0; font-size: 1.2rem; color: var(--text-main); font-weight: 800; letter-spacing: -0.02em;">
+                                        <?php echo htmlspecialchars($summary['name']); ?></h4>
+                                    <p
+                                        style="margin: 0.2rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                        <span
+                                            style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">ID:
+                                            <?php echo htmlspecialchars($summary['emp_id']); ?></span>
                                     </p>
                                 </div>
                             </div>
                             <div style="text-align: right;">
-                                <span style="font-size: 0.8rem; background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.3rem 0.8rem; border-radius: 2rem; font-weight: 700;">
+                                <span
+                                    style="font-size: 0.8rem; background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.3rem 0.8rem; border-radius: 2rem; font-weight: 700;">
                                     <?php echo date('F Y', strtotime($filter_month . '-01')); ?>
                                 </span>
                             </div>
                         </div>
 
                         <!-- Body: Grid stats (3 columns) -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; align-items: stretch;">
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; align-items: stretch;">
                             <!-- Days Present -->
-                            <div style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                            <div
+                                style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary-color); flex-shrink: 0;">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"></path>
+                                    <div
+                                        style="width: 36px; height: 36px; border-radius: 8px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary-color); flex-shrink: 0;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5">
+                                            </path>
                                         </svg>
                                     </div>
-                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Days Present</span>
+                                    <span
+                                        style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Days
+                                        Present</span>
                                 </div>
                                 <div>
                                     <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); line-height: 1;">
-                                        <?php echo $summary['total_days']; ?> <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">Days</span>
+                                        <?php echo $summary['total_days']; ?> <span
+                                            style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">Days</span>
                                     </div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; display: flex; gap: 0.4rem;">
-                                        <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">WFO: <?php echo $summary['wfo_days']; ?></span>
-                                        <span style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">WFH: <?php echo $summary['wfh_days']; ?></span>
+                                    <div
+                                        style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; display: flex; gap: 0.4rem;">
+                                        <span
+                                            style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">WFO:
+                                            <?php echo $summary['wfo_days']; ?></span>
+                                        <span
+                                            style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">WFH:
+                                            <?php echo $summary['wfh_days']; ?></span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Average Daily Hours -->
-                            <div style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                            <div
+                                style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0;">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
+                                    <div
+                                        style="width: 36px; height: 36px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
                                         </svg>
                                     </div>
-                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Average Daily</span>
+                                    <span
+                                        style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Average
+                                        Daily</span>
                                 </div>
                                 <div>
                                     <div style="display: flex; align-items: baseline; gap: 0.15rem; line-height: 1;">
-                                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo $avgHrs; ?></span>
-                                        <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-right: 0.3rem;">h</span>
-                                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo sprintf("%02d", $avgMins); ?></span>
+                                        <span
+                                            style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo $avgHrs; ?></span>
+                                        <span
+                                            style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-right: 0.3rem;">h</span>
+                                        <span
+                                            style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo sprintf("%02d", $avgMins); ?></span>
                                         <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">m</span>
                                     </div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.7rem; font-weight: 600;">
+                                    <div
+                                        style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.7rem; font-weight: 600;">
                                         Across checked-out days
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Total Hours Worked -->
-                            <div style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                            <div
+                                style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>
+                                    <div
+                                        style="width: 36px; height: 36px; border-radius: 8px; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>
                                         </svg>
                                     </div>
-                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total Hours</span>
+                                    <span
+                                        style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total
+                                        Hours</span>
                                 </div>
                                 <div>
                                     <div style="display: flex; align-items: baseline; gap: 0.15rem; line-height: 1;">
-                                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo $totHrs; ?></span>
-                                        <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-right: 0.3rem;">h</span>
-                                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo sprintf("%02d", $totMins); ?></span>
+                                        <span
+                                            style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo $totHrs; ?></span>
+                                        <span
+                                            style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-right: 0.3rem;">h</span>
+                                        <span
+                                            style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><?php echo sprintf("%02d", $totMins); ?></span>
                                         <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">m</span>
                                     </div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.7rem; font-weight: 600;">
+                                    <div
+                                        style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.7rem; font-weight: 600;">
                                         Cumulative this month
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Late Check-in Status -->
-                            <div style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                            <div
+                                style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; color: #ef4444; flex-shrink: 0;">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z"></path>
+                                    <div
+                                        style="width: 36px; height: 36px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; color: #ef4444; flex-shrink: 0;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z">
+                                            </path>
                                         </svg>
                                     </div>
-                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Late Status</span>
+                                    <span
+                                        style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Late
+                                        Status</span>
                                 </div>
                                 <div>
                                     <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); line-height: 1;">
-                                        <?php echo $summary['late_count_total']; ?> <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">Lates</span>
+                                        <?php echo $summary['late_count_total']; ?> <span
+                                            style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">Lates</span>
                                     </div>
-                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem; font-weight: 600;">
+                                    <div
+                                        style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem; font-weight: 600;">
                                         Cycle: <?php echo $summary['late_count_cycle']; ?> / 2 concessions
                                     </div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; display: flex; gap: 0.4rem;">
-                                        <span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">Half Days: <?php echo $summary['half_days_late']; ?></span>
+                                    <div
+                                        style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; display: flex; gap: 0.4rem;">
+                                        <span
+                                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">Half
+                                            Days: <?php echo $summary['half_days_late']; ?></span>
                                     </div>
                                 </div>
                             </div>
@@ -692,26 +765,31 @@ include 'includes/header.php';
                                             <?php echo strtoupper(substr($lRow['name'], 0, 1)); ?>
                                         </div>
                                         <div>
-                                            <strong style="color: var(--primary-color); display: block;"><?php echo htmlspecialchars($lRow['name']); ?></strong>
-                                            <span style="font-size: 0.75rem; color: var(--text-muted);"><?php echo htmlspecialchars($lRow['emp_id'] ?? ''); ?></span>
+                                            <strong
+                                                style="color: var(--primary-color); display: block;"><?php echo htmlspecialchars($lRow['name']); ?></strong>
+                                            <span
+                                                style="font-size: 0.75rem; color: var(--text-muted);"><?php echo htmlspecialchars($lRow['emp_id'] ?? ''); ?></span>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <span style="font-weight: 600; color: var(--text-main);">
-                                        <?php echo date('d M Y', strtotime($lRow['from_date'])); ?> 
-                                        to 
+                                        <?php echo date('d M Y', strtotime($lRow['from_date'])); ?>
+                                        to
                                         <?php echo date('d M Y', strtotime($lRow['to_date'])); ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 600; color: var(--text-main);"><?php echo htmlspecialchars($lRow['subject']); ?></div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); white-space: normal; max-width: 300px;">
+                                    <div style="font-weight: 600; color: var(--text-main);">
+                                        <?php echo htmlspecialchars($lRow['subject']); ?></div>
+                                    <div
+                                        style="font-size: 0.75rem; color: var(--text-muted); white-space: normal; max-width: 300px;">
                                         <?php echo htmlspecialchars($lRow['description']); ?>
                                     </div>
                                     <?php if (!empty($lRow['attachment'])): ?>
                                         <div style="margin-top: 0.3rem;">
-                                            <a href="uploads/leaves/<?php echo urlencode($lRow['attachment']); ?>" target="_blank" style="color: var(--primary-color); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                            <a href="uploads/leaves/<?php echo urlencode($lRow['attachment']); ?>" target="_blank"
+                                                style="color: var(--primary-color); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.2rem;">
                                                 📎 View Attachment
                                             </a>
                                         </div>
@@ -734,33 +812,33 @@ include 'includes/header.php';
                                 <td>
                                     <?php if ($status === 'pending'): ?>
                                         <div style="display: flex; gap: 0.4rem;">
-                                            <a href="process_leave.php?id=<?php echo $lRow['id']; ?>&status=approved" class="btn" 
-                                               style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem;"
-                                               onclick="return confirm('Are you sure you want to approve this leave request?')">
+                                            <a href="process_leave.php?id=<?php echo $lRow['id']; ?>&status=approved" class="btn"
+                                                style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem;"
+                                                onclick="return confirm('Are you sure you want to approve this leave request?')">
                                                 Approve
                                             </a>
-                                            <a href="process_leave.php?id=<?php echo $lRow['id']; ?>&status=rejected" class="btn" 
-                                               style="background: #ef4444; border-color: #ef4444; color: white; text-decoration: none; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem;"
-                                               onclick="return confirm('Are you sure you want to reject this leave request?')">
+                                            <a href="process_leave.php?id=<?php echo $lRow['id']; ?>&status=rejected" class="btn"
+                                                style="background: #ef4444; border-color: #ef4444; color: white; text-decoration: none; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem;"
+                                                onclick="return confirm('Are you sure you want to reject this leave request?')">
                                                 Reject
                                             </a>
                                         </div>
                                     <?php else: ?>
-                                        <?php 
+                                        <?php
                                         $today = date('Y-m-d');
                                         $isPast = ($lRow['to_date'] < $today);
-                                        if (!$isPast): 
+                                        if (!$isPast):
                                             $lRowJson = htmlspecialchars(json_encode($lRow));
-                                        ?>
-                                            <button class="btn" 
-                                               style="background: #ef4444; border-color: #ef4444; color: white; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem; display: inline-block; cursor: pointer;"
-                                               onclick="openAdminCancelModal(<?php echo $lRowJson; ?>)">
+                                            ?>
+                                            <button class="btn"
+                                                style="background: #ef4444; border-color: #ef4444; color: white; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem; display: inline-block; cursor: pointer;"
+                                                onclick="openAdminCancelModal(<?php echo $lRowJson; ?>)">
                                                 Cancel
                                             </button>
                                         <?php else: ?>
-                                            <button class="btn" disabled 
-                                               style="background: #cbd5e1; border-color: #cbd5e1; color: #64748b; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem; cursor: not-allowed; opacity: 0.6;"
-                                               title="Cannot cancel past leave requests">
+                                            <button class="btn" disabled
+                                                style="background: #cbd5e1; border-color: #cbd5e1; color: #64748b; padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.3rem; cursor: not-allowed; opacity: 0.6;"
+                                                title="Cannot cancel past leave requests">
                                                 Cancel
                                             </button>
                                         <?php endif; ?>
@@ -880,17 +958,19 @@ include 'includes/header.php';
                                     <div class="kebab-menu">
                                         <button class="kebab-trigger" onclick="toggleKebab(event, this)" title="Actions">
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                                <circle cx="3" cy="8" r="1.5"/>
-                                                <circle cx="8" cy="8" r="1.5"/>
-                                                <circle cx="13" cy="8" r="1.5"/>
+                                                <circle cx="3" cy="8" r="1.5" />
+                                                <circle cx="8" cy="8" r="1.5" />
+                                                <circle cx="13" cy="8" r="1.5" />
                                             </svg>
                                         </button>
                                         <div class="kebab-dropdown">
                                             <a href="edit_attendance.php?id=<?php echo $row['id']; ?>" class="kebab-edit">
                                                 <span class="kebab-icon">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                                     </svg>
                                                 </span>
                                                 Edit
@@ -899,9 +979,12 @@ include 'includes/header.php';
                                             <a href="delete_attendance.php?id=<?php echo $row['id']; ?>" class="kebab-delete"
                                                 onclick="return confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')">
                                                 <span class="kebab-icon">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <polyline points="3 6 5 6 21 6"/>
-                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <polyline points="3 6 5 6 21 6" />
+                                                        <path
+                                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                                     </svg>
                                                 </span>
                                                 Delete

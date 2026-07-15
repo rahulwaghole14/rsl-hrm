@@ -61,7 +61,7 @@ function getEventsForMonth($year, $month)
         }
 
         // Fetch Birthdays
-        $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE MONTH(dob) = ?");
+        $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE status = 'active' AND MONTH(dob) = ?");
         $stmt->execute([$month]);
         while ($row = $stmt->fetch()) {
             $dayB = date('d', strtotime($row['dob']));

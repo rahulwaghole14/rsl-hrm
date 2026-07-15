@@ -716,7 +716,7 @@ $isLoginPage = ($currentPage == 'login.php');
 
                                     if (count($birthday_dates) > 0) {
                                         $placeholders = implode(',', array_fill(0, count($birthday_dates), '?'));
-                                        $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE dob IS NOT NULL AND DATE_FORMAT(dob, '%m-%d') IN ($placeholders)");
+                                        $stmt = $pdo->prepare("SELECT name, dob FROM users WHERE status = 'active' AND dob IS NOT NULL AND DATE_FORMAT(dob, '%m-%d') IN ($placeholders)");
                                         $stmt->execute($birthday_dates);
                                         $birthdaysList = $stmt->fetchAll();
 
