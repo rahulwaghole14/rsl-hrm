@@ -9,11 +9,7 @@ require_once 'calendar/functions.php';
 $month = isset($_GET['month']) ? (int) $_GET['month'] : (int) date('m');
 $year = isset($_GET['year']) ? (int) $_GET['year'] : (int) date('Y');
 
-// Ensure we stay in 2026 for this specific app requirement, 
-// though the logic is generic.
-if ($year != 2026) {
-    $year = 2026;
-}
+// Removed hardcoded year 2026 constraint
 
 if ($month < 1)
     $month = 1;

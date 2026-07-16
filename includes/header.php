@@ -51,13 +51,13 @@ if ($isLoggedIn) {
 // Month/Year logic for navigation (Available globally in the header)
 $navMonth = isset($_GET['month']) ? (int) $_GET['month'] : (int) date('m');
 $navYear = isset($_GET['year']) ? (int) $_GET['year'] : (int) date('Y');
-if ($navYear != 2026)
-    $navYear = 2026; // Custom requirement
+
 $navMonthName = date('F', mktime(0, 0, 0, $navMonth, 1, $navYear));
 
 // Prev/Next Links
+// Prev/Next Links
 $prevMonth = ($navMonth > 1) ? $navMonth - 1 : 12;
-$prevYear = ($navMonth > 1) ? $navYear : $navYear - 1; // Though we stick to 2026
+$prevYear = ($navMonth > 1) ? $navYear : $navYear - 1;
 $nextMonth = ($navMonth < 12) ? $navMonth + 1 : 1;
 $nextYear = ($navMonth < 12) ? $navYear : $navYear + 1;
 ?>
@@ -501,11 +501,11 @@ $isLoginPage = ($currentPage == 'login.php');
                                     d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
                         </button>
-                        <?php if ($currentPage == 'index.php'): ?>
+                        <?php if ($currentPage == 'index.php' || $currentPage == 'meetings.php'): ?>
                             <div style="display: flex; align-items: center; gap: 1rem;">
-                                <a href="?month=<?php echo $navMonth - 1; ?>&year=<?php echo $navYear; ?>"
+                                <a href="?month=<?php echo $prevMonth; ?>&year=<?php echo $prevYear; ?>"
                                     class="header-nav-btn"
-                                    style="<?php echo ($navMonth <= 1) ? 'pointer-events: none; opacity: 0.5;' : ''; ?> padding: 0.5rem; width: 38px; height: 38px;">
+                                    style="<?php echo ($prevYear < 2016) ? 'pointer-events: none; opacity: 0.5;' : ''; ?> padding: 0.5rem; width: 38px; height: 38px;">
                                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -521,19 +521,89 @@ $isLoginPage = ($currentPage == 'login.php');
                                     </div>
 
                                     <div id="monthPicker" class="month-picker-dropdown">
-                                        <?php
-                                        for ($m = 1; $m <= 12; $m++) {
-                                            $mName = date('F', mktime(0, 0, 0, $m, 1, 2026));
-                                            $activeClass = ($m == $navMonth) ? 'active' : '';
-                                            echo "<a href='?month=$m&year=2026' class='month-option $activeClass'>$mName</a>";
-                                        }
-                                        ?>
+                                        <div class="month-picker-header">
+                                            <button type="button" class="year-nav-btn" onclick="changePickerYear(-1)">❮</button>
+                                            <span id="pickerYearDisplay" onclick="toggleYearList()" class="year-toggle-btn" style="cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 0.25rem;"><?php echo $navYear; ?></span>
+                                            <button type="button" class="year-nav-btn" onclick="changePickerYear(1)">❯</button>
+                                        </div>
+                                        <div class="month-picker-grid" id="monthGrid">
+                                            <?php
+                                            $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                            foreach ($months as $i => $mName) {
+                                                $m = $i + 1;
+                                                $activeClass = ($m == $navMonth) ? 'active' : '';
+                                                echo "<a href='?month=$m&year=$navYear' class='month-option $activeClass' data-month='$m'>$mName</a>";
+                                            }
+                                            ?>
+                                        </div>
+                                        <div class="year-picker-grid" id="yearPickerGrid">
+                                            <?php
+                                            for ($y = 2016; $y <= 2099; $y++) {
+                                                $activeClass = ($y == $navYear) ? 'active' : '';
+                                                echo "<div class='year-option $activeClass' onclick='selectPickerYear($y)'>$y</div>";
+                                            }
+                                            ?>
+                                        </div>
                                     </div>
+                                    <script>
+                                        let currentPickerYear = <?php echo $navYear; ?>;
+
+                                        function toggleYearList() {
+                                            const mGrid = document.getElementById('monthGrid');
+                                            const yGrid = document.getElementById('yearPickerGrid');
+                                            if (yGrid.style.display === 'grid') {
+                                                yGrid.style.display = 'none';
+                                                mGrid.style.display = 'grid';
+                                            } else {
+                                                mGrid.style.display = 'none';
+                                                yGrid.style.display = 'grid';
+                                                
+                                                // Scroll to active year
+                                                const activeYear = yGrid.querySelector('.year-option.active');
+                                                if (activeYear) {
+                                                    yGrid.scrollTop = activeYear.offsetTop - 50;
+                                                }
+                                            }
+                                        }
+
+                                        function selectPickerYear(year) {
+                                            // Update UI for active year
+                                            const yGrid = document.getElementById('yearPickerGrid');
+                                            yGrid.querySelectorAll('.year-option').forEach(el => el.classList.remove('active'));
+                                            event.target.classList.add('active');
+                                            
+                                            // Set the year
+                                            changePickerYear(year - currentPickerYear);
+                                            toggleYearList();
+                                        }
+
+                                        function changePickerYear(delta) {
+                                            currentPickerYear += delta;
+                                            if(currentPickerYear < 2016) currentPickerYear = 2016;
+                                            if(currentPickerYear > 2099) currentPickerYear = 2099;
+                                            document.getElementById('pickerYearDisplay').innerText = currentPickerYear;
+                                            
+                                            const links = document.querySelectorAll('.month-option');
+                                            links.forEach(link => {
+                                                const m = link.getAttribute('data-month');
+                                                link.href = `?month=${m}&year=${currentPickerYear}`;
+                                            });
+
+                                            // Keep year picker active state in sync if navigated by arrows
+                                            const yGrid = document.getElementById('yearPickerGrid');
+                                            yGrid.querySelectorAll('.year-option').forEach(el => {
+                                                el.classList.remove('active');
+                                                if (parseInt(el.innerText) === currentPickerYear) {
+                                                    el.classList.add('active');
+                                                }
+                                            });
+                                        }
+                                    </script>
                                 </div>
 
-                                <a href="?month=<?php echo $navMonth + 1; ?>&year=<?php echo $navYear; ?>"
+                                <a href="?month=<?php echo $nextMonth; ?>&year=<?php echo $nextYear; ?>"
                                     class="header-nav-btn"
-                                    style="<?php echo ($navMonth >= 12) ? 'pointer-events: none; opacity: 0.5;' : ''; ?> padding: 0.5rem; width: 38px; height: 38px;">
+                                    style="<?php echo ($nextYear > 2099) ? 'pointer-events: none; opacity: 0.5;' : ''; ?> padding: 0.5rem; width: 38px; height: 38px;">
                                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
@@ -553,55 +623,166 @@ $isLoginPage = ($currentPage == 'login.php');
                                     top: 100%;
                                     left: 50%;
                                     transform: translateX(-50%);
-                                    background: rgba(255, 255, 255, 0.65);
-                                    backdrop-filter: blur(16px);
-                                    -webkit-backdrop-filter: blur(16px);
-                                    border: 1px solid rgba(255, 255, 255, 0.6);
-                                    border-radius: 0.75rem;
-                                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05);
+                                    background: #ffffff;
+                                    border: 1px solid #e5e7eb;
+                                    border-radius: 0.5rem;
+                                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
                                     z-index: 5000;
-                                    width: 260px;
+                                    width: 250px;
                                     margin-top: 12px;
-                                    padding: 0.5rem;
+                                    padding: 0;
+                                    overflow: hidden;
                                 }
 
                                 [data-theme="dark"] .month-picker-dropdown {
-                                    background: rgba(30, 41, 59, 0.65);
-                                    border-color: rgba(255, 255, 255, 0.1);
+                                    background: #1e293b;
+                                    border-color: #334155;
                                 }
 
                                 .month-picker-dropdown.active {
+                                    display: block;
+                                    animation: slideDown 0.2s ease;
+                                }
+
+                                .month-picker-header {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
+                                    padding: 0.75rem;
+                                    border-bottom: 1px solid #e5e7eb;
+                                    font-weight: 700;
+                                    font-size: 1.1rem;
+                                    color: #374151;
+                                    background: #ffffff;
+                                }
+
+                                [data-theme="dark"] .month-picker-header {
+                                    background: #1e293b;
+                                    border-color: #334155;
+                                    color: #f8fafc;
+                                }
+
+                                .year-nav-btn {
+                                    background: none;
+                                    border: none;
+                                    font-size: 1.1rem;
+                                    color: #374151;
+                                    cursor: pointer;
+                                    padding: 0 0.5rem;
+                                    font-weight: 800;
+                                    transition: color 0.15s;
+                                }
+
+                                [data-theme="dark"] .year-nav-btn {
+                                    color: #f8fafc;
+                                }
+
+                                .year-nav-btn:hover {
+                                    color: #3b82f6;
+                                }
+
+                                .month-picker-grid {
                                     display: grid;
                                     grid-template-columns: repeat(3, 1fr);
-                                    gap: 0.25rem;
-                                    animation: slideDown 0.2s ease;
+                                    background: #e5e7eb;
+                                    gap: 1px;
+                                }
+
+                                [data-theme="dark"] .month-picker-grid {
+                                    background: #334155;
                                 }
 
                                 .month-option {
                                     display: flex;
                                     align-items: center;
                                     justify-content: center;
-                                    padding: 0.5rem;
-                                    color: var(--text-main);
+                                    padding: 1rem 0;
+                                    color: #374151;
                                     text-decoration: none;
-                                    font-size: 0.85rem;
+                                    font-size: 0.95rem;
                                     font-weight: 500;
-                                    border-radius: 0.5rem;
-                                    transition: all 0.2s;
-                                    border: 1px solid transparent;
-                                    height: 40px;
+                                    background: #ffffff;
+                                    transition: all 0.1s;
+                                    box-sizing: border-box;
+                                    outline: none;
+                                    border: 2px solid transparent;
+                                }
+
+                                [data-theme="dark"] .month-option {
+                                    background: #1e293b;
+                                    color: #f8fafc;
                                 }
 
                                 .month-option:hover {
-                                    background: var(--bg-color);
-                                    color: var(--primary-color);
-                                    border-color: var(--border-color);
+                                    background: #f3f4f6;
+                                }
+
+                                [data-theme="dark"] .month-option:hover {
+                                    background: #334155;
                                 }
 
                                 .month-option.active {
-                                    background: var(--primary-color);
-                                    color: white;
-                                    border-color: var(--primary-color);
+                                    border-color: #60a5fa; /* Blue border */
+                                    color: #1e3a8a;
+                                    font-weight: 700;
+                                }
+
+                                [data-theme="dark"] .month-option.active {
+                                    border-color: #3b82f6;
+                                    color: #bfdbfe;
+                                }
+
+                                .year-toggle-btn:hover { background: #f3f4f6; }
+                                [data-theme="dark"] .year-toggle-btn:hover { background: #334155; }
+
+                                .year-picker-grid {
+                                    display: none;
+                                    grid-template-columns: repeat(3, 1fr);
+                                    background: #e5e7eb;
+                                    gap: 1px;
+                                    max-height: 195px; /* same height as 4 rows of months */
+                                    overflow-y: auto;
+                                    -ms-overflow-style: none;  /* IE and Edge */
+                                    scrollbar-width: none;  /* Firefox */
+                                }
+                                .year-picker-grid::-webkit-scrollbar {
+                                    display: none; /* Chrome, Safari, Opera */
+                                }
+                                [data-theme="dark"] .year-picker-grid {
+                                    background: #334155;
+                                }
+
+                                .year-option {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    padding: 1rem 0;
+                                    color: #374151;
+                                    font-size: 0.95rem;
+                                    font-weight: 500;
+                                    background: #ffffff;
+                                    transition: all 0.1s;
+                                    cursor: pointer;
+                                    border: 2px solid transparent;
+                                }
+                                [data-theme="dark"] .year-option {
+                                    background: #1e293b;
+                                    color: #f8fafc;
+                                }
+                                .year-option:hover {
+                                    background: #f3f4f6;
+                                }
+                                [data-theme="dark"] .year-option:hover {
+                                    background: #334155;
+                                }
+                                .year-option.active {
+                                    border-color: #60a5fa;
+                                    color: #1e3a8a;
+                                    font-weight: 700;
+                                }
+                                [data-theme="dark"] .year-option.active {
+                                    border-color: #3b82f6;
+                                    color: #bfdbfe;
                                 }
 
                                 @keyframes slideDown {
