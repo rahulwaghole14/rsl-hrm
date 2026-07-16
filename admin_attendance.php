@@ -742,7 +742,7 @@ include 'includes/header.php';
                     <tr>
                         <th class="sticky-col-1" style="width: 250px; min-width: 250px;">Employee</th>
                         <th>Leave Dates</th>
-                        <th>Subject / Reason</th>
+                        <th>Type / Subject</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -780,6 +780,9 @@ include 'includes/header.php';
                                     </span>
                                 </td>
                                 <td>
+                                    <div style="font-weight: 700; color: var(--primary-color); margin-bottom: 0.2rem;">
+                                        <?php echo htmlspecialchars($lRow['leave_type'] ?? 'Leave'); ?>
+                                    </div>
                                     <div style="font-weight: 600; color: var(--text-main);">
                                         <?php echo htmlspecialchars($lRow['subject']); ?></div>
                                     <div

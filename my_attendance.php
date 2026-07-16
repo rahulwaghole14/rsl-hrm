@@ -199,18 +199,19 @@ try {
 }
 
 // Fetch leave counts for the logged-in user
-$leaveCounts = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+$leaveCounts = ['pending' => 0, 'approved' => 0, 'rejected' => 0, 'wfh' => 0];
 try {
     // Fetch national holidays
     $holidaysStmt = $pdo->query("SELECT event_date FROM events WHERE type = 'holiday'");
     $holidays = $holidaysStmt->fetchAll(PDO::FETCH_COLUMN);
 
-    $stmtLeaves = $pdo->prepare("SELECT status, from_date, to_date, approved_dates FROM leaves WHERE user_id = ?");
+    $stmtLeaves = $pdo->prepare("SELECT leave_type, subject, status, from_date, to_date, approved_dates FROM leaves WHERE user_id = ? AND YEAR(from_date) = YEAR(CURDATE())");
     $stmtLeaves->execute([$userId]);
     $leaveRows = $stmtLeaves->fetchAll();
 
     foreach ($leaveRows as $lRow) {
         $status = strtolower($lRow['status']);
+        $leave_type = trim($lRow['leave_type'] ?? 'Leave');
         $dayCount = 0;
 
         if (($status === 'approved' || $status === 'partially_approved') && !empty($lRow['approved_dates'])) {
@@ -235,14 +236,32 @@ try {
             }
         }
 
-        if ($status === 'pending') {
-            $leaveCounts['pending'] += $dayCount;
-        } elseif ($status === 'approved' || $status === 'partially_approved') {
-            $leaveCounts['approved'] += $dayCount;
-        } elseif ($status === 'rejected') {
-            $leaveCounts['rejected'] += $dayCount;
+        if (strtolower($leave_type) === 'half day') {
+            $dayCount = $dayCount * 0.5;
+        }
+
+        if (strtolower($leave_type) === 'wfh') {
+            if ($status === 'approved' || $status === 'partially_approved') {
+                $leaveCounts['wfh'] += $dayCount;
+            }
+        } else {
+            if ($status === 'pending') {
+                $leaveCounts['pending'] += $dayCount;
+            } elseif ($status === 'approved' || $status === 'partially_approved') {
+                $leaveCounts['approved'] += $dayCount;
+            } elseif ($status === 'rejected') {
+                $leaveCounts['rejected'] += $dayCount;
+            }
         }
     }
+
+    // Add half days from late marking for this year
+    $stmtLate = $pdo->prepare("SELECT COUNT(*) FROM attendance WHERE user_id = ? AND is_half_day = 1 AND YEAR(date) = YEAR(CURDATE())");
+    $stmtLate->execute([$userId]);
+    $lateHalfDays = (int) $stmtLate->fetchColumn();
+
+    $leaveCounts['approved'] += ($lateHalfDays * 0.5);
+
 } catch (PDOException $e) {
     // Fail silently
 }
@@ -345,6 +364,13 @@ include 'includes/header.php';
                         <span
                             style="background: #fee2e2; color: #b91c1c; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #fecaca; min-width: 28px; text-align: center;">
                             <?php echo $leaveCounts['rejected']; ?>
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color);">
+                        <span style="color: var(--text-muted); font-weight: 500;">Approved WFH:</span>
+                        <span
+                            style="background: #e0e7ff; color: #4338ca; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #c7d2fe; min-width: 28px; text-align: center;">
+                            <?php echo $leaveCounts['wfh']; ?>
                         </span>
                     </div>
                 </div>
