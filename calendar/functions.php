@@ -67,6 +67,22 @@ function getEventsForMonth($year, $month)
             $dayB = date('d', strtotime($row['dob']));
             $data['birthdays'][$dayB][] = $row['name'];
         }
+
+        // Fetch Work Anniversaries
+        $stmt = $pdo->prepare("SELECT name, date_of_joining FROM users WHERE status = 'active' AND date_of_joining IS NOT NULL AND MONTH(date_of_joining) = ?");
+        $stmt->execute([$month]);
+        $data['anniversaries'] = [];
+        while ($row = $stmt->fetch()) {
+            $joinYear = (int)date('Y', strtotime($row['date_of_joining']));
+            $yearsWorked = $year - $joinYear;
+            if ($yearsWorked > 0) {
+                $dayA = date('d', strtotime($row['date_of_joining']));
+                $data['anniversaries'][$dayA][] = [
+                    'name' => $row['name'],
+                    'years' => $yearsWorked
+                ];
+            }
+        }
     } catch (\Exception $e) {
         // Log error if needed
     }
@@ -80,7 +96,8 @@ function renderCalendar($year, $month)
     $data = getEventsForMonth($year, $month);
     $events = $data['events'];
     $leaves = $data['leaves'];
-    $birthdays = $data['birthdays'];
+    $birthdays = $data['birthdays'] ?? [];
+    $anniversaries = $data['anniversaries'] ?? [];
 
     // Get first day of the month
     $firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
@@ -210,6 +227,28 @@ function renderCalendar($year, $month)
 
             echo '<div class="birthday-tag" title="Happy Birthday ' . htmlspecialchars($bdayName) . '!">';
             echo '🎂' . htmlspecialchars($bdisplayInitials);
+            echo '</div>';
+        }
+
+        // Display Anniversaries
+        $dayAnniversaries = isset($anniversaries[$day_padded]) ? $anniversaries[$day_padded] : [];
+        foreach ($dayAnniversaries as $anni) {
+            $awords = explode(" ", $anni['name']);
+            $ainitials = "";
+            foreach ($awords as $w) {
+                if (!empty($w))
+                    $ainitials .= strtoupper($w[0]);
+            }
+            $adisplayInitials = substr($ainitials, 0, 2);
+
+            $suffix = 'th';
+            $y = $anni['years'];
+            if ($y % 10 == 1 && $y % 100 != 11) $suffix = 'st';
+            elseif ($y % 10 == 2 && $y % 100 != 12) $suffix = 'nd';
+            elseif ($y % 10 == 3 && $y % 100 != 13) $suffix = 'rd';
+
+            echo '<div class="anniversary-tag" title="Happy ' . $y . $suffix . ' Work Anniversary ' . htmlspecialchars($anni['name']) . '!">';
+            echo '🌟' . htmlspecialchars($adisplayInitials);
             echo '</div>';
         }
 
