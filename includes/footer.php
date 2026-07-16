@@ -22,6 +22,7 @@
     .event-tag.search-highlight,
     .holiday-tag.search-highlight,
     .birthday-tag.search-highlight,
+    .anniversary-tag.search-highlight,
     .leave-tag.search-highlight {
         background: #fef08a !important;
         color: #1e293b !important;
@@ -83,6 +84,7 @@
     .result-badge.event { background: #fef3c7; color: #d97706; }
     .result-badge.half_day { background: #fef9c3; color: #ca8a04; }
     .result-badge.birthday { background: #ede9fe; color: #7c3aed; }
+    .result-badge.anniversary { background: #ffedd5; color: #c2410c; }
     .result-badge.working { background: #dcfce7; color: #16a34a; }
 
     .result-title { font-weight: 600; font-size: 0.9rem; }
@@ -228,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function highlightOnPage(query) {
         clearHighlights();
         const dayCells = document.querySelectorAll('.day-cell:not(.other-month)');
-        const allTags = document.querySelectorAll('.event-tag, .holiday-tag, .birthday-tag, .leave-tag');
+        const allTags = document.querySelectorAll('.event-tag, .holiday-tag, .birthday-tag, .anniversary-tag, .leave-tag');
         const lowerQuery = query.toLowerCase();
         const matchedCells = new Set();
 

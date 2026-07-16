@@ -59,6 +59,28 @@ try {
         ];
     }
 
+    // Search Anniversaries
+    $stmt = $pdo->prepare(
+        "SELECT name, date_of_joining FROM users WHERE status = 'active' AND name LIKE ? AND date_of_joining IS NOT NULL LIMIT 10"
+    );
+    $stmt->execute([$searchTerm]);
+
+    while ($row = $stmt->fetch()) {
+        $joinYear = (int)date('Y', strtotime($row['date_of_joining']));
+        $yearsWorked = $year - $joinYear;
+        if ($yearsWorked > 0) {
+            $anniDate = $year . '-' . date('m-d', strtotime($row['date_of_joining']));
+            $results[] = [
+                'type' => 'anniversary',
+                'title' => '🌟 ' . $row['name'] . ' (' . $yearsWorked . ' Yrs)',
+                'date' => $anniDate,
+                'date_display' => date('d M (D)', strtotime($anniDate)),
+                'month' => (int) date('m', strtotime($anniDate)),
+                'id' => null
+            ];
+        }
+    }
+
     // Sort all results by date
     usort($results, function ($a, $b) {
         return strcmp($a['date'], $b['date']);

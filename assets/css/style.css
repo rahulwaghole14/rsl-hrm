@@ -815,6 +815,26 @@ body {
     word-wrap: break-word;
 }
 
+.anniversary-tag {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+    border-left: 2px solid #f59e0b;
+    cursor: default;
+    white-space: normal;
+    word-wrap: break-word;
+    margin-top: 2px;
+}
+
+[data-theme="dark"] .anniversary-tag {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fde68a;
+    border-left: 2px solid #f59e0b;
+}
+
 .meeting-count-badge {
     background: rgba(139, 92, 246, 0.1);
     color: #8b5cf6;
