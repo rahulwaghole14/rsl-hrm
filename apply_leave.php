@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
     $from_date = $_POST['from_date'];
     $to_date = $_POST['to_date'];
+    $leave_type = $_POST['leave_type'] ?? 'Leave';
     $subject = $_POST['subject'];
     $description = $_POST['description'];
     $attachment = null;
@@ -98,8 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO leaves (user_id, from_date, to_date, leave_date, subject, description, attachment) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$user_id, $from_date, $to_date, $from_date, $subject, $description, $attachment]);
+        $stmt = $pdo->prepare("INSERT INTO leaves (user_id, from_date, to_date, leave_date, leave_type, subject, description, attachment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $from_date, $to_date, $from_date, $leave_type, $subject, $description, $attachment]);
         $leave_id = $pdo->lastInsertId(); // Get the ID for the email links
 
         // --- FETCH EMPLOYEE DETAILS ---

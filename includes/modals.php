@@ -19,7 +19,7 @@ const nationalHolidays = <?php echo json_encode($holidayDates); ?>;
 <div id="leaveModal" class="modal-overlay">
     <div class="modal-content">
         <span class="close" onclick="closeModal('leaveModal')">&times;</span>
-        <h2 style="margin-bottom: 1rem; color: var(--primary-color);">Apply for Leave</h2>
+        <h2 id="applyLeaveHeader" style="margin-bottom: 1rem; color: var(--primary-color);">Apply for Leave</h2>
         <form action="apply_leave.php" method="POST" enctype="multipart/form-data" onsubmit="return validateLeaveForm()">
             <!-- Hidden context fields for redirect -->
             <input type="hidden" name="nav_month" value="<?php echo $navMonth; ?>">
@@ -37,6 +37,16 @@ const nationalHolidays = <?php echo json_encode($holidayDates); ?>;
 
             <div id="daysCountDisplay" style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">
                 Total Days: <span id="totalDaysText">0</span>
+            </div>
+
+            <div class="form-group">
+                <label>Type <span style="color:red">*</span></label>
+                <select name="leave_type" id="leaveTypeSelect" required onchange="updateLeaveHeader()"
+                    style="width:100%; padding:0.75rem; border:1px solid var(--border-color); border-radius:0.5rem; outline:none; font-family:inherit;">
+                    <option value="Leave" selected>Leave</option>
+                    <option value="Half Day">Half Day</option>
+                    <option value="WFH">WFH</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -144,6 +154,18 @@ const nationalHolidays = <?php echo json_encode($holidayDates); ?>;
 </style>
 
 <script>
+    function updateLeaveHeader() {
+        const type = document.getElementById('leaveTypeSelect').value;
+        const header = document.getElementById('applyLeaveHeader');
+        if (type === 'Half Day') {
+            header.innerText = 'Apply for Half Day';
+        } else if (type === 'WFH') {
+            header.innerText = 'Apply for WFH';
+        } else {
+            header.innerText = 'Apply for Leave';
+        }
+    }
+
     function isHolidayOrWeekendJS(dateStr) {
         const dateObj = new Date(dateStr);
         const day = dateObj.getDay(); // 0=Sun, 6=Sat
