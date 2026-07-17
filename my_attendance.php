@@ -366,7 +366,8 @@ include 'includes/header.php';
                             <?php echo $leaveCounts['rejected']; ?>
                         </span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color);">
                         <span style="color: var(--text-muted); font-weight: 500;">Approved WFH:</span>
                         <span
                             style="background: #e0e7ff; color: #4338ca; padding: 0.2rem 0.6rem; border-radius: 1rem; font-weight: 700; border: 1px solid #c7d2fe; min-width: 28px; text-align: center;">
@@ -465,8 +466,11 @@ include 'includes/header.php';
                 <?php /* ... rest of the control content ... */ ?>
                 <?php if (!$todayAttendance): ?>
                     <?php if (time() >= strtotime($today . ' 07:00:00')): ?>
-                        <form action="process_attendance.php" method="POST" style="text-align: center;">
+                        <form id="checkInForm" action="process_attendance.php" method="POST" style="text-align: center;">
                             <input type="hidden" name="action" value="check_in">
+                            <input type="hidden" name="lat" id="geo_lat" value="">
+                            <input type="hidden" name="lng" id="geo_lng" value="">
+                            <input type="hidden" name="check_in_photo" id="check_in_photo" value="">
                             <input type="hidden" name="work_mode" value="<?php echo htmlspecialchars($requestedMode); ?>">
                             <div style="margin-bottom: 1rem; font-weight: 600; color: var(--text-main);">
                                 <label
@@ -478,9 +482,18 @@ include 'includes/header.php';
                                     <option value="WFH" <?php echo $requestedMode === 'WFH' ? 'selected' : ''; ?>>🏠 WFH</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary"
-                                style="padding: 1.25rem 2.5rem; font-size: 1.2rem; width: 220px; max-width: 100%; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">Check
-                                In</button>
+
+                            <?php if ($requestedMode === 'WFO'): ?>
+                                <div id="locationBlock">
+                                    <button type="button" id="trackLocationBtn" class="btn btn-primary" onclick="trackLocation()"
+                                        style="padding: 1.25rem 2.5rem; font-size: 1.2rem; width: 220px; max-width: 100%; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">Check
+                                        In</button>
+                                </div>
+                            <?php else: ?>
+                                <button type="button" class="btn btn-primary" onclick="openCameraModal()"
+                                    style="padding: 1.25rem 2.5rem; font-size: 1.2rem; width: 220px; max-width: 100%; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">Check
+                                    In</button>
+                            <?php endif; ?>
                         </form>
                         <p style="color: var(--text-muted); font-size: 0.9rem;">Office hours: 07:00 AM - 12:00 AM</p>
                     <?php else: ?>
@@ -1036,5 +1049,168 @@ include 'includes/header.php';
         });
     });
 </script>
+
+<script>
+    const OFFICE_LAT = 18.647392;
+    const OFFICE_LNG = 73.784673;
+    const MAX_RADIUS = 20; // meters
+
+    function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // metres
+        const p1 = lat1 * Math.PI / 180;
+        const p2 = lat2 * Math.PI / 180;
+        const dp = (lat2 - lat1) * Math.PI / 180;
+        const dl = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(dp / 2) * Math.sin(dp / 2) +
+            Math.cos(p1) * Math.cos(p2) *
+            Math.sin(dl / 2) * Math.sin(dl / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+    }
+
+    function trackLocation() {
+        const btn = document.getElementById('trackLocationBtn');
+        btn.disabled = true;
+        btn.innerText = 'Locating...';
+
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            btn.disabled = false;
+            btn.innerText = 'Check In';
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(function (position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            document.getElementById('geo_lat').value = lat;
+            document.getElementById('geo_lng').value = lng;
+
+            const distance = getDistanceInMeters(lat, lng, OFFICE_LAT, OFFICE_LNG);
+
+            if (distance <= MAX_RADIUS) {
+                // Success! Auto-open the camera modal
+                btn.disabled = false;
+                btn.innerText = 'Check In';
+                openCameraModal();
+            } else {
+                alert("Geofence blocked: You are " + Math.round(distance) + " meters away from the office. You must be within " + MAX_RADIUS + " meters to punch in.");
+                btn.disabled = false;
+                btn.innerText = 'Check In';
+            }
+        }, function (error) {
+            alert("Unable to retrieve your location. Please ensure location services are enabled and you are using HTTPS.");
+            btn.disabled = false;
+            btn.innerText = 'Check In';
+        }, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        });
+    }
+
+    let stream = null;
+
+    function openCameraModal() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("No camera detected on this system. Proceeding with check-in without a photo.");
+            document.getElementById('checkInForm').submit();
+            return;
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (s) {
+                stream = s;
+                const modal = document.getElementById('cameraModal');
+                // Move modal to body to prevent CSS transform containment issues
+                document.body.appendChild(modal);
+                modal.style.display = 'flex';
+
+                // Reset states
+                document.getElementById('cameraVideo').style.display = 'block';
+                document.getElementById('cameraCanvas').style.display = 'none';
+
+                const btnCapture = document.getElementById('btnCapture');
+                if (btnCapture) {
+                    btnCapture.style.display = 'inline-flex';
+                    btnCapture.disabled = false;
+                    btnCapture.innerText = '📸 Capture & Submit';
+                }
+
+                const video = document.getElementById('cameraVideo');
+                video.srcObject = stream;
+                video.play().catch(e => console.error("Video play error:", e));
+            })
+            .catch(function (err) {
+                alert("Camera access denied or no camera found. Proceeding with check-in without a photo.");
+                document.getElementById('checkInForm').submit();
+            });
+    }
+
+    function closeCameraModal() {
+        const modal = document.getElementById('cameraModal');
+        modal.style.display = 'none';
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
+    function capturePhoto() {
+        try {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Show preview briefly exactly like the mock
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+
+            document.getElementById('check_in_photo').value = dataUrl;
+
+            const btn = document.getElementById('btnCapture');
+            btn.disabled = true;
+            btn.innerText = '✅ Submitting...';
+
+            // Wait 1 second to show the preview before submitting
+            setTimeout(() => {
+                closeCameraModal();
+                document.getElementById('checkInForm').submit();
+            }, 1000);
+        } catch (e) {
+            console.error(e);
+            alert("Error capturing photo. Please try again.");
+        }
+    }
+</script>
+
+<!-- Camera Modal -->
+<div id="cameraModal" class="modal-overlay"
+    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); opacity: 1 !important; visibility: visible !important;">
+    <div
+        style="background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; width: 90%; max-width: 400px; text-align: center;">
+        <h3 style="margin-bottom: 1rem; color: var(--text-main);">Selfie Check-In</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Please capture your photo to
+            confirm attendance.</p>
+
+        <video id="cameraVideo" autoplay playsinline
+            style="width: 100%; min-height: 250px; border-radius: 0.5rem; background: #000; margin-bottom: 1rem; object-fit: cover;"></video>
+        <canvas id="cameraCanvas"
+            style="width: 100%; min-height: 250px; border-radius: 0.5rem; background: #000; margin-bottom: 1rem; object-fit: cover; display: none;"></canvas>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <button type="button" class="btn" onclick="closeCameraModal()">Cancel</button>
+            <button type="button" id="btnCapture" class="btn btn-primary" onclick="capturePhoto()"
+                style="background: #22c55e; border-color: #16a34a;">📸 Capture & Submit</button>
+        </div>
+    </div>
+</div>
 
 <?php include 'includes/footer.php'; ?>

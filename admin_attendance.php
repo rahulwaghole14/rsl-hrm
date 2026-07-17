@@ -310,6 +310,9 @@ include 'includes/header.php';
                     <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">Filter</button>
                     <a href="admin_attendance.php?tab=<?php echo htmlspecialchars($activeTab); ?>" class="btn"
                         style="text-decoration: none; padding: 0.65rem 1rem;">Clear</a>
+                    
+
+
                     <?php if ($activeTab === 'attendance'): ?>
                         <a href="export_attendance.php?<?php echo http_build_query($_GET); ?>" class="btn"
                             style="background: #10b981; border-color: #10b981; color: white; text-decoration: none; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
@@ -858,6 +861,7 @@ include 'includes/header.php';
                     <tr>
                         <th class="sticky-col-1" style="width: 120px; min-width: 120px;">Date</th>
                         <th class="sticky-col-2" style="width: 250px; min-width: 250px;">Employee</th>
+                        <th>Photo</th>
                         <th>Check In</th>
                         <th>Check Out</th>
                         <th>Break Time</th>
@@ -890,6 +894,15 @@ include 'includes/header.php';
                                         <strong
                                             style="color: var(--primary-color);"><?php echo htmlspecialchars($row['name']); ?></strong>
                                     </div>
+                                </td>
+                                <td>
+                                    <?php if (!empty($row['check_in_photo'])): ?>
+                                        <div onclick="showPhotoModal('uploads/attendance/<?php echo htmlspecialchars($row['check_in_photo']); ?>')" title="View Full Image">
+                                            <img src="uploads/attendance/<?php echo htmlspecialchars($row['check_in_photo']); ?>" alt="Selfie" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0; cursor: zoom-in;">
+                                        </div>
+                                    <?php else: ?>
+                                        <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500; background: rgba(0,0,0,0.05); padding: 0.2rem 0.6rem; border-radius: 1rem;">N/A</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <span style="color: var(--primary-color); font-weight: 600;">
@@ -1129,6 +1142,20 @@ include 'includes/header.php';
     </div>
 </div>
 
+<!-- ✅ CENTERED OVERLAY — Photo Popup -->
+<div class="emp-overlay" id="photoOverlay" onclick="handleOverlayClick(event, 'photoOverlay')">
+    <div class="emp-modal-card" style="max-width: 500px; padding: 1rem; background: transparent; box-shadow: none;">
+        <button class="emp-close-x" onclick="closeEmpModal('photoOverlay')" style="color: white; top: -1.5rem; right: -1.5rem; font-size: 2rem;">&times;</button>
+        <img id="modalPhotoImg" src="" alt="Full Selfie" style="width: 100%; border-radius: 1rem; box-shadow: 0 25px 60px rgba(0,0,0,0.5);">
+    </div>
+</div>
+
+<script>
+    function showPhotoModal(imgSrc) {
+        document.getElementById('modalPhotoImg').src = imgSrc;
+        document.getElementById('photoOverlay').classList.add('active');
+    }
+</script>
 <style>
     /* ── Overlay backdrop ── */
     .emp-overlay {

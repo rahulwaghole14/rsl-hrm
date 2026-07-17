@@ -24,9 +24,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'check_in') {
             $work_mode = $_POST['work_mode'] ?? 'WFO';
-            $stmt = $pdo->prepare("INSERT INTO attendance (user_id, date, check_in_time, status, work_mode) VALUES (?, ?, ?, 'checked_in', ?)");
-            $stmt->execute([$user_id, $date, $time, $work_mode]);
-            
+            $photo_filename = null;
+            if (!empty($_POST['check_in_photo'])) {
+                $base64_string = $_POST['check_in_photo'];
+                $img_data = explode(',', $base64_string);
+                if (count($img_data) == 2) {
+                    $decoded = base64_decode($img_data[1]);
+                    $photo_filename = 'photo_' . $user_id . '_' . time() . '.jpg';
+                    $filepath = 'uploads/attendance/' . $photo_filename;
+                    file_put_contents($filepath, $decoded);
+                }
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO attendance (user_id, date, check_in_time, status, work_mode, check_in_photo) VALUES (?, ?, ?, 'checked_in', ?, ?)");
+            $stmt->execute([$user_id, $date, $time, $work_mode, $photo_filename]);
+
             // Apply Late Check-in Policy Recalculation
             require_once 'includes/late_policy.php';
             recalculateUserMonthlyLatePolicy($pdo, $user_id, date('Y-m', strtotime($date)));
@@ -44,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $break_start = strtotime($date . ' ' . $row['last_break_start']);
                 $break_end = $now;
                 $break_diff = $break_end - $break_start;
-                $new_total_break = (int)$row['total_break_seconds'] + $break_diff;
+                $new_total_break = (int) $row['total_break_seconds'] + $break_diff;
 
                 $stmt = $pdo->prepare("UPDATE attendance SET status = 'checked_in', total_break_seconds = ?, last_break_start = NULL WHERE user_id = ? AND date = ?");
                 $update_res = $stmt->execute([$new_total_break, $user_id, $date]);
@@ -73,23 +85,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Final Calculation Logic
-                $total_elapsed_seconds = (int)$actual_check_out - (int)$check_in;
-                $break_seconds = (int)$total_break;
-                
+                $total_elapsed_seconds = (int) $actual_check_out - (int) $check_in;
+                $break_seconds = (int) $total_break;
+
                 // FORCE THE MATH
                 $working_seconds = $total_elapsed_seconds - $break_seconds;
-                if ($working_seconds < 0) $working_seconds = 0;
-                
+                if ($working_seconds < 0)
+                    $working_seconds = 0;
+
                 $totalHours = round($working_seconds / 3600, 2);
-                
+
                 // Double check for the user
                 $check_math = round($total_elapsed_seconds / 3600, 2);
 
                 $update = $pdo->prepare("UPDATE attendance SET check_out_time = ?, total_hours = ?, status = 'checked_out', total_break_seconds = ? WHERE user_id = ? AND date = ?");
                 $update->execute([date('H:i:s', $actual_check_out), $totalHours, $break_seconds, $user_id, $date]);
-                
-                $_SESSION['msg'] = "SUCCESS: Checked out. Working Hours: $totalHours (Total: $check_math hrs, Break: " . round($break_seconds/60, 1) . " mins)";
-                
+
+                $_SESSION['msg'] = "SUCCESS: Checked out. Working Hours: $totalHours (Total: $check_math hrs, Break: " . round($break_seconds / 60, 1) . " mins)";
+
                 // Log to file for developer
                 $log_msg = date('Y-m-d H:i:s') . " | UID: $user_id | Total: $total_elapsed_seconds | Break: $break_seconds | Working: $working_seconds | Hours: $totalHours\n";
                 file_put_contents('attendance_debug.log', $log_msg, FILE_APPEND);
