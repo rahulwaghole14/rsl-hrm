@@ -966,9 +966,50 @@ $isLoginPage = ($currentPage == 'login.php');
                                     } catch (Exception $e) {
                                     }
 
-                                    // Sort notifications chronologically
+                                    // 5. Fetch Leaves (Pending for Admin, Processed for Employee)
+                                    try {
+                                        if ($curRole === 'admin' || $curRole === 'sub_admin') {
+                                            $stmt = $pdo->prepare("SELECT l.id, u.name, l.from_date, l.to_date, l.leave_date, l.leave_type, l.created_at FROM leaves l JOIN users u ON l.user_id = u.id WHERE l.status = 'pending' ORDER BY l.created_at DESC LIMIT 5");
+                                            $stmt->execute();
+                                            $pendingLeaves = $stmt->fetchAll();
+                                            foreach($pendingLeaves as $pl) {
+                                                $startDate = $pl['leave_type'] === 'Leave' ? $pl['from_date'] : $pl['leave_date'];
+                                                $endDate = $pl['leave_type'] === 'Leave' ? $pl['to_date'] : $pl['leave_date'];
+                                                $notif_id = md5('leave_pending_' . $pl['id'] . '_' . $pl['created_at']);
+                                                $notifications[] = [
+                                                    'id' => $notif_id,
+                                                    'icon' => '🏖️',
+                                                    'title' => 'Leave Request: ' . htmlspecialchars($pl['name']),
+                                                    'subtitle' => 'Pending request from ' . date('d M', strtotime($startDate)) . ' to ' . date('d M', strtotime($endDate)),
+                                                    'date' => date('Y-m-d H:i:s'),
+                                                    'url' => 'index.php?view_leave=' . $pl['id']
+                                                ];
+                                            }
+                                        } else {
+                                            // For employees, show their recent processed leaves
+                                            $stmt = $pdo->prepare("SELECT id, status, from_date, to_date, leave_date, leave_type, created_at FROM leaves WHERE user_id = ? AND status != 'pending' ORDER BY id DESC LIMIT 5");
+                                            $stmt->execute([$curUserId]);
+                                            $processedLeaves = $stmt->fetchAll();
+                                            foreach($processedLeaves as $pl) {
+                                                $startDate = $pl['leave_type'] === 'Leave' ? $pl['from_date'] : $pl['leave_date'];
+                                                $endDate = $pl['leave_type'] === 'Leave' ? $pl['to_date'] : $pl['leave_date'];
+                                                $notif_id = md5('leave_processed_' . $pl['id'] . '_' . $pl['status']);
+                                                $icon = ($pl['status'] === 'approved' || $pl['status'] === 'partially_approved') ? '✅' : '❌';
+                                                $notifications[] = [
+                                                    'id' => $notif_id,
+                                                    'icon' => $icon,
+                                                    'title' => 'Leave ' . ucfirst(str_replace('_', ' ', $pl['status'])),
+                                                    'subtitle' => 'Your leave from ' . date('d M', strtotime($startDate)) . ' to ' . date('d M', strtotime($endDate)) . ' was ' . str_replace('_', ' ', $pl['status']),
+                                                    'date' => date('Y-m-d H:i:s'),
+                                                    'url' => 'index.php?view_leave=' . $pl['id']
+                                                ];
+                                            }
+                                        }
+                                    } catch(Exception $e) {}
+
+                                    // Sort notifications chronologically (descending for newest at top)
                                     usort($notifications, function ($a, $b) {
-                                        return strcmp($a['date'], $b['date']);
+                                        return strcmp($b['date'], $a['date']);
                                     });
 
                                 } catch (Exception $e) {
@@ -1012,9 +1053,10 @@ $isLoginPage = ($currentPage == 'login.php');
                                         <div style="max-height: 300px; overflow-y: auto;">
                                             <?php if (count($notifications) > 0): ?>
                                                 <?php foreach ($notifications as $n): ?>
+                                                    <?php $urlOnClick = isset($n['url']) ? "window.location.href='" . htmlspecialchars($n['url']) . "';" : ""; ?>
                                                     <div class="notif-item" data-id="<?php echo $n['id']; ?>"
-                                                        onclick="markAsRead(event, '<?php echo $n['id']; ?>')"
-                                                        style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; gap: 0.75rem; align-items: flex-start; transition: background 0.2s;"
+                                                        onclick="markAsRead(event, '<?php echo $n['id']; ?>'); <?php echo $urlOnClick; ?>"
+                                                        style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; gap: 0.75rem; align-items: flex-start; transition: background 0.2s; cursor: <?php echo isset($n['url']) ? 'pointer' : 'default'; ?>;"
                                                         onmouseover="this.style.background='var(--bg-color)'"
                                                         onmouseout="this.style.background='transparent'">
                                                         <div style="font-size: 1.2rem;"><?php echo $n['icon']; ?></div>

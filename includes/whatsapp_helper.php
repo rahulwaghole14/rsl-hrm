@@ -4,8 +4,8 @@
 function sendWhatsAppMessage($phone, $message)
 {
     $url = "https://whatsapp-platform-api-backend-zzis.onrender.com/api/unofficial/send-message";
-    $accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZTliY2EzNC1lZTM3LTQ2NTgtODUwNi05ZjgyMTQwOWRjNTgiLCJlbWFpbCI6InJzbC5wcmF0aWsyN0BnbWFpbC5jb20iLCJyb2xlIjoiYnVzaW5lc3Nfb3duZXIiLCJleHAiOjQ5MzYzMzA1NTUsInR5cGUiOiJhY2Nlc3MifQ.x1VG-ePIypY5GLuCOoBWHNSqXPtTEaHEIMPmvnJ5lvg";
-    $deviceId = "7ca7880b-a025-4022-bdf8-701c6421a6da";
+    $accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiODkzMGU3NS0wNjEyLTRjODYtOTVkMS00ODQ5YmE2YzI2YWEiLCJlbWFpbCI6InJzbC5wcmF0aWsyN0BnbWFpbC5jb20iLCJyb2xlIjoiYnVzaW5lc3Nfb3duZXIiLCJleHAiOjQ5MzgxNDA2MjcsInR5cGUiOiJhY2Nlc3MifQ._n8hdQLPl55DYzCIz8ljIZ0Zcp54peODed_KyDRES9s";
+    $deviceId = "8885eb07-7b4f-4f8b-975b-f0025302d76c";
 
     // Format phone number (ensure country code, assumes India +91 if 10 digits)
     $phone = preg_replace('/[^0-9]/', '', $phone);
@@ -15,7 +15,7 @@ function sendWhatsAppMessage($phone, $message)
 
     $data = [
         'device_id' => $deviceId,
-        'device_name' => 'Rsl_calander  (Chrome)',
+        'device_name' => 'RSL (Chrome)',
         'receiver_number' => $phone,
         'message' => $message
     ];

@@ -505,7 +505,12 @@ include 'includes/header.php';
                 <?php elseif ($todayAttendance['status'] !== 'checked_out'): ?>
                     <div style="text-align: center; width: 100%;">
                         <div
-                            style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem;">
+                            style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem; align-items: center;">
+                            <?php if (!empty($todayAttendance['check_in_photo'])): ?>
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                    <img src="uploads/attendance/<?php echo htmlspecialchars($todayAttendance['check_in_photo']); ?>" alt="Check-in Photo" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                </div>
+                            <?php endif; ?>
                             <div>
                                 <p
                                     style="font-size: 0.8rem; color: var(--primary-color); font-weight: 600; margin-bottom: 0.25rem;">
@@ -554,7 +559,12 @@ include 'includes/header.php';
                     </div>
                 <?php else: ?>
                     <div style="text-align: center;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <?php if (!empty($todayAttendance['check_in_photo'])): ?>
+                                <img src="uploads/attendance/<?php echo htmlspecialchars($todayAttendance['check_in_photo']); ?>" alt="Check-in Photo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #16a34a; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <?php endif; ?>
+                            <div style="font-size: 3rem; margin-bottom: 0;">✅</div>
+                        </div>
                         <p style="font-size: 1.2rem; font-weight: 700; color: #16a34a; margin-bottom: 0.5rem;">Completed
                         </p>
                         <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
@@ -873,6 +883,7 @@ include 'includes/header.php';
             <thead>
                 <tr style="border-bottom: 2px solid rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.2);">
                     <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Date</th>
+                    <th style="padding: 1rem; font-weight: 700; color: var(--text-muted); text-align: center;">Photo</th>
                     <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Check In</th>
                     <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Check Out</th>
                     <th style="padding: 1rem; font-weight: 700; color: var(--text-muted);">Mode</th>
@@ -909,13 +920,22 @@ include 'includes/header.php';
 
                 if (empty($recentRecords)): ?>
                     <tr>
-                        <td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-muted);">No records yet.
+                        <td colspan="8" style="padding: 2rem; text-align: center; color: var(--text-muted);">No records yet.
                         </td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($recentRecords as $row): ?>
                         <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
                             <td style="padding: 1rem; font-weight: 600;"><?php echo date('d M Y', strtotime($row['date'])); ?>
+                            </td>
+                            <td style="padding: 1rem; text-align: center;">
+                                <?php if (!empty($row['check_in_photo'])): ?>
+                                    <div onclick="showPhotoModal('uploads/attendance/<?php echo htmlspecialchars($row['check_in_photo']); ?>')" title="View Full Image" style="display: inline-block;">
+                                        <img src="uploads/attendance/<?php echo htmlspecialchars($row['check_in_photo']); ?>" alt="Selfie" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0; cursor: zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    </div>
+                                <?php else: ?>
+                                    <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.75rem; border: 1px dashed #cbd5e1; margin: 0 auto;">N/A</div>
+                                <?php endif; ?>
                             </td>
                             <td style="padding: 1rem;"><?php echo date('h:i A', strtotime($row['check_in_time'])); ?></td>
                             <td style="padding: 1rem;">
@@ -1053,7 +1073,7 @@ include 'includes/header.php';
 <script>
     const OFFICE_LAT = 18.647392;
     const OFFICE_LNG = 73.784673;
-    const MAX_RADIUS = 20; // meters
+    const MAX_RADIUS = 50; // meters
 
     function getDistanceInMeters(lat1, lon1, lat2, lon2) {
         const R = 6371e3; // metres
@@ -1212,5 +1232,29 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
+
+<!-- Photo Viewer Modal -->
+<div class="emp-overlay" id="photoOverlay" onclick="handlePhotoOverlayClick(event)" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(4px); z-index: 20000; align-items: center; justify-content: center;">
+    <div class="emp-modal-card" style="max-width: 500px; padding: 1rem; background: transparent; box-shadow: none; position: relative;">
+        <button class="emp-close-x" onclick="closePhotoModal()" style="color: white; position: absolute; top: -1.5rem; right: -1.5rem; font-size: 2rem; background: none; border: none; cursor: pointer;">&times;</button>
+        <img id="modalPhotoImg" src="" alt="Full Selfie" style="width: 100%; border-radius: 1rem; box-shadow: 0 25px 60px rgba(0,0,0,0.5);">
+    </div>
+</div>
+
+<script>
+    function showPhotoModal(imgSrc) {
+        document.getElementById('modalPhotoImg').src = imgSrc;
+        document.getElementById('photoOverlay').style.display = 'flex';
+    }
+    function closePhotoModal() {
+        document.getElementById('photoOverlay').style.display = 'none';
+        document.getElementById('modalPhotoImg').src = '';
+    }
+    function handlePhotoOverlayClick(event) {
+        if (event.target.id === 'photoOverlay') {
+            closePhotoModal();
+        }
+    }
+</script>
 
 <?php include 'includes/footer.php'; ?>

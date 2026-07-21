@@ -52,5 +52,28 @@ if ($view === 'week') {
 
 <?php
 include 'includes/modals.php';
-include 'includes/footer.php';
+if (isset($_GET['view_leave'])): ?>
+<?php
+    $viewLeaveId = (int)$_GET['view_leave'];
+    $stmt = $pdo->prepare("SELECT l.*, u.name as user_name FROM leaves l JOIN users u ON l.user_id = u.id WHERE l.id = ?");
+    $stmt->execute([$viewLeaveId]);
+    $viewLeave = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($viewLeave && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'sub_admin' || $viewLeave['user_id'] == $_SESSION['user_id'])) {
+        // Prepare data to match what the modal expects (like from_date / to_date logic)
+        if ($viewLeave['leave_type'] !== 'Leave') {
+            $viewLeave['from_date'] = $viewLeave['leave_date'];
+            $viewLeave['to_date'] = $viewLeave['leave_date'];
+        }
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var leaveData = " . json_encode($viewLeave) . ";
+                if (typeof openAdminViewModal === 'function') {
+                    openAdminViewModal(leaveData);
+                }
+            });
+        </script>";
+    }
 ?>
+<?php endif; ?>
+
+<?php include 'includes/footer.php'; ?>
