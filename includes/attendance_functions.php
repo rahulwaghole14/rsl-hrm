@@ -1,7 +1,8 @@
 <?php
 /**
  * Automatically check out any unclosed attendance sessions from previous days.
- * Sets the checkout time to 11:59:59 PM (23:59:59) on the same date as check-in.
+ * Sets the checkout time to 6:30 PM (18:30:00) on the same date as check-in,
+ * representing a standard end-of-day instead of midnight.
  */
 function autoCheckoutForgotten($pdo, $userId = null) {
     $today = date('Y-m-d');
@@ -24,7 +25,12 @@ function autoCheckoutForgotten($pdo, $userId = null) {
         $recordDate = $record['date'];
         $check_in_ts = (int)strtotime($recordDate . ' ' . $record['check_in_time']);
         $total_break_sec = (int)($record['total_break_seconds'] ?? 0);
-        $day_end_ts = (int)strtotime($recordDate . ' 23:59:59');
+        // Default auto-checkout at 6:30 PM, but if check-in was after 6:30 PM,
+        // fall back to 23:59:59 (employee was working a late/evening shift)
+        $day_end_ts = (int)strtotime($recordDate . ' 18:30:00');
+        if ($check_in_ts >= $day_end_ts) {
+            $day_end_ts = (int)strtotime($recordDate . ' 23:59:59');
+        }
 
         // If they were on break when the day ended, we assume the break lasted until the end of the day
         if ($record['status'] === 'on_break' && !empty($record['last_break_start'])) {
@@ -41,14 +47,16 @@ function autoCheckoutForgotten($pdo, $userId = null) {
         
         $totalHours = round($working_sec / 3600, 2);
 
+        $checkout_time_str = date('H:i:s', $day_end_ts);
+
         $update = $pdo->prepare("UPDATE attendance 
-                                SET check_out_time = '23:59:59', 
+                                SET check_out_time = ?, 
                                     total_hours = ?, 
                                     status = 'checked_out', 
                                     total_break_seconds = ?,
                                     last_break_start = NULL 
                                 WHERE id = ?");
-        $update->execute([$totalHours, $total_break_sec, $record['id']]);
+        $update->execute([$checkout_time_str, $totalHours, $total_break_sec, $record['id']]);
     }
 }
 
