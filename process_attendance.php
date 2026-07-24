@@ -68,6 +68,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $row = $stmt->fetch();
 
             if ($row) {
+                $work_mode = $row['work_mode'] ?? 'WFO';
+                if ($work_mode === 'WFO') {
+                    $lat = isset($_POST['lat']) && $_POST['lat'] !== '' ? (float)$_POST['lat'] : null;
+                    $lng = isset($_POST['lng']) && $_POST['lng'] !== '' ? (float)$_POST['lng'] : null;
+
+                    if ($lat !== null && $lng !== null) {
+                        $office_lat = 18.647392;
+                        $office_lng = 73.784673;
+                        $earth_radius = 6371000; // meters
+                        $dLat = deg2rad($lat - $office_lat);
+                        $dLng = deg2rad($lng - $office_lng);
+                        $a = sin($dLat / 2) * sin($dLat / 2) +
+                             cos(deg2rad($office_lat)) * cos(deg2rad($lat)) *
+                             sin($dLng / 2) * sin($dLng / 2);
+                        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+                        $distance = $earth_radius * $c;
+
+                        if ($distance > 50) {
+                            $_SESSION['msg'] = "Geofence blocked: You are " . round($distance) . " meters away from the office location. You must be at the office location to check out.";
+                            header("Location: my_attendance.php");
+                            exit;
+                        }
+                    }
+                }
+
                 $check_in = strtotime($date . ' ' . $row['check_in_time']);
                 $total_break = $row['total_break_seconds'];
 

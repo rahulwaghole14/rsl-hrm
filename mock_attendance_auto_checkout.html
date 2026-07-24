@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Dashboard - Auto Checkout Marking Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Top Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            background: var(--card-bg);
+            padding: 1.25rem 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* View Toggle Tabs */
+        .view-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: #f1f5f9;
+            padding: 0.3rem;
+            border-radius: 0.75rem;
+        }
+
+        .tab-btn {
+            border: none;
+            background: transparent;
+            padding: 0.6rem 1.2rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        /* Info Banner */
+        .info-banner {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-left: 5px solid #0284c7;
+            color: #0369a1;
+            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Table Layout */
+        .card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 0.85rem 1rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Badges */
+        .badge-wfo {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-wfh {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        /* Auto Checkout Badge (Requested by User) */
+    /* Auto Checkout Badge (Text Only) */
+    .text-auto {
+        color: #d97706;
+        font-weight: 700;
+        font-size: 0.8rem;
+        margin-left: 0.3rem;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <span>🏷️ Auto Check-Out Marking Demonstration</span>
+        </div>
+        <div class="view-tabs">
+            <button class="tab-btn active" onclick="switchView('employee')">👨‍💼 Employee View</button>
+            <button class="tab-btn" onclick="switchView('admin')">🛡️ Admin View</button>
+        </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <span>💡 <strong>Feature Summary:</strong> When an employee forgets to check out, the system automatically checks them out at <strong>6:30 PM (18:30:00)</strong> and appends the keyword <strong>(Auto)</strong> next to their check-out time.</span>
+    </div>
+
+    <!-- EMPLOYEE VIEW -->
+    <div id="employeeView" class="card">
+        <div class="card-title">
+            <span>📋 My Attendance Logs (John Smith - EMP-1042)</span>
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Showing Recent Log History</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Work Mode</th>
+                        <th>Break Time</th>
+                        <th>Total Working Hours</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Today -->
+                    <tr>
+                        <td><strong>23 Jul 2026</strong> <small style="color: var(--primary-color); font-weight:700;">(Today)</small></td>
+                        <td style="color: var(--primary-color); font-weight: 600;">09:15 AM</td>
+                        <td style="color: var(--text-muted);">-</td>
+                        <td><span class="badge-wfo">WFO</span></td>
+                        <td>00 Hr 00 Min</td>
+                        <td>
+                            <span class="badge-working">
+                                <span class="pulse-dot"></span> Working
+                            </span>
+                        </td>
+                    </tr>
+
+                    <!-- Yesterday (AUTO CHECKOUT RECORD) -->
+                    <tr class="row-auto">
+                        <td><strong>22 Jul 2026</strong></td>
+                        <td style="color: var(--primary-color); font-weight: 600;">09:30 AM</td>
+                        <td>
+                            <span style="color: #ef4444; font-weight: 600;">06:30 PM</span>
+                            <span class="text-auto" title="Automatically checked out at 6:30 PM by system">(Auto)</span>
+                        </td>
+                        <td><span class="badge-wfo">WFO</span></td>
+                        <td>00 Hr 45 Min</td>
+                        <td>
+                            <span class="badge-success">8 Hr 15 Min</span>
+                        </td>
+                    </tr>
+
+                    <!-- Manual Checkout Record -->
+                    <tr>
+                        <td><strong>21 Jul 2026</strong></td>
+                        <td style="color: var(--primary-color); font-weight: 600;">09:20 AM</td>
+                        <td>
+                            <span style="color: #ef4444; font-weight: 600;">06:15 PM</span>
+                        </td>
+                        <td><span class="badge-wfo">WFO</span></td>
+                        <td>00 Hr 45 Min</td>
+                        <td>
+                            <span class="badge-success">8 Hr 10 Min</span>
+                        </td>
+                    </tr>
+
+                    <!-- WFH Manual Checkout Record -->
+                    <tr>
+                        <td><strong>20 Jul 2026</strong></td>
+                        <td style="color: var(--primary-color); font-weight: 600;">09:00 AM</td>
+                        <td>
+                            <span style="color: #ef4444; font-weight: 600;">06:00 PM</span>
+                        </td>
+                        <td><span class="badge-wfh">WFH</span></td>
+                        <td>00 Hr 40 Min</td>
+                        <td>
+                            <span class="badge-success">8 Hr 20 Min</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="adminView" class="card" style="display: none;">
+        <div class="card-title">
+            <span>🛡️ Employee Attendance Records (Admin View)</span>
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Filter: July 2026</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Break</th>
+                        <th>Work Mode</th>
+                        <th>Total Hours</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="row-auto">
+                        <td><strong>John Smith</strong> <small style="color: var(--text-muted);">(EMP-1042)</small></td>
+                        <td>22 Jul 2026</td>
+                        <td style="color: var(--primary-color); font-weight: 600;">09:30 AM</td>
+                        <td>
+                            <span style="color: #ef4444; font-weight: 600;">06:30 PM</span>
+                            <span class="text-auto" title="System Auto Checkout">(Auto)</span>
+                        </td>
+                        <td>00:45 Hrs</td>
+                        <td><span class="badge-wfo">WFO</span></td>
+                        <td><span class="badge-success">08h 15m 00s</span></td>
+                        <td><button class="btn-edit" onclick="alert('Admin can modify checkout time if required.')">✏️ Edit</button></td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>Sarah Connor</strong> <small style="color: var(--text-muted);">(EMP-1088)</small></td>
+                        <td>22 Jul 2026</td>
+                        <td style="color: var(--primary-color); font-weight: 600;">09:15 AM</td>
+                        <td>
+                            <span style="color: #ef4444; font-weight: 600;">06:20 PM</span>
+                        </td>
+                        <td>00:45 Hrs</td>
+                        <td><span class="badge-wfh">WFH</span></td>
+                        <td><span class="badge-success">08h 20m 00s</span></td>
+                        <td><button class="btn-edit" onclick="alert('Admin Edit')">✏️ Edit</button></td>
+                    </tr>
+
+                    <tr class="row-auto">
+                        <td><strong>Alex Miller</strong> <small style="color: var(--text-muted);">(EMP-1105)</small></td>
+                        <td>22 Jul 2026</td>
+                        <td style="color: var(--primary-color); font-weight: 600;">09:45 AM</td>
+                        <td>
+                            <span style="color: #ef4444; font-weight: 600;">06:30 PM</span>
+                            <span class="text-auto" title="System Auto Checkout">(Auto)</span>
+                        </td>
+                        <td>00:45 Hrs</td>
+                        <td><span class="badge-wfo">WFO</span></td>
+                        <td><span class="badge-success">08h 00m 00s</span></td>
+                        <td><button class="btn-edit" onclick="alert('Admin Edit')">✏️ Edit</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function switchView(view) {
+        const empView = document.getElementById('employeeView');
+        const adminView = document.getElementById('adminView');
+        const buttons = document.querySelectorAll('.tab-btn');
+
+        if (view === 'employee') {
+            empView.style.display = 'block';
+            adminView.style.display = 'none';
+            buttons[0].classList.add('active');
+            buttons[1].classList.remove('active');
+        } else {
+            empView.style.display = 'none';
+            adminView.style.display = 'block';
+            buttons[0].classList.remove('active');
+            buttons[1].classList.add('active');
+        }
+    }
+</script>
+
+</body>
+</html>

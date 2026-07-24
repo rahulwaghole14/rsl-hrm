@@ -58,6 +58,7 @@ try {
         check_in_time TIME NOT NULL,
         check_out_time TIME DEFAULT NULL,
         total_hours DECIMAL(5,2) DEFAULT NULL,
+        is_auto_checkout TINYINT(1) DEFAULT 0,
         FOREIGN KEY (user_id) REFERENCES users(id),
         UNIQUE KEY (user_id, date)
     )");

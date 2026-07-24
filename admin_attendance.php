@@ -1,7 +1,9 @@
 <?php
 function formatHours($decimal)
 {
-    if (!$decimal)
+    if ($decimal === null || $decimal === '')
+        return "--";
+    if ((float)$decimal == 0)
         return "00h 00m 00s";
     $hours = floor($decimal);
     $minutes = floor(($decimal - $hours) * 60);
@@ -913,6 +915,9 @@ include 'includes/header.php';
                                     <span style="color: #ef4444; font-weight: 600;">
                                         <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
                                     </span>
+                                    <?php if (!empty($row['is_auto_checkout'])): ?>
+                                        <span style="color: #d97706; font-size: 0.8rem; font-weight: 700; margin-left: 0.2rem;" title="Auto checked out by system">(Auto)</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <span style="font-weight: 600; color: #f59e0b;">

@@ -7,6 +7,13 @@
 function autoCheckoutForgotten($pdo, $userId = null) {
     $today = date('Y-m-d');
     
+    // Ensure column is_auto_checkout exists
+    try {
+        $pdo->exec("ALTER TABLE attendance ADD COLUMN is_auto_checkout TINYINT(1) DEFAULT 0");
+    } catch (PDOException $e) {
+        // Column already exists
+    }
+
     // Prepare the query. If $userId is provided, only process that user.
     // Otherwise, process all users.
     $sql = "SELECT * FROM attendance WHERE date < ? AND status != 'checked_out'";
@@ -25,28 +32,22 @@ function autoCheckoutForgotten($pdo, $userId = null) {
         $recordDate = $record['date'];
         $check_in_ts = (int)strtotime($recordDate . ' ' . $record['check_in_time']);
         $total_break_sec = (int)($record['total_break_seconds'] ?? 0);
-        // Default auto-checkout at 6:30 PM, but if check-in was after 6:30 PM,
-        // fall back to 23:59:59 (employee was working a late/evening shift)
+        // Default auto-checkout at 6:30 PM (18:30:00)
+        // If check-in was after 6:30 PM, fall back to 23:59:59
         $day_end_ts = (int)strtotime($recordDate . ' 18:30:00');
         if ($check_in_ts >= $day_end_ts) {
             $day_end_ts = (int)strtotime($recordDate . ' 23:59:59');
         }
 
-        // If they were on break when the day ended, we assume the break lasted until the end of the day
+        // If they were on break when the day ended, add break time until end of day
         if ($record['status'] === 'on_break' && !empty($record['last_break_start'])) {
             $break_start_ts = (int)strtotime($recordDate . ' ' . $record['last_break_start']);
-            // Add the duration from break start to end of day
             $total_break_sec += max(0, $day_end_ts - $break_start_ts);
         }
         
         $total_elapsed_sec = $day_end_ts - $check_in_ts;
-        $working_sec = $total_elapsed_sec - $total_break_sec;
-        
-        // Ensure working seconds isn't negative (though unlikely)
-        if ($working_sec < 0) $working_sec = 0;
-        
+        $working_sec = max(0, $total_elapsed_sec - $total_break_sec);
         $totalHours = round($working_sec / 3600, 2);
-
         $checkout_time_str = date('H:i:s', $day_end_ts);
 
         $update = $pdo->prepare("UPDATE attendance 
@@ -54,7 +55,8 @@ function autoCheckoutForgotten($pdo, $userId = null) {
                                     total_hours = ?, 
                                     status = 'checked_out', 
                                     total_break_seconds = ?,
-                                    last_break_start = NULL 
+                                    last_break_start = NULL,
+                                    is_auto_checkout = 1 
                                 WHERE id = ?");
         $update->execute([$checkout_time_str, $totalHours, $total_break_sec, $record['id']]);
     }

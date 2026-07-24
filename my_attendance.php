@@ -548,12 +548,20 @@ include 'includes/header.php';
                                 </form>
                             <?php endif; ?>
 
-                            <form action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
+                            <form id="checkOutForm" action="process_attendance.php" method="POST" style="width: 220px; max-width: 100%;">
                                 <input type="hidden" name="action" value="check_out">
-                                <button type="submit" class="btn"
-                                    onclick="return confirm('Are you sure you want to check out?')"
-                                    style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #f87171; color: #ef4444; background: #fff;">⏹️
-                                    Check Out</button>
+                                <input type="hidden" name="lat" id="checkout_lat" value="">
+                                <input type="hidden" name="lng" id="checkout_lng" value="">
+                                <?php if (($todayAttendance['work_mode'] ?? 'WFO') === 'WFO'): ?>
+                                    <button type="button" id="trackCheckoutBtn" class="btn" onclick="trackCheckoutLocation()"
+                                        style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #f87171; color: #ef4444; background: #fff;">⏹️
+                                        Check Out</button>
+                                <?php else: ?>
+                                    <button type="submit" class="btn"
+                                        onclick="return confirm('Are you sure you want to check out?')"
+                                        style="width: 100%; padding: 1rem; border-radius: 1rem; border-color: #f87171; color: #ef4444; background: #fff;">⏹️
+                                        Check Out</button>
+                                <?php endif; ?>
                             </form>
                         </div>
                     </div>
@@ -939,7 +947,12 @@ include 'includes/header.php';
                             </td>
                             <td style="padding: 1rem;"><?php echo date('h:i A', strtotime($row['check_in_time'])); ?></td>
                             <td style="padding: 1rem;">
-                                <?php echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; ?>
+                                <?php 
+                                echo $row['check_out_time'] ? date('h:i A', strtotime($row['check_out_time'])) : '-'; 
+                                if (!empty($row['is_auto_checkout'])) {
+                                    echo ' <span style="color: #d97706; font-size: 0.8rem; font-weight: 700; margin-left: 0.2rem;" title="Auto checked out by system">(Auto)</span>';
+                                }
+                                ?>
                             </td>
                             <td style="padding: 1rem;">
                                 <span
@@ -966,22 +979,8 @@ include 'includes/header.php';
                                 <?php if ($row['status'] === 'checked_out'): ?>
                                     <span
                                         style="background: #dcfce7; color: #16a34a; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
-                                        <?php
-                                        $check_in_ts = strtotime($row['date'] . ' ' . $row['check_in_time']);
-                                        $check_out_ts = strtotime($row['date'] . ' ' . $row['check_out_time']);
-                                        $working_sec = ($check_out_ts - $check_in_ts) - (int) $row['total_break_seconds'];
-                                        echo formatDuration($working_sec);
-                                        ?>
+                                        <?php echo formatDecimalHours((float)$row['total_hours']); ?>
                                     </span>
-                                    <script>
-                                        var rowData = {
-                                            check_in: <?php echo json_encode($row['check_in_time']); ?>,
-                                            check_out: <?php echo json_encode($row['check_out_time']); ?>,
-                                            break_mins: <?php echo (int) round($row['total_break_seconds'] / 60, 0); ?>,
-                                            working_hours: <?php echo json_encode($row['total_hours']); ?>
-                                        };
-                                        console.log("HISTORY [<?php echo $row['date']; ?>]:", JSON.stringify(rowData));
-                                    </script>
                                 <?php else: ?>
                                     <span
                                         style="background: #fef9c3; color: #a16207; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
@@ -1125,6 +1124,58 @@ include 'includes/header.php';
             alert("Unable to retrieve your location. Please ensure location services are enabled and you are using HTTPS.");
             btn.disabled = false;
             btn.innerText = 'Check In';
+        }, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        });
+    }
+
+    function trackCheckoutLocation() {
+        if (!confirm('Are you sure you want to check out?')) {
+            return;
+        }
+        const btn = document.getElementById('trackCheckoutBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = 'Locating...';
+        }
+
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = '⏹️ Check Out';
+            }
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(function (position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            const latInput = document.getElementById('checkout_lat');
+            const lngInput = document.getElementById('checkout_lng');
+            if (latInput) latInput.value = lat;
+            if (lngInput) lngInput.value = lng;
+
+            const distance = getDistanceInMeters(lat, lng, OFFICE_LAT, OFFICE_LNG);
+
+            if (distance <= MAX_RADIUS) {
+                document.getElementById('checkOutForm').submit();
+            } else {
+                alert("Geofence blocked: You are " + Math.round(distance) + " meters away from the office location. You must be within " + MAX_RADIUS + " meters of the office to check out.");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = '⏹️ Check Out';
+                }
+            }
+        }, function (error) {
+            alert("Unable to retrieve your location for check-out. Please ensure location services are enabled.");
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = '⏹️ Check Out';
+            }
         }, {
             enableHighAccuracy: true,
             timeout: 15000,

@@ -35,24 +35,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $total_break_seconds = ($bh * 3600) + ($bm * 60);
     $date = $record['date'];
     $totalHours = null;
+    $status = $record['status'];
     if ($check_in && $check_out) {
         $start = strtotime($date . ' ' . $check_in);
         $end = strtotime($date . ' ' . $check_out);
         $diffSeconds = $end - $start;
-        // If end time is before start time, assume it's the next day or invalid, 
-        $diffSeconds = $end - $start;
-        $totalHours = round($diffSeconds / 3600, 2);
-
-        // Deduct break time
-        $break_hours_decimal = $total_break_seconds / 3600;
-        $totalHours = max(0, $totalHours - $break_hours_decimal);
-
-        $totalHours = round($totalHours, 2);
+        if ($diffSeconds < 0) {
+            $diffSeconds += 86400; // Handle overnight shift
+        }
+        $working_seconds = max(0, $diffSeconds - $total_break_seconds);
+        $totalHours = round($working_seconds / 3600, 2);
+        $status = 'checked_out';
     }
 
     try {
-        $update = $pdo->prepare("UPDATE attendance SET check_in_time = ?, check_out_time = ?, total_hours = ?, work_mode = ?, total_break_seconds = ? WHERE id = ?");
-        $update->execute([$check_in, $check_out, $totalHours, $work_mode, $total_break_seconds, $id]);
+        $update = $pdo->prepare("UPDATE attendance SET check_in_time = ?, check_out_time = ?, total_hours = ?, work_mode = ?, total_break_seconds = ?, status = ?, is_auto_checkout = 0 WHERE id = ?");
+        $update->execute([$check_in, $check_out, $totalHours, $work_mode, $total_break_seconds, $status, $id]);
 
         // Apply Late Check-in Policy Recalculation
         require_once 'includes/late_policy.php';
