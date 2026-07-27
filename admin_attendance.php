@@ -84,14 +84,15 @@ if (!isset($_GET['search']) && !isset($_GET['filter_date']) && !isset($_GET['fil
 $records = [];
 $leaves = [];
 $users = [];
+$absent_records_list = [];
 
 try {
     // Fetch all users for the "Add Attendance" dropdown
-    $usersStmt = $pdo->query("SELECT id, name, emp_id FROM users WHERE role != 'admin' ORDER BY name ASC");
+    $usersStmt = $pdo->query("SELECT id, name, emp_id FROM users WHERE role != 'admin' AND status = 'active' ORDER BY name ASC");
     $users = $usersStmt->fetchAll();
 
     if ($activeTab === 'leaves') {
-        $where = ["1=1"];
+        $where = ["u.role != 'admin'", "u.status = 'active'"];
         $params = [];
         if ($search !== '') {
             $where[] = "u.name LIKE ?";
@@ -106,7 +107,7 @@ try {
         $stmt->execute($params);
         $leaves = $stmt->fetchAll();
     } else {
-        $where = ["1=1"];
+        $where = ["u.role != 'admin'", "u.status = 'active'"];
         $params = [];
 
         if ($search !== '') {
@@ -136,6 +137,58 @@ try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $records = $stmt->fetchAll();
+
+        // Add absent employees if filtering by a single date
+        if ($filter_date !== '') {
+            $absent_where = ["u.role != 'admin'", "u.status = 'active'"];
+            $absent_params = [];
+            if ($search !== '') {
+                $absent_where[] = "u.name LIKE ?";
+                $absent_params[] = '%' . $search . '%';
+            }
+            
+            $absent_sql = "SELECT u.id as user_id, u.name, u.emp_id, u.email, u.role 
+                           FROM users u 
+                           WHERE " . implode(" AND ", $absent_where) . "
+                           AND u.id NOT IN (
+                               SELECT user_id FROM attendance WHERE date = ?
+                           )
+                           ORDER BY u.name ASC";
+            $absent_params[] = $filter_date;
+            
+            $stmt_absent = $pdo->prepare($absent_sql);
+            $stmt_absent->execute($absent_params);
+            $absent_users = $stmt_absent->fetchAll();
+            
+            // Check for leaves on $filter_date
+            $leave_stmt = $pdo->prepare("SELECT user_id FROM leaves WHERE ? BETWEEN from_date AND to_date AND (status = 'approved' OR status = 'partially_approved')");
+            $leave_stmt->execute([$filter_date]);
+            $leave_rows = $leave_stmt->fetchAll(PDO::FETCH_ASSOC);
+            $users_on_leave = [];
+            foreach($leave_rows as $lr) {
+                $users_on_leave[$lr['user_id']] = true;
+            }
+            
+            foreach ($absent_users as $au) {
+                $status_label = isset($users_on_leave[$au['user_id']]) ? 'on_leave' : 'absent';
+                $absent_records_list[] = [
+                    'id' => null, 
+                    'user_id' => $au['user_id'],
+                    'date' => $filter_date,
+                    'check_in_time' => null,
+                    'check_out_time' => null,
+                    'status' => $status_label,
+                    'total_break_seconds' => 0,
+                    'total_hours' => 0,
+                    'work_mode' => 'N/A',
+                    'name' => $au['name'],
+                    'emp_id' => $au['emp_id'],
+                    'email' => $au['email'],
+                    'role' => $au['role'],
+                    'check_in_photo' => null
+                ];
+            }
+        }
     }
 } catch (PDOException $e) {
     $error = "Error fetching records: " . $e->getMessage();
@@ -243,7 +296,7 @@ include 'includes/header.php';
                 <?php echo $activeTab === 'leaves' ? 'Employees Leave' : 'Employee Attendance'; ?>
                 <span
                     style="font-size: 1rem; background: var(--primary-color); color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; display: inline-flex; align-items: center; justify-content: center;"
-                    title="Total Records Shown">
+                    title="Present / Records Shown">
                     <?php
                     if ($activeTab === 'leaves') {
                         $totalLeaveDays = 0;
@@ -256,6 +309,16 @@ include 'includes/header.php';
                     }
                     ?>
                 </span>
+                <?php if ($activeTab === 'attendance' && !empty($absent_records_list)): ?>
+                    <span
+                        onclick="openAbsentModal()"
+                        style="cursor: pointer; font-size: 1rem; background: #ef4444; color: white; padding: 0.2rem 0.8rem; border-radius: 1rem; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.2s, box-shadow 0.2s;"
+                        onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.4)';"
+                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';"
+                        title="Absent Count (Click to view)">
+                        <?php echo count($absent_records_list); ?> Absent
+                    </span>
+                <?php endif; ?>
             </h2>
 
             <?php if ($activeTab === 'attendance' && isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
@@ -1155,7 +1218,60 @@ include 'includes/header.php';
     </div>
 </div>
 
+<!-- ✅ CENTERED OVERLAY — Absent Employees Popup -->
+<div class="emp-overlay" id="absentOverlay" onclick="handleOverlayClick(event, 'absentOverlay')">
+    <div class="emp-modal-card" style="max-width: 600px; text-align: left; padding: 2rem;">
+        <button class="emp-close-x" onclick="closeEmpModal('absentOverlay')">&times;</button>
+        <h2 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z"></path></svg>
+            Absent Employees
+        </h2>
+        
+        <div style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+            <?php if (!empty($absent_records_list)): ?>
+                <table class="dense-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($absent_records_list as $ar): ?>
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
+                                            <?php echo strtoupper(substr($ar['name'], 0, 1)); ?>
+                                        </div>
+                                        <div>
+                                            <strong style="color: var(--primary-color); display: block;"><?php echo htmlspecialchars($ar['name']); ?></strong>
+                                            <span style="font-size: 0.75rem; color: var(--text-muted);"><?php echo htmlspecialchars($ar['emp_id'] ?? ''); ?></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?php if ($ar['status'] === 'absent'): ?>
+                                        <span style="background: #fee2e2; color: #ef4444; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.8rem; font-weight: 700; border: 1px solid #fecaca; display: inline-block;">Absent</span>
+                                    <?php else: ?>
+                                        <span style="background: #dbeafe; color: #1d4ed8; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.8rem; font-weight: 700; border: 1px solid #bfdbfe; display: inline-block;">On Leave</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No absent employees.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
 <script>
+    function openAbsentModal() {
+        document.getElementById('absentOverlay').classList.add('active');
+    }
     function showPhotoModal(imgSrc) {
         document.getElementById('modalPhotoImg').src = imgSrc;
         document.getElementById('photoOverlay').classList.add('active');
