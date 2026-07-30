@@ -25,7 +25,7 @@ for ($h = 11; $h <= 20; $h++) {
 $allUsers = [];
 if ($pdo) {
     try {
-        $stmt = $pdo->query("SELECT id, name FROM users WHERE department != 'IT' ORDER BY name ASC");
+        $stmt = $pdo->query("SELECT id, name FROM users WHERE department != 'IT' AND status = 'active' ORDER BY name ASC");
         $allUsers = $stmt->fetchAll();
     } catch (\Exception $e) {
     }
