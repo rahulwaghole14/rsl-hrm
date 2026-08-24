@@ -244,6 +244,7 @@ if ($showSummary) {
             }
         }
 
+        $leave_dates_array = [];
         foreach ($user_leaves as $lRow) {
             $l_type = $lRow['leave_type'] ?? 'Leave';
             if ($l_type === 'WFH') continue; // Not a leave
@@ -256,6 +257,7 @@ if ($showSummary) {
                     foreach ($dates as $d) {
                         if (strpos($d, $filter_month) === 0) {
                             $days_in_month++;
+                            $leave_dates_array[] = $d;
                         }
                     }
                 }
@@ -268,6 +270,7 @@ if ($showSummary) {
                         $dayOfWeek = $d->format('N');
                         if ($dayOfWeek != 6 && $dayOfWeek != 7 && !in_array($dateStr, $holidays)) {
                             $days_in_month++;
+                            $leave_dates_array[] = $dateStr;
                         }
                     }
                 }
@@ -285,6 +288,43 @@ if ($showSummary) {
 
         $total_half_days = $half_leaves_count + $half_days_late;
 
+        // Calculate absent dates
+        $attStmt = $pdo->prepare("SELECT date FROM attendance WHERE user_id = ? AND DATE_FORMAT(date, '%Y-%m') = ?");
+        $attStmt->execute([$uid, $filter_month]);
+        $attended_dates = $attStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $absent_dates_list = [];
+        $filter_month_start_date = $filter_month . '-01';
+        $filter_month_end_date = date('Y-m-t', strtotime($filter_month_start_date));
+        $today_date = date('Y-m-d');
+        
+        $calc_end = $filter_month_end_date;
+        if ($filter_month > date('Y-m')) {
+            $calc_end = null; 
+        } elseif ($filter_month == date('Y-m')) {
+            $calc_end = $today_date;
+        }
+
+        if ($calc_end !== null) {
+            $start_dt = new DateTime($filter_month_start_date);
+            $end_dt = new DateTime($calc_end);
+            for ($d = clone $start_dt; $d <= $end_dt; $d->modify('+1 day')) {
+                $dateStr = $d->format('Y-m-d');
+                $dayOfWeek = $d->format('N');
+                
+                if ($dayOfWeek == 6 || $dayOfWeek == 7 || in_array($dateStr, $holidays)) {
+                    continue;
+                }
+                if (in_array($dateStr, $attended_dates)) {
+                    continue;
+                }
+                if (in_array($dateStr, $leave_dates_array)) {
+                    continue;
+                }
+                $absent_dates_list[] = $dateStr;
+            }
+        }
+
         $userSummaries[$uid] = [
             'name' => $mu['name'],
             'emp_id' => $mu['emp_id'],
@@ -300,7 +340,8 @@ if ($showSummary) {
             'full_leaves_count' => $full_leaves_count,
             'half_leaves_count' => $total_half_days,
             'wfh_leaves_count' => $wfh_leaves_count,
-            'total_leaves_month' => $full_leaves_count + ($total_half_days * 0.5)
+            'total_leaves_month' => $full_leaves_count + ($total_half_days * 0.5),
+            'absent_dates' => $absent_dates_list
         ];
     }
 
@@ -917,6 +958,58 @@ include 'includes/header.php';
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Absent Days -->
+                                    <div
+                                        style="background: rgba(255, 255, 255, 0.45); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div
+                                                style="width: 36px; height: 36px; border-radius: 8px; background: rgba(249, 115, 22, 0.1); display: flex; align-items: center; justify-content: center; color: #f97316; flex-shrink: 0;">
+                                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                            <span
+                                                style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Absent</span>
+                                        </div>
+                                        <div>
+                                            <?php
+                                            $absent_count = count($summary['absent_dates']);
+                                            $display_dates = "No absent days";
+                                            if ($absent_count > 0) {
+                                                $absent_dates_formatted = array_map(function($d) { return date('d M', strtotime($d)); }, $summary['absent_dates']);
+                                                $display_dates = implode(', ', array_slice($absent_dates_formatted, 0, 3));
+                                                if ($absent_count > 3) {
+                                                    $display_dates .= ' (+' . ($absent_count - 3) . ' more)';
+                                                }
+                                            }
+                                            ?>
+                                            <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); line-height: 1;">
+                                                <?php echo $absent_count; ?> <span
+                                                    style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">Days</span>
+                                            </div>
+                                            <?php if ($absent_count > 0): ?>
+                                                <div
+                                                    style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; display: flex; gap: 0.4rem; flex-wrap: wrap;" title="<?php echo htmlspecialchars(implode(', ', $summary['absent_dates'])); ?>">
+                                                    <span
+                                                        style="background: rgba(249, 115, 22, 0.1); color: #f97316; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">
+                                                        Dates: <?php echo htmlspecialchars($display_dates); ?>
+                                                    </span>
+                                                </div>
+                                            <?php else: ?>
+                                                <div
+                                                    style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                                    <span
+                                                        style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; font-size: 0.7rem;">
+                                                        <?php echo htmlspecialchars($display_dates); ?>
+                                                    </span>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                     <?php endforeach; ?>
@@ -1072,7 +1165,7 @@ include 'includes/header.php';
                                             </td>
                                             <td class="sticky-col-2">
                                                 <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
-                                                    onclick="showEmployeeDetails(<?php echo htmlspecialchars(json_encode(['id' => $row['user_id'], 'name' => $row['name'], 'email' => $row['email'], 'role' => $row['role'], 'emp_id' => $row['emp_id']]), ENT_QUOTES, 'UTF-8'); ?>)">
+                                                    onclick="window.location.href='?tab=attendance&search=<?php echo urlencode($row['name']); ?>&filter_month=<?php echo date('Y-m', strtotime($row['date'])); ?>'">
                                                     <div
                                                         style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
                                                         <?php echo strtoupper(substr($row['name'], 0, 1)); ?>
