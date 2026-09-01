@@ -1035,8 +1035,9 @@ include 'includes/header.php';
                             display: false
                         },
                         ticks: {
-                            maxRotation: 0,
-                            minRotation: 0
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 45
                         }
                     }
                 },
