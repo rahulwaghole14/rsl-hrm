@@ -6,19 +6,28 @@ session_start();
 // Auto-checkout any unclosed sessions from previous days
 autoCheckoutForgotten($pdo);
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     die("Unauthorized");
 }
+
+$isAdmin = ($_SESSION['role'] === 'admin');
+$userId = $_SESSION['user_id'];
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : '';
 $filter_month = isset($_GET['filter_month']) ? $_GET['filter_month'] : '';
+$filter = isset($_GET['filter']) ? $_GET['filter'] : '';
 
 try {
     $where = ["1=1"];
     $params = [];
 
-    if ($search !== '') {
+    if (!$isAdmin) {
+        $where[] = "a.user_id = ?";
+        $params[] = $userId;
+    }
+
+    if ($search !== '' && $isAdmin) {
         $where[] = "u.name LIKE ?";
         $params[] = '%' . $search . '%';
     }
@@ -29,6 +38,15 @@ try {
     if ($filter_month !== '') {
         $where[] = "DATE_FORMAT(a.date, '%Y-%m') = ?";
         $params[] = $filter_month;
+    }
+    if ($filter === 'this_week') {
+        $where[] = "YEARWEEK(a.date, 1) = YEARWEEK(CURDATE(), 1)";
+    } elseif ($filter === 'last_week') {
+        $where[] = "YEARWEEK(a.date, 1) = YEARWEEK(CURDATE() - INTERVAL 1 WEEK, 1)";
+    } elseif ($filter === 'this_month') {
+        $where[] = "MONTH(a.date) = MONTH(CURDATE()) AND YEAR(a.date) = YEAR(CURDATE())";
+    } elseif ($filter === 'last_month') {
+        $where[] = "MONTH(a.date) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(a.date) = YEAR(CURDATE() - INTERVAL 1 MONTH)";
     }
 
     $sql = "SELECT a.*, u.name, u.emp_id 

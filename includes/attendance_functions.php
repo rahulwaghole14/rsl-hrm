@@ -5,6 +5,9 @@
  * representing a standard end-of-day instead of midnight.
  */
 function autoCheckoutForgotten($pdo, $userId = null) {
+    if (!$pdo) {
+        return;
+    }
     $today = date('Y-m-d');
     
     // Ensure column is_auto_checkout exists
