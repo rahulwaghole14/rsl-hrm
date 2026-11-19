@@ -3,9 +3,10 @@
 
 function sendWhatsAppMessage($phone, $message)
 {
-    $url = "https://whatsapp-platform-api-backend-zzis.onrender.com/api/unofficial/send-message";
-    $accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiODkzMGU3NS0wNjEyLTRjODYtOTVkMS00ODQ5YmE2YzI2YWEiLCJlbWFpbCI6InJzbC5wcmF0aWsyN0BnbWFpbC5jb20iLCJyb2xlIjoiYnVzaW5lc3Nfb3duZXIiLCJleHAiOjQ5MzgxNDA2MjcsInR5cGUiOiJhY2Nlc3MifQ._n8hdQLPl55DYzCIz8ljIZ0Zcp54peODed_KyDRES9s";
-    $deviceId = "8885eb07-7b4f-4f8b-975b-f0025302d76c";
+    $url = "https://wa.rslsolution.com/backend-php/public/unofficial/send-message";
+    $accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwidXNlcl9pZCI6NSwiZW1haWwiOiJyc2wucHJhdGlrMjdAZ21haWwuY29tIiwicm9sZSI6InVzZXIiLCJleHAiOjQ5NDg2ODQwMzJ9.NNFP5T2JKD762cw7BwBJs_5auvoq324eh-VX6TJngA0";
+    $deviceId = "7ffc347b-b2ca-4747-a733-46f13c78f9b5";
+    $deviceName = "HRM";
 
     // Format phone number (ensure country code, assumes India +91 if 10 digits)
     $phone = preg_replace('/[^0-9]/', '', $phone);
@@ -15,18 +16,22 @@ function sendWhatsAppMessage($phone, $message)
 
     $data = [
         'device_id' => $deviceId,
-        'device_name' => 'RSL (Chrome)',
+        'device_name' => $deviceName,
         'receiver_number' => $phone,
         'message' => $message
     ];
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_ENCODING, "");
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Content-Type: application/json",
-        "Authorization: Bearer " . $accessToken
+        "Authorization: Bearer " . $accessToken,
+        "Content-Type: application/json"
     ]);
 
     $response = curl_exec($ch);

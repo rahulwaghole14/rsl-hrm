@@ -312,23 +312,30 @@ include 'includes/header.php';
                     <input type="text" name="name" id="userName" required placeholder="John Doe">
                 </div>
                 <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" name="email" id="userEmail" required placeholder="john@example.com">
+                    <label>Gender</label>
+                    <select name="gender" id="userGender" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
                 </div>
             </div>
 
             <div class="form-grid" style="margin-top: 0.5rem;">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" id="userEmail" required placeholder="john@example.com">
+                </div>
                 <div class="form-group">
                     <label>Mobile Number</label>
                     <input type="text" name="mob_no" id="userMob" required placeholder="10-digit number">
                 </div>
+            </div>
+
+            <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group">
                     <label>Date of Birth</label>
                     <input type="date" name="dob" id="userDob" required>
                 </div>
-            </div>
-
-            <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group">
                     <label>Role</label>
                     <select name="role" id="userRole" onchange="toggleEmpId(this.value)" required>
@@ -337,17 +344,20 @@ include 'includes/header.php';
                         <option value="admin">Admin</option>
                     </select>
                 </div>
+            </div>
+
+            <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group" id="empIdGroup">
                     <label>Employee ID</label>
                     <input type="text" name="emp_id" id="userEmpId" placeholder="EMP123">
                 </div>
-            </div>
-
-            <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group">
                     <label>Date of Joining</label>
                     <input type="date" name="date_of_joining" id="userDoj">
                 </div>
+            </div>
+
+            <div class="form-grid" style="margin-top: 0.5rem;">
                 <div class="form-group">
                     <label>Status</label>
                     <select name="status" id="userStatus" required>
@@ -355,6 +365,7 @@ include 'includes/header.php';
                         <option value="inactive">Inactive</option>
                     </select>
                 </div>
+                <div class="form-group"></div>
             </div>
 
             <div class="form-group" style="margin-top: 0.5rem;">
@@ -412,6 +423,7 @@ include 'includes/header.php';
         document.getElementById('userDoj').value = user.date_of_joining || '';
         document.getElementById('userRole').value = user.role;
         document.getElementById('userEmpId').value = user.emp_id || '';
+        document.getElementById('userGender').value = user.gender || 'Male';
         document.getElementById('userPassword').required = false;
         document.getElementById('passwordHelp').style.display = 'block';
         document.getElementById('passwordLabel').innerText = 'New Password';

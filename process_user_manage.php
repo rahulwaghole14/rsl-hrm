@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
     $mob_no = trim($_POST['mob_no']);
     $dob = $_POST['dob'];
+    $gender = $_POST['gender'] ?? 'Male';
     $date_of_joining = !empty($_POST['date_of_joining']) ? $_POST['date_of_joining'] : null;
     $role = $_POST['role'];
     $status = $_POST['status'] ?? 'active';
@@ -50,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $updatedFields[] = "Date of Birth";
             if ($oldUser['role'] !== $role)
                 $updatedFields[] = "Role";
+            if ($oldUser['gender'] !== $gender)
+                $updatedFields[] = "Gender";
             if ($oldUser['status'] !== $status)
                 $updatedFields[] = "Status";
             if ($oldUser['emp_id'] !== $emp_id)
@@ -66,11 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 $password = password_hash($raw_password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, mob_no = ?, dob = ?, role = ?, status = ?, emp_id = ?, password = ?, date_of_joining = ? WHERE id = ?");
-                $stmt->execute([$name, $email, $mob_no, $dob, $role, $status, $emp_id, $password, $date_of_joining, $id]);
+                $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, mob_no = ?, dob = ?, gender = ?, role = ?, status = ?, emp_id = ?, password = ?, date_of_joining = ? WHERE id = ?");
+                $stmt->execute([$name, $email, $mob_no, $dob, $gender, $role, $status, $emp_id, $password, $date_of_joining, $id]);
             } else {
-                $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, mob_no = ?, dob = ?, role = ?, status = ?, emp_id = ?, date_of_joining = ? WHERE id = ?");
-                $stmt->execute([$name, $email, $mob_no, $dob, $role, $status, $emp_id, $date_of_joining, $id]);
+                $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, mob_no = ?, dob = ?, gender = ?, role = ?, status = ?, emp_id = ?, date_of_joining = ? WHERE id = ?");
+                $stmt->execute([$name, $email, $mob_no, $dob, $gender, $role, $status, $emp_id, $date_of_joining, $id]);
             }
 
             // Send WhatsApp Message for Update
@@ -87,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $waMessage .= "Name: " . $name . "\n";
             $waMessage .= "Email: " . $email . "\n";
             $waMessage .= "Mobile: " . $mob_no . "\n";
+            $waMessage .= "Gender: " . $gender . "\n";
             $waMessage .= "Role: " . ucfirst($role) . "\n";
             $waMessage .= "Status: " . ucfirst($status) . "\n";
             if (!empty($dob)) {
@@ -113,8 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             $password = password_hash($raw_password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, mob_no, dob, role, status, password, emp_id, department, date_of_joining) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$name, $email, $mob_no, $dob, $role, $status, $password, $emp_id, $department, $date_of_joining]);
+            $stmt = $pdo->prepare("INSERT INTO users (name, email, mob_no, dob, gender, role, status, password, emp_id, department, date_of_joining) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $email, $mob_no, $dob, $gender, $role, $status, $password, $emp_id, $department, $date_of_joining]);
 
             // Send Welcome WhatsApp Message
             require_once 'includes/whatsapp_helper.php';
